@@ -38,6 +38,20 @@ describe("worker input and failure boundaries", () => {
     expect(response.type).toBe("complete");
     if (response.type === "complete") expect(response.run.overallStatus).toBe("FAIL");
   });
+  it("uses the decoded post-BOM string as the explorer coordinate source", () => {
+    const body = validPain001.replace("pain.001.001.99", "pain.001.001.09");
+    const encodedBody = new TextEncoder().encode(body);
+    const bytes = new Uint8Array(encodedBody.length + 3);
+    bytes.set([0xef, 0xbb, 0xbf]);
+    bytes.set(encodedBody, 3);
+    const response = validateWorkerRequest({ ...request(bytes.buffer), includeExplorer: true, snapshotId: 7 });
+    expect(response.type).toBe("complete");
+    if (response.type === "complete") {
+      expect(response.source).toBe(body);
+      expect(response.snapshotId).toBe(7);
+      expect(response.explorerPending).toBe(true);
+    }
+  });
   it("categorizes engine exceptions without forwarding potentially sensitive text", () => {
     vi.mocked(validateSource).mockImplementationOnce(() => { throw new Error("PRIVATE-FILE-CONTENT"); });
     expect(validateWorkerRequest(request(encoded("test"))))

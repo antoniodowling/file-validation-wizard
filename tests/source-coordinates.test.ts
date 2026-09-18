@@ -29,9 +29,18 @@ describe("canonical source coordinates", () => {
   });
 
   it("keeps Unicode offsets in UTF-16 code units", () => {
-    const source = "A😀é\nB";
+    const source = "A😀é\t&amp;\nB";
     expect(source.indexOf("e")).toBe(3);
     expect(sourceOffsetAtLineColumn(source, 1, 4)).toBe(3);
     expect(sourceLineColumnAtOffset(source, 3)).toEqual({ line: 1, column: 4 });
+    expect(sourceLineColumnAtOffset(source, source.length)).toEqual({ line: 2, column: 2 });
+  });
+
+  it("preserves explicit EOF points through viewer normalization", () => {
+    const source = "one\r\ntwo\r";
+    const viewer = normalizeSourceForViewer(source);
+    expect(viewer.canonicalToViewer(source.length)).toBe(viewer.text.length);
+    expect(viewer.viewerToCanonical(viewer.text.length)).toBe(source.length);
+    expect(sourceOffsetAtLineColumn(source, 3, 1)).toBe(source.length);
   });
 });

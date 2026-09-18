@@ -1,6 +1,7 @@
 import type { SyntaxNode } from "@lezer/common";
 import { parser as xmlLocationParser } from "@lezer/xml";
 import { XMLValidator } from "fast-xml-parser";
+import { MAX_SOURCE_INDEX_CHARACTERS } from "./explorer-budget";
 import { scanEdiSegments, type LocatedEdiElement, type LocatedEdiSegment } from "./parsers/edi-source";
 import { isValidSourceSpan, sourceOffsetAtLineColumn, trimSourceSpan } from "./source-coordinates";
 import type {
@@ -379,6 +380,28 @@ function locateEdiFinding(source: string, pack: FormatPack, finding: RuleResult)
 }
 
 export function locateFindings(source: string, pack: FormatPack, run: ValidationRun): readonly FindingLocationEntry[] {
+  if (source.length > MAX_SOURCE_INDEX_CHARACTERS) {
+    return Object.freeze(run.results
+      .filter((finding) => finding.outcome !== "PASS")
+      .map((finding) => {
+        let location: FindingLocation;
+        if (finding.ruleId === "demo.non-empty-source") {
+          location = fileWide("This finding applies to the complete file rather than a single source token.");
+        } else if (finding.ruleId === "demo.xml-declaration") {
+          const firstContent = source.search(/\S/u);
+          const offset = firstContent < 0 ? 0 : firstContent;
+          location = located([target("context", "Beginning of the document where the declaration is expected", span(offset, offset))]);
+        } else if (finding.ruleId === "edi.fixed-header" && source.startsWith("ISA")) {
+          location = located([target("context", "Incomplete ISA header", span(0, Math.min(106, source.length)))]);
+        } else {
+          location = unavailable(
+            `The decoded source exceeds the ${MAX_SOURCE_INDEX_CHARACTERS.toLocaleString()}-character location-index budget. Validation results are unchanged.`,
+          );
+        }
+        return Object.freeze({ ordinal: finding.ordinal, location: validatedLocation(location, source.length) });
+      }));
+  }
+
   let xmlTree: ReturnType<typeof xmlLocationParser.parse> | null = null;
   const needsXmlTree = pack.parserKind === "ISO_XML" && run.results.some((finding) =>
     finding.outcome !== "PASS"

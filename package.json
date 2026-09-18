@@ -9,9 +9,11 @@
     "build:readme": "vite build --config vite.readme.config.ts && node scripts/finalize-readme-package.mjs",
     "test": "vitest run",
     "test:stress-files": "node --test tests/stress-files.test.mjs",
+    "test:readme-package": "node --test tests/readme-package-contract.test.mjs",
     "generate:stress-files": "node scripts/generate-stress-files.mjs",
     "test:e2e": "playwright test",
-    "validate": "npm run test && npm run test:stress-files && npm run build && npm run build:readme && npm run test:e2e"
+    "validate:core": "npm run test && npm run test:stress-files && npm run build && npm run build:readme && npm run test:readme-package",
+    "validate": "npm run validate:core && npm run test:e2e"
   },
   "dependencies": {
     "@codemirror/state": "^6.7.5",

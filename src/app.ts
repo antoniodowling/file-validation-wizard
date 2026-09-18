@@ -1,6 +1,7 @@
 import warningTriangleIcon from "bootstrap-icons/icons/exclamation-triangle.svg?raw";
 import InlineValidationWorker from "./validation.worker?worker&inline";
 import { validationReportFileName, validationRunToCsv } from "./csv";
+import { explorerMarkup, FileExplorerController } from "./explorer-controller";
 import {
   extensionList,
   findCatalogEntry,
@@ -12,6 +13,7 @@ import { fileSelectionError } from "./file-policy";
 import { findEnabledFormatPack } from "./format-packs";
 import { overallStatusLabel } from "./outcome";
 import { pageWindow } from "./pagination";
+import { pageForFinding } from "./finding-navigation";
 import { validationFailureMessage } from "./validation-failure";
 import { VALIDATION_DEADLINE_MS } from "./types";
 import type {
@@ -29,10 +31,12 @@ export interface ValidatorOptions {
   version?: string | undefined;
   lockSelection?: boolean;
   idPrefix?: string;
+  enableExplorer?: boolean;
 }
 
 export function mountPaymentFileValidator(app: HTMLDivElement, options: ValidatorOptions = {}): () => void {
 const prefix = options.idPrefix ?? "";
+const explorerEnabled = options.enableExplorer === true;
 
 app.dataset.validatorMounted = "true";
 
@@ -174,7 +178,7 @@ app.innerHTML = `
                   <col class="column-location" />
                   <col class="column-message" />
                 </colgroup>
-                <thead><tr><th>Result</th><th>Field</th><th>Path</th><th>Message</th></tr></thead>
+                <thead><tr><th scope="col">Result</th><th scope="col">Field</th><th scope="col">Path</th><th scope="col">Message</th></tr></thead>
                 <tbody id="finding-rows"></tbody>
               </table>
             </div>
@@ -193,6 +197,7 @@ app.innerHTML = `
         </div>
       </section>
     </div>
+    ${explorerEnabled ? explorerMarkup() : ""}
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
   </div>
 `;
@@ -202,6 +207,61 @@ for (const element of app.querySelectorAll<HTMLElement>("[id], [for], [aria-cont
     const value = element.getAttribute(attribute);
     if (value) element.setAttribute(attribute, value.split(" ").map((id) => prefix + id).join(" "));
   }
+}
+
+let workspace: HTMLDivElement | null = null;
+let workspaceDivider: HTMLDivElement | null = null;
+let showExplorerButton: HTMLButtonElement | null = null;
+let mobileResultsButton: HTMLButtonElement | null = null;
+let mobileFileButton: HTMLButtonElement | null = null;
+if (explorerEnabled) {
+  const content = app.querySelector<HTMLDivElement>(".validator-content");
+  const steps = content?.querySelector<HTMLOListElement>(".steps");
+  const wizard = content?.querySelector<HTMLDivElement>(".wizard");
+  const explorer = content?.querySelector<HTMLElement>("[data-file-explorer]");
+  const live = content?.querySelector<HTMLElement>(`#${prefix}live-status`);
+  if (!content || !steps || !wizard || !explorer || !live) throw new Error("Explorer workspace could not be constructed.");
+  content.classList.add("explorer-enabled");
+  workspace = document.createElement("div");
+  workspace.className = "validator-workspace";
+  workspace.dataset.mobileView = "results";
+  const primary = document.createElement("div");
+  primary.className = "validator-primary";
+  primary.append(steps, wizard);
+  workspaceDivider = document.createElement("div");
+  workspaceDivider.className = "workspace-divider";
+  workspaceDivider.tabIndex = 0;
+  workspaceDivider.setAttribute("role", "separator");
+  workspaceDivider.setAttribute("aria-label", "Resize validation results and file explorer");
+  workspaceDivider.setAttribute("aria-orientation", "vertical");
+  workspaceDivider.setAttribute("aria-valuemin", "30");
+  workspaceDivider.setAttribute("aria-valuemax", "70");
+  workspaceDivider.setAttribute("aria-valuenow", "40");
+  workspace.append(primary, workspaceDivider, explorer);
+
+  const mobileViews = document.createElement("div");
+  mobileViews.className = "workspace-view-toggle";
+  mobileViews.setAttribute("aria-label", "Workspace view");
+  mobileResultsButton = document.createElement("button");
+  mobileResultsButton.type = "button";
+  mobileResultsButton.className = "button secondary active";
+  mobileResultsButton.textContent = "Results";
+  mobileResultsButton.setAttribute("aria-pressed", "true");
+  mobileFileButton = document.createElement("button");
+  mobileFileButton.type = "button";
+  mobileFileButton.className = "button secondary";
+  mobileFileButton.textContent = "File";
+  mobileFileButton.setAttribute("aria-pressed", "false");
+  mobileViews.append(mobileResultsButton, mobileFileButton);
+
+  showExplorerButton = document.createElement("button");
+  showExplorerButton.type = "button";
+  showExplorerButton.className = "button secondary workspace-show-file";
+  showExplorerButton.textContent = "Show file explorer";
+  showExplorerButton.hidden = true;
+  content.insertBefore(mobileViews, live);
+  content.insertBefore(showExplorerButton, live);
+  content.insertBefore(workspace, live);
 }
 
 requiredElement<HTMLElement>("#safety-icon").innerHTML = warningTriangleIcon;
@@ -228,6 +288,7 @@ const selectedFilePanel = requiredElement<HTMLDivElement>("#selected-file");
 const liveStatus = requiredElement<HTMLDivElement>("#live-status");
 const outcomeFilters = new Set<RuleOutcome>(["ERROR", "WARNING", "PASS"]);
 const resultsPageSize = 25;
+const explorerPreparationDeadlineMs = 10_000;
 
 let activeStep: 1 | 2 | 3 = 1;
 const presetFormat = FORMAT_CATALOG.find((item) =>
@@ -240,13 +301,16 @@ if (presetFormat) formatSearch.value = `${presetFormat.code} — ${presetFormat.
 if (presetVersion?.validationProfileId) activeStep = 2;
 let selectedFile: File | null = null;
 let currentRun: ValidationRun | null = null;
+let acceptedSnapshotId: number | null = null;
 let resultsPage = 1;
 let activeWorker: Worker | null = null;
 let validating = false;
 let runGeneration = 0;
 let validationDeadline: number | null = null;
+let explorerDeadline: number | null = null;
 let visibleFormats: readonly FormatCatalogEntry[] = FORMAT_CATALOG;
 let activeOptionIndex = -1;
+let explorerController: FileExplorerController | null = null;
 
 const selectedFormat = () => findCatalogEntry(selectedFormatId);
 const selectedVersion = () => findCatalogVersion(selectedFormatId, selectedVersionId);
@@ -275,29 +339,132 @@ function announce(message: string): void {
   }, 10);
 }
 
-function stopWorker(): void {
-  runGeneration += 1;
+function setMobileWorkspaceView(view: "results" | "file"): void {
+  if (!workspace) return;
+  workspace.dataset.mobileView = view;
+  mobileResultsButton?.classList.toggle("active", view === "results");
+  mobileFileButton?.classList.toggle("active", view === "file");
+  mobileResultsButton?.setAttribute("aria-pressed", String(view === "results"));
+  mobileFileButton?.setAttribute("aria-pressed", String(view === "file"));
+}
+
+function revealExplorer(): void {
+  if (!workspace) return;
+  workspace.classList.remove("explorer-hidden");
+  if (showExplorerButton) showExplorerButton.hidden = true;
+  setMobileWorkspaceView("file");
+}
+
+function hideExplorer(): void {
+  if (!workspace) return;
+  workspace.classList.add("explorer-hidden");
+  workspace.classList.remove("explorer-expanded");
+  const expandButton = workspace.querySelector<HTMLButtonElement>("[data-explorer-expand]");
+  if (expandButton) expandButton.textContent = "Expand file";
+  if (showExplorerButton) showExplorerButton.hidden = false;
+  setMobileWorkspaceView("results");
+}
+
+function toggleExpandedExplorer(): boolean {
+  if (!workspace) return false;
+  workspace.classList.remove("explorer-hidden");
+  workspace.classList.toggle("explorer-expanded");
+  if (showExplorerButton) showExplorerButton.hidden = true;
+  setMobileWorkspaceView("file");
+  return workspace.classList.contains("explorer-expanded");
+}
+
+if (explorerEnabled) {
+  const explorerRoot = app.querySelector<HTMLElement>("[data-file-explorer]");
+  if (!explorerRoot) throw new Error("File explorer root is missing.");
+  explorerController = new FileExplorerController({
+    root: explorerRoot,
+    getVisibleFindings: () => visibleFindings(),
+    showFindingInResults,
+    onLocationLabelsChanged: () => renderFindingRows(),
+    onHide: hideExplorer,
+    onExpand: toggleExpandedExplorer,
+    announce,
+  });
+  explorerController.setPlaceholder("Validate a selected file to inspect its decoded source here.");
+  showExplorerButton?.addEventListener("click", revealExplorer);
+  mobileResultsButton?.addEventListener("click", () => setMobileWorkspaceView("results"));
+  mobileFileButton?.addEventListener("click", revealExplorer);
+
+  const setDividerValue = (value: number): void => {
+    if (!workspace || !workspaceDivider) return;
+    const clamped = Math.max(30, Math.min(70, Math.round(value)));
+    workspace.style.setProperty("--wizard-share", `${clamped}%`);
+    workspaceDivider.setAttribute("aria-valuenow", String(clamped));
+  };
+  workspaceDivider?.addEventListener("keydown", (event) => {
+    const current = Number(workspaceDivider?.getAttribute("aria-valuenow") ?? 40);
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    if (event.key === "ArrowLeft") setDividerValue(current - 2);
+    if (event.key === "ArrowRight") setDividerValue(current + 2);
+    if (event.key === "Home") setDividerValue(30);
+    if (event.key === "End") setDividerValue(70);
+  });
+  workspaceDivider?.addEventListener("dblclick", () => setDividerValue(40));
+  workspaceDivider?.addEventListener("pointerdown", (event) => {
+    if (!workspace || !workspaceDivider) return;
+    event.preventDefault();
+    workspaceDivider.setPointerCapture(event.pointerId);
+    const move = (moveEvent: PointerEvent): void => {
+      const bounds = workspace?.getBoundingClientRect();
+      if (!bounds?.width) return;
+      setDividerValue(((moveEvent.clientX - bounds.left) / bounds.width) * 100);
+    };
+    const finish = (): void => {
+      workspaceDivider?.removeEventListener("pointermove", move);
+      workspaceDivider?.removeEventListener("pointerup", finish);
+      workspaceDivider?.removeEventListener("pointercancel", finish);
+    };
+    workspaceDivider.addEventListener("pointermove", move);
+    workspaceDivider.addEventListener("pointerup", finish);
+    workspaceDivider.addEventListener("pointercancel", finish);
+  });
+}
+
+function terminateWorker(): void {
   if (validationDeadline !== null) window.clearTimeout(validationDeadline);
+  if (explorerDeadline !== null) window.clearTimeout(explorerDeadline);
   validationDeadline = null;
+  explorerDeadline = null;
   activeWorker?.terminate();
   activeWorker = null;
   validating = false;
   validateButton.textContent = "Validate file →";
 }
 
+function invalidateActiveWork(): void {
+  runGeneration += 1;
+  terminateWorker();
+}
+
+function completeValidationPhase(): void {
+  if (validationDeadline !== null) window.clearTimeout(validationDeadline);
+  validationDeadline = null;
+  validating = false;
+  validateButton.textContent = "Validate file →";
+}
+
 function clearRun(): void {
   currentRun = null;
+  acceptedSnapshotId = null;
   resultsPage = 1;
   exportButton.disabled = true;
 }
 
 function clearFileAndRun(): void {
-  stopWorker();
+  invalidateActiveWork();
   selectedFile = null;
   fileInput.value = "";
   selectedFilePanel.hidden = true;
   setUploadError(null);
   clearRun();
+  explorerController?.setPlaceholder("Validate a selected file to inspect its decoded source here.");
 }
 
 function formatDisplay(item: FormatCatalogEntry): string {
@@ -472,8 +639,11 @@ function renderWizard(): void {
 
   app.querySelectorAll<HTMLElement>(".step").forEach((step) => {
     const number = Number(step.dataset.step);
-    step.classList.toggle("active", number === activeStep);
+    const current = number === activeStep;
+    step.classList.toggle("active", current);
     step.classList.toggle("complete", stepIsComplete(number));
+    if (current) step.setAttribute("aria-current", "step");
+    else step.removeAttribute("aria-current");
   });
 
 }
@@ -550,10 +720,15 @@ function chooseFiles(files: FileList | readonly File[]): void {
   }
   const candidate = files[0];
   if (!candidate) return;
-  stopWorker();
+  invalidateActiveWork();
   selectedFile = candidate;
   clearRun();
   setUploadError(null);
+  explorerController?.setPlaceholder(
+    "The source will appear after this file is validated.",
+    candidate.name,
+    humanFileSize(candidate.size),
+  );
   renderAll();
   announce(`${candidate.name} selected. Ready to validate.`);
 }
@@ -625,7 +800,26 @@ function visibleFindings(): readonly RuleResult[] {
     });
 }
 
+function showFindingInResults(ordinal: number, focus: boolean): void {
+  const rows = visibleFindings();
+  const page = pageForFinding(rows, ordinal, resultsPageSize);
+  if (page !== null) resultsPage = page;
+  renderFindingRows();
+  if (!focus) return;
+  setMobileWorkspaceView("results");
+  window.setTimeout(() => {
+    app.querySelector<HTMLButtonElement>(`[data-finding-action="${ordinal}"]`)?.focus();
+  }, 0);
+}
+
 function renderFindingRows(): void {
+  const activeFindingAction = document.activeElement instanceof HTMLElement && app.contains(document.activeElement)
+    ? document.activeElement.dataset.findingAction
+    : undefined;
+  const restoreFindingActionFocus = (): void => {
+    if (activeFindingAction === undefined) return;
+    app.querySelector<HTMLButtonElement>(`[data-finding-action="${activeFindingAction}"]`)?.focus();
+  };
   const body = requiredElement<HTMLTableSectionElement>("#finding-rows");
   body.replaceChildren();
   const rows = visibleFindings();
@@ -647,10 +841,13 @@ function renderFindingRows(): void {
     cell.textContent = findings().length === 0 ? "No validation results are available." : "No results match these filters.";
     row.append(cell);
     body.append(row);
+    explorerController?.reconcileVisibleFindings();
+    restoreFindingActionFocus();
     return;
   }
   for (const finding of rows.slice(window.start, window.end)) {
     const row = document.createElement("tr");
+    if (explorerController?.isSelected(finding.ordinal)) row.classList.add("selected-finding");
     const severity = document.createElement("td");
     const badge = document.createElement("span");
     badge.className = `severity ${finding.outcome.toLowerCase()}`;
@@ -663,10 +860,27 @@ function renderFindingRows(): void {
     code.textContent = finding.locator;
     locator.append(code);
     const message = document.createElement("td");
-    message.textContent = finding.message;
+    const messageText = document.createElement("span");
+    messageText.textContent = finding.message;
+    message.append(messageText);
+    if (explorerController && finding.outcome !== "PASS") {
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "button text finding-source-action";
+      action.dataset.findingAction = String(finding.ordinal);
+      action.textContent = explorerController.actionLabel(finding);
+      action.setAttribute("aria-pressed", String(explorerController.isSelected(finding.ordinal)));
+      action.addEventListener("click", () => {
+        revealExplorer();
+        explorerController?.selectFinding(finding);
+      });
+      message.append(action);
+    }
     row.append(severity, field, locator, message);
     body.append(row);
   }
+  explorerController?.reconcileVisibleFindings();
+  restoreFindingActionFocus();
 }
 
 function renderResults(): void {
@@ -698,17 +912,18 @@ app.querySelectorAll<HTMLButtonElement>(".filter-toggle").forEach((button) => {
     const active = outcomeFilters.has(outcome);
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
-    resultsPage = 1;
-    renderFindingRows();
+    renderAfterFindingControlsChange();
   });
 });
-const resetPageAndRenderFindings = (): void => {
-  resultsPage = 1;
+const renderAfterFindingControlsChange = (): void => {
+  const selectedOrdinal = explorerController?.selectedFindingOrdinal() ?? null;
+  const selectedPage = selectedOrdinal === null ? null : pageForFinding(visibleFindings(), selectedOrdinal, resultsPageSize);
+  resultsPage = selectedPage ?? 1;
   renderFindingRows();
 };
-requiredElement<HTMLInputElement>("#finding-search").addEventListener("input", resetPageAndRenderFindings);
-requiredElement<HTMLSelectElement>("#path-filter").addEventListener("change", resetPageAndRenderFindings);
-requiredElement<HTMLSelectElement>("#sort-order").addEventListener("change", resetPageAndRenderFindings);
+requiredElement<HTMLInputElement>("#finding-search").addEventListener("input", renderAfterFindingControlsChange);
+requiredElement<HTMLSelectElement>("#path-filter").addEventListener("change", renderAfterFindingControlsChange);
+requiredElement<HTMLSelectElement>("#sort-order").addEventListener("change", renderAfterFindingControlsChange);
 requiredElement<HTMLButtonElement>("#previous-page").addEventListener("click", () => {
   resultsPage -= 1;
   renderFindingRows();
@@ -727,6 +942,7 @@ validateButton.addEventListener("click", async () => {
   const generation = ++runGeneration;
   validating = true;
   clearRun();
+  explorerController?.setPlaceholder("Validation is in progress. Previous source state has been cleared.", file.name, humanFileSize(file.size));
   setUploadError(null);
   validateButton.textContent = "Validating…";
   renderUpload();
@@ -734,7 +950,7 @@ validateButton.addEventListener("click", async () => {
 
   function failRun(code: ValidationFailureCode): void {
     if (generation !== runGeneration) return;
-    stopWorker();
+    invalidateActiveWork();
     const message = validationFailureMessage(code);
     setUploadError(message);
     renderAll();
@@ -764,17 +980,60 @@ validateButton.addEventListener("click", async () => {
   worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {
     if (generation !== runGeneration || worker !== activeWorker) return;
     if (event.data.type === "complete") {
-      stopWorker();
+      completeValidationPhase();
       currentRun = event.data.run;
+      acceptedSnapshotId = event.data.snapshotId ?? generation;
+      if (explorerController && event.data.source !== undefined) {
+        explorerController.acceptSnapshot({
+          id: acceptedSnapshotId,
+          fileName: file.name,
+          fileSizeLabel: humanFileSize(file.size),
+          source: event.data.source,
+          run: event.data.run,
+        });
+      }
       renderResults();
+      if (event.data.explorerPending && explorerController) {
+        explorerDeadline = window.setTimeout(() => {
+          if (acceptedSnapshotId !== generation) return;
+          explorerController?.setLocationFailure(generation);
+          terminateWorker();
+        }, explorerPreparationDeadlineMs);
+      } else {
+        terminateWorker();
+      }
+    } else if (event.data.type === "explorer-ready") {
+      if (event.data.snapshotId !== acceptedSnapshotId) return;
+      explorerController?.setLocations(event.data.snapshotId, event.data.locations);
+      terminateWorker();
+    } else if (event.data.type === "explorer-error") {
+      if (event.data.snapshotId !== acceptedSnapshotId) return;
+      explorerController?.setLocationFailure(event.data.snapshotId);
+      terminateWorker();
     } else if (event.data.type === "error") {
       failRun(event.data.code);
     }
   });
-  worker.addEventListener("error", () => failRun("WORKER_ERROR"));
-  worker.addEventListener("messageerror", () => failRun("WORKER_ERROR"));
+  const handleWorkerFailure = (): void => {
+    if (generation !== runGeneration || worker !== activeWorker) return;
+    if (acceptedSnapshotId === generation && currentRun) {
+      explorerController?.setLocationFailure(generation);
+      terminateWorker();
+    } else {
+      failRun("WORKER_ERROR");
+    }
+  };
+  worker.addEventListener("error", handleWorkerFailure);
+  worker.addEventListener("messageerror", handleWorkerFailure);
   try {
-    const request: WorkerRequest = { type: "validate", packId: profileId, fileName: file.name, bytes };
+    const request: WorkerRequest = {
+      type: "validate",
+      packId: profileId,
+      fileName: file.name,
+      bytes,
+      includeExplorer: explorerEnabled,
+      snapshotId: generation,
+    };
     worker.postMessage(request, [bytes]);
   } catch {
     failRun("WORKER_ERROR");
@@ -796,6 +1055,8 @@ exportButton.addEventListener("click", () => {
 renderAll();
 
 return () => {
+  explorerController?.destroy();
+  explorerController = null;
   clearFileAndRun();
   app.replaceChildren();
   delete app.dataset.validatorMounted;

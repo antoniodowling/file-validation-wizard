@@ -34,6 +34,7 @@ function synchronizeMounts(): void {
       lockSelection: root.dataset.lockSelection === "true",
       ...options,
       idPrefix: legacy ? "" : `hnb-validator-${++sequence}-`,
+      enableExplorer: legacy,
     }));
   }
 }

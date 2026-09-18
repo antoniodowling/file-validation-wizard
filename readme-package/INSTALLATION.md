@@ -14,6 +14,8 @@ The bundle includes the worker, catalog, parsers, and rules. No validation backe
 
 Create a ReadMe Custom Page in HTML mode and paste `custom-page.html`. Add a descriptive page heading above it. For the examples below, give it the path `/page/payment-file-validator` or substitute your actual page URL in every link. The package does not create or publish this page.
 
+The read-only File explorer is enabled on this dedicated page only. It is bundled into the shared JavaScript and requires no separate editor asset or CDN. Inline Guide components and link-triggered modals intentionally keep the compact validator without the explorer.
+
 Direct navigation to that page reads preset settings from its fragment. Without the shared JavaScript, the page's JavaScript-required message is the fallback; validation itself requires JavaScript.
 
 ## Inline Guide component
@@ -56,6 +58,6 @@ Close or Escape stops active validation and clears selected files/results. Reope
 
 ## Verification before publication
 
-Check the actual ReadMe draft for component rendering, narrow article layouts and mobile widths, multiple inline instances, modal keyboard focus and Escape, page navigation/back/forward, presets, reference-only formats, file replacement, validation, and CSV downloads. Confirm a synthetic PASS/FAIL result and Blob-worker compatibility, coexistence with existing Custom JavaScript, and no selected-file network upload. Local browser tests do not establish ReadMe-hosted compatibility. Existing accessibility follow-ups in `docs/ACCESSIBILITY_FOLLOW_UPS.md` remain applicable.
+Check the actual ReadMe draft for component rendering, narrow article layouts and mobile widths, the dedicated-page explorer, finding-to-source navigation, multiple inline instances, modal keyboard focus and Escape, page navigation/back/forward, presets, reference-only formats, file replacement, validation, and CSV downloads. Confirm a synthetic PASS/FAIL result and Blob-worker compatibility, coexistence with existing Custom JavaScript, and no selected-file network upload. Local tests do not establish ReadMe-hosted compatibility. Existing accessibility follow-ups in `docs/ACCESSIBILITY_FOLLOW_UPS.md` remain applicable.
 
 Generated files: edit `src/`, `scripts/finalize-readme-package.mjs`, or `scripts/readme-templates/`, then run `npm run build:readme`. Do not edit generated copies directly.

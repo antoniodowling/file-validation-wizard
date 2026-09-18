@@ -18,7 +18,7 @@ async function openXmlUpload(page: Page, code: "pain.001" | "pain.008", version:
 
 test("starts with format search and keeps later-step messaging inside its step", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".validator-content > :first-child")).toHaveClass(/steps/);
+  await expect(page.locator(".validator-primary > :first-child")).toHaveClass(/steps/);
   await expect(page.locator(".intro, .eyebrow, .lede")).toHaveCount(0);
   await expect(page.locator(".step-number").first()).toHaveCSS(
     "clip-path",
@@ -224,6 +224,42 @@ test("shows only the format/version error for a mismatched PAIN message", async 
   await expect(page.locator("#finding-rows")).toContainText(
     "Ensure the file format type/version you selected matches the file you uploaded.",
   );
+});
+
+test("opens an exact source location in the read-only file explorer", async ({ page }) => {
+  await page.goto("/");
+  await openXmlUpload(page, "pain.001", "pain.001.001.09");
+  await page.locator("#file-input").setInputFiles({
+    name: "wrong-version.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>\r\n<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.007.001.09">\r\n  <CstmrPmtRvsl><GrpHdr><MsgId>REVERSAL-001</MsgId><NbOfTxs>1</NbOfTxs></GrpHdr></CstmrPmtRvsl>\r\n</Document>`),
+  });
+  await page.getByRole("button", { name: "Validate file" }).click();
+
+  const explorer = page.getByRole("complementary", { name: "File explorer" });
+  await expect(explorer).toBeVisible();
+  await expect(explorer.getByRole("heading", { name: "wrong-version.xml" })).toBeVisible();
+  const viewSource = page.getByRole("button", { name: "View in file" });
+  await expect(viewSource).toBeVisible();
+  await viewSource.click();
+  await expect(explorer).toContainText("iso.namespace-version");
+  await expect(explorer).toContainText("Exact source location");
+  await expect(explorer.locator(".cm-finding-range")).toContainText(
+    "urn:iso:std:iso:20022:tech:xsd:pain.007.001.09",
+  );
+  await expect(explorer.locator(".cm-content")).toHaveAttribute("contenteditable", "false");
+
+  await explorer.locator("[data-source-search]").fill("Document");
+  await expect(explorer.locator("[data-search-status]")).toHaveText("1 of 2 matches");
+  await explorer.locator("[data-search-next]").click();
+  await expect(explorer.locator("[data-search-status]")).toHaveText("2 of 2 matches");
+  await explorer.locator("[data-go-line]").fill("2");
+  await explorer.locator("[data-go-line-button]").click();
+
+  await explorer.getByRole("button", { name: "Hide file" }).click();
+  await expect(explorer).toBeHidden();
+  await page.getByRole("button", { name: "Show file explorer" }).click();
+  await expect(explorer).toBeVisible();
 });
 
 test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration", async ({ page }) => {
