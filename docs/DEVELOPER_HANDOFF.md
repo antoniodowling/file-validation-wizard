@@ -2,7 +2,7 @@
 
 ## What to use
 
-The source of truth is `src/`. The four files in `readme-package/` are generated from it and committed for developers who only need the ReadMe copy/paste deliverable. The former root-level package has moved into that directory. Do not edit generated artifacts directly.
+The source of truth is `src/`. The files in `readme-package/` are generated from it and `scripts/readme-templates/` and committed for developers who only need the ReadMe copy/paste deliverable. The former root-level package has moved into that directory. Do not edit generated artifacts directly.
 
 Use Node.js 22.12 or newer and `npm ci` from the repository root. Run `npm run dev` for the standalone preview. Run `npx playwright install` once to install Chromium, Firefox, and WebKit, then `npm run validate` to run the unit tests, type check, standalone build, ReadMe build, and browser tests. On Linux, browser system dependencies may also be required (`npx playwright install --with-deps`).
 
@@ -36,3 +36,11 @@ Use synthetic files only in examples, tests, and public issues. Never commit cus
 ## Handoff validation (2026-09-17)
 
 A clean `npm ci` completed with zero reported dependency vulnerabilities. All 32 unit tests across eight files passed. TypeScript checking, the standalone production build, and ReadMe package generation passed. The browser suite could not complete because test browser processes failed to launch under the local macOS sandbox; no browser pass is claimed. Browser testing was stopped after the owner reported unexpected browser exits. Hosted ReadMe and manual accessibility acceptance remain outstanding.
+
+## Guide component and modal validation (2026-09-17)
+
+The package now includes an inline MDX wrapper, format/version presets, optional selection locking, and same-origin link-triggered native dialogs. The existing dedicated-page mount remains supported. Each new instance has unique control IDs and independent state. Closing invalidates pending file reads, terminates active workers, and clears file/results state.
+
+Validation: 32 unit tests passed; TypeScript, standalone build, and regenerated ReadMe package passed. The isolated browser suite passed 54 checks and exposed three copies of a cancellation-test failure (one per browser). After correcting cancellation and making active-worker testing deterministic, all 24 affected browser checks passed across Chromium, Firefox, and WebKit, including the new pending-read regression. Unaffected browser checks were not repeated. ReadMe-hosted integration and the previously documented manual accessibility acceptance remain outstanding.
+
+Playwright no longer reuses an arbitrary existing server. If port 4173 is occupied, use an unused port, for example `PW_TEST_PORT=4187 npm run test:e2e`. The test server uses strict port binding so evidence comes from this checkout.

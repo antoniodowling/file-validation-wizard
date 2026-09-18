@@ -1,3 +1,4 @@
+:root { container-type: inline-size; container-name: payment-validator; }
 :root {
   color: #253f42;
   font-family: "ABC Monument Grotesk", "ABC Monument Grotesque", Arial, sans-serif;
@@ -32,7 +33,7 @@ button, input, select { font: inherit; }
 a:focus-visible { border-radius: 2px; background: #e7f2f3; box-shadow: none; text-decoration-line: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
 [hidden] { display: none !important; }
 
-main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 24px 0 40px; }
+.validator-content { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 24px 0 40px; }
 .accent, .step-label { color: var(--primary); }
 h1, h2, h3 { color: var(--ink); font-family: "Huntington Serif", Georgia, serif; line-height: 1.15; }
 h2 { margin: 0; font-size: 1.45rem; }
@@ -173,7 +174,7 @@ td code { color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
 .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 
 @media (max-width: 820px) {
-  main { width: min(100% - 28px, 1120px); padding-top: 28px; }
+  .validator-content { width: min(100% - 28px, 1120px); padding-top: 28px; }
   .selection-grid, .toolbar { grid-template-columns: 1fr 1fr; }
   .format-action { grid-column: 1 / -1; align-items: flex-end; }
   .format-action-label { display: none; }
@@ -210,4 +211,40 @@ td code { color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+
+/* Respond to a Guide column as well as a browser viewport. */
+@container payment-validator (max-width: 820px) {
+  .validator-content { width: min(100% - 28px, 1120px); padding-top: 28px; }
+  .selection-grid, .toolbar { grid-template-columns: 1fr 1fr; }
+  .format-action { grid-column: 1 / -1; align-items: flex-end; }
+  .format-action-label { display: none; }
+  .section-heading, .result-banner { align-items: flex-start; flex-direction: column; }
+  .metrics { width: 100%; }
+  .metrics div { flex: 1; }
+}
+
+@container payment-validator (max-width: 560px) {
+  .step { gap: 5px; }
+  .step strong { font-size: .76rem; }
+  .step:not(:last-child)::after { width: 8px; margin: 0 3px; }
+  .step-number { width: 28px; height: 24px; font-size: .8rem; }
+  .accordion-trigger { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .big-number { font-size: 1.5rem; }
+  .selection-grid, .toolbar { grid-template-columns: 1fr; }
+  .format-action { grid-column: auto; }
+  .format-action .button { width: 100%; }
+  .format-option { align-items: flex-start; }
+  .selected-file { align-items: flex-start; flex-wrap: wrap; }
+  .file-actions { width: 100%; }
+  .split-actions { align-items: stretch; flex-direction: column-reverse; }
+  .split-actions .button { width: 100%; }
+  .pagination { align-items: stretch; flex-direction: column; }
+  .pagination-actions, .pagination-actions .button { width: 100%; }
+  .pagination-actions .button { flex: 1; }
+  .table-wrap table { min-width: 720px; }
+}
+
+@container payment-validator (max-width: 340px) {
+  .step strong { white-space: normal; }
 }

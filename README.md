@@ -55,7 +55,10 @@ Run `npm run build:readme` to generate the copy/paste artifacts in `readme-packa
 
 - `custom-page.html` — the mount element for a ReadMe Custom Page in HTML mode;
 - `custom-css.css` — portal-scoped styles for Appearance > Custom CSS; and
+- `PaymentFileValidator.mdx` — a reusable inline Guide component with optional format/version presets;
 - `custom-javascript.js` — the site-wide guarded application bundle for Appearance > Custom JavaScript.
+
+The same engine supports a dedicated page, inline Guide components, and link-triggered modals. See the installation guide for ordinary Markdown links that open the modal while retaining a dedicated-page fallback.
 
 The JavaScript bundle includes the validation worker and requires no hosted validator assets or backend. Follow `readme-package/INSTALLATION.md` to install and test it in an unpublished ReadMe page.
 

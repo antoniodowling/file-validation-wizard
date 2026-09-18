@@ -3,7 +3,7 @@ import postcss from "postcss";
 
 const packageDirectory = new URL("../readme-package/", import.meta.url);
 const cssPath = new URL("custom-css.css", packageDirectory);
-const rootSelector = "#hnb-payment-file-validator";
+const rootSelector = ":is(#hnb-payment-file-validator, [data-payment-file-validator])";
 const css = await readFile(cssPath, "utf8");
 const stylesheet = postcss.parse(css);
 
@@ -27,14 +27,12 @@ stylesheet.append({
   ],
 });
 
-await writeFile(cssPath, `${stylesheet.toString()}\n`, "utf8");
+await writeFile(cssPath, `${stylesheet.toString()}\n${await readFile(new URL("./readme-templates/modal.css", import.meta.url), "utf8")}`, "utf8");
 await writeFile(
   new URL("custom-page.html", packageDirectory),
-  `<div id="hnb-payment-file-validator"></div>\n<noscript>JavaScript is required to use the Payment File Validation Wizard.</noscript>\n`,
+  `<div id="hnb-payment-file-validator"><p>JavaScript is required to use the Payment File Validation Wizard.</p></div>\n<noscript>JavaScript is required to use the Payment File Validation Wizard.</noscript>\n`,
   "utf8",
 );
-await writeFile(
-  new URL("INSTALLATION.md", packageDirectory),
-  `# ReadMe installation\n\n1. Create a ReadMe Custom Page in HTML mode and paste \`custom-page.html\` where the wizard should appear.\n2. Add the page-level heading and explanatory content in ReadMe above the mount element. The host page must contain one descriptive \`h1\`; the embedded wizard intentionally does not create another.\n3. Append \`custom-css.css\` to **Appearance → CSS, JS, HTML → Custom CSS**.\n4. Append \`custom-javascript.js\` to **Appearance → CSS, JS, HTML → Custom JavaScript**.\n5. Save the page as an unpublished draft and test format selection, upload, validation, pagination, and CSV export before publishing.\n\nThe JavaScript is safe to load site-wide: it mounts only when \`#hnb-payment-file-validator\` exists. The validation worker, catalog, parsers, and rules are embedded in the JavaScript bundle. No validator asset hosting or validation backend is required.\n\nThese files are generated. Make changes in \`src/\` and run \`npm run build:readme\` rather than editing the package directly.\n`,
-  "utf8",
-);
+for (const name of ["INSTALLATION.md", "PaymentFileValidator.mdx"]) {
+  await writeFile(new URL(name, packageDirectory), await readFile(new URL(`./readme-templates/${name}`, import.meta.url), "utf8"));
+}
