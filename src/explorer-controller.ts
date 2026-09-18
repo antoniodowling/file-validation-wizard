@@ -138,7 +138,7 @@ export class FileExplorerController {
   actionLabel(finding: RuleResult): string {
     const location = this.locations.get(finding.ordinal);
     if (location?.kind === "located") {
-      return location.primary.kind === "context" ? "View context" : "View in file";
+      return location.primary.kind === "context" ? "View ›" : "View in file";
     }
     return "View details";
   }

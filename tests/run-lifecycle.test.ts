@@ -208,10 +208,16 @@ describe("validation lifecycle", () => {
       snapshotId: worker.requests[0]!.snapshotId!,
       locations: [{
         ordinal: finding.ordinal,
-        location: { kind: "file-wide", explanation: "Test location." },
+        location: {
+          kind: "located",
+          primary: { kind: "context", label: "Test context.", span: { start: 0, end: 0 } },
+          related: [],
+        },
       }],
     });
-    expect(document.activeElement).toBe(q(`[data-finding-action="${finding.ordinal}"]`));
+    const updatedAction = q(`[data-finding-action="${finding.ordinal}"]`);
+    expect(document.activeElement).toBe(updatedAction);
+    expect(updatedAction.textContent).toBe("View ›");
   });
 
   it("ignores late explorer data after a same-name file replacement", async () => {
