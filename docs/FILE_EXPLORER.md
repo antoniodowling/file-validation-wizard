@@ -21,6 +21,14 @@ Every non-PASS result receives one of these location outcomes:
 
 Locations are a run-scoped sidecar keyed by the result `ordinal`; the CSV schema and validation messages remain unchanged. Related targets are limited to 32 and disclose truncation.
 
+## Known limitation: cascading structural findings
+
+A missing or misspelled parent element can cause several descendant rules to report missing data even when similarly named descendants appear in the source. For example, `CstmrCdtTrfInit` instead of `CstmrCdtTrfInitn` prevents the validator from recognizing the message container, so `GrpHdr`, `MsgId`, `PmtInf`, and `NbOfTxs` are all absent from their required paths. These findings describe distinct unmet structural requirements, but they may share one root cause and must not be interpreted as five independent source defects.
+
+The explorer may highlight a similarly named descendant as **context** when it exists under the unrecognized parent. That highlight helps explain the cascade; it does not mean the descendant was evaluated as though its parent path were valid.
+
+Possible future treatments include grouping dependent findings under a parent/root-cause finding, suppressing descendants until their required parent is recognized, or explicitly labeling them as consequential findings. Any change would alter visible result counts, CSV output, navigation, and validation semantics, so it requires a deliberate product and rule-contract decision rather than a source-viewer-only change.
+
 ## Lifecycle and failure behavior
 
 Validation completion is accepted before optional source-location enrichment. A mapper, viewer, or enrichment timeout cannot turn a completed PASS, PASS WITH WARNINGS, or FAIL into an incomplete run, and CSV export stays available. Replacing/removing a file, changing its profile, or unmounting invalidates the snapshot and ignores late worker messages. Source remains in memory only for the mount's accepted run.
