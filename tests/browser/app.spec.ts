@@ -113,7 +113,7 @@ test("supports keyboard search and dependent version selection", async ({ page }
   await expect(page.getByText("Maximum size: 25MB")).toBeVisible();
   await expect(page.getByText("Use test data only")).toBeVisible();
   await expect(page.getByText(
-    "Selected files are never uploaded to Huntington, but using sensitive data is never advised.",
+    "Selected files are never uploaded to ABC Bank, but using sensitive data is never advised.",
   )).toBeVisible();
   await expect(page.locator(".safety-notice")).toHaveCSS("background-color", "rgb(255, 251, 235)");
   await expect(page.locator(".safety-notice")).toHaveCSS("border-left-color", "rgb(204, 163, 0)");
@@ -188,7 +188,7 @@ test("validates a matching PAIN profile and opens Results", async ({ page }) => 
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#result-meta")).toHaveCount(0);
   await expect(page.locator("#result-basis")).toHaveText(
-    "This result is based on syntax and structure checks. It does not guarantee that Huntington will accept, process, or execute the file.",
+    "This result is based on syntax and structure checks. It does not guarantee that ABC Bank will accept, process, or execute the file.",
   );
   await expect(page.locator(".metrics strong")).toHaveText(["Errors", "Warnings", "Pass"]);
   await expect(page.locator("#pass-count")).toHaveText("11");
@@ -264,7 +264,7 @@ test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration"
   await page.locator("#file-input").setInputFiles(demoFile("pain.001.001.09-pass-with-warnings.xml"));
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
-  await expect(page.locator("#result-basis")).toContainText("does not guarantee that Huntington will accept");
+  await expect(page.locator("#result-basis")).toContainText("does not guarantee that ABC Bank will accept");
   await expect(page.locator("#warning-count")).toHaveText("1");
   await expect(page.getByText("Add an XML declaration to make the document encoding explicit.")).toBeVisible();
   const resultLayout = await page.evaluate(() => {

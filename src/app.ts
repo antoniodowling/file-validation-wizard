@@ -99,7 +99,7 @@ app.innerHTML = `
             <div>
               <strong id="safety-title">Use test data only</strong>
               <p>
-                Selected files are never uploaded to Huntington, but using sensitive data is never advised.
+                Selected files are never uploaded to ABC Bank, but using sensitive data is never advised.
               </p>
             </div>
           </aside>
@@ -890,7 +890,7 @@ function renderResults(): void {
   requiredElement<HTMLElement>("#results-title").textContent = label;
   requiredElement<HTMLElement>("#result-basis").textContent = currentRun.overallStatus === "FAIL"
     ? "Based on syntax and structure checks, this file contains the errors below. Please resolve them before file submission."
-    : "This result is based on syntax and structure checks. It does not guarantee that Huntington will accept, process, or execute the file.";
+    : "This result is based on syntax and structure checks. It does not guarantee that ABC Bank will accept, process, or execute the file.";
   const passCount = currentRun.results.filter((result) => result.outcome === "PASS").length;
   requiredElement<HTMLElement>("#error-count").textContent = String(currentRun.errorCount);
   requiredElement<HTMLElement>("#warning-count").textContent = String(currentRun.warningCount);
