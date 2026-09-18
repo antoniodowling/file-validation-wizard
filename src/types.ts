@@ -1,4 +1,8 @@
 export const MAX_FILE_BYTES = 25_000_000;
+export const VALIDATION_DEADLINE_MS = 10_000;
+
+export type WorkerFailureCode = "FILE_TOO_LARGE" | "PROFILE_UNAVAILABLE" | "INVALID_ENCODING" | "ENGINE_ERROR";
+export type ValidationFailureCode = WorkerFailureCode | "FILE_READ_ERROR" | "WORKER_UNAVAILABLE" | "WORKER_ERROR" | "TIMEOUT";
 
 export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820";
 export type ParserKind = "ISO_XML" | "EDI_X12";
@@ -134,4 +138,4 @@ export interface WorkerRequest {
 
 export type WorkerResponse =
   | { readonly type: "complete"; readonly run: ValidationRun }
-  | { readonly type: "error"; readonly message: string };
+  | { readonly type: "error"; readonly code: WorkerFailureCode };
