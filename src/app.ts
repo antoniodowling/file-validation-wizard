@@ -767,7 +767,7 @@ validateButton.addEventListener("click", async () => {
       stopWorker();
       currentRun = event.data.run;
       renderResults();
-    } else {
+    } else if (event.data.type === "error") {
       failRun(event.data.code);
     }
   });

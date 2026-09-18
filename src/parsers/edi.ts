@@ -7,6 +7,7 @@ import type {
   ValidationContext,
 } from "../types";
 import type { ParserOutput } from "./iso";
+import { scanEdiSegments } from "./edi-source";
 import { result } from "./shared";
 
 const find = (segments: readonly EdiSegment[], id: string): readonly EdiSegment[] =>
@@ -35,18 +36,7 @@ export function parseEdi(source: string, pack: FormatPack): ParserOutput {
   const elementSeparator = source[3] ?? "";
   const componentSeparator = source[104] ?? "";
   const segmentTerminator = source[105] ?? "";
-  const segments: EdiSegment[] = source
-    .split(segmentTerminator)
-    .map((raw) => raw.replace(/^[\r\n ]+|[\r\n ]+$/g, ""))
-    .filter(Boolean)
-    .map((raw, index) => {
-      const parts = raw.split(elementSeparator);
-      return Object.freeze({
-        id: parts.shift()?.trim() ?? "",
-        elements: Object.freeze(parts),
-        position: index + 1,
-      });
-    });
+  const segments: readonly EdiSegment[] = scanEdiSegments(source, elementSeparator, segmentTerminator);
 
   const isa = find(segments, "ISA")[0];
   const iea = find(segments, "IEA").at(-1);
