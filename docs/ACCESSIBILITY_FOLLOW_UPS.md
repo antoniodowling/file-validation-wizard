@@ -5,7 +5,7 @@ confirmed issues from checks that still require manual evidence. An automated sc
 or a single browser state is not sufficient to claim conformance for the complete
 three-step workflow.
 
-Audit date: 2026-09-17
+Initial audit: 2026-09-17. Automated coverage updated: 2026-09-18.
 
 ## Open issues
 
@@ -18,7 +18,7 @@ Audit date: 2026-09-17
 
 | ID | Priority | Area | Verification required |
 | --- | --- | --- | --- |
-| A11Y-006 | High | Automated coverage | Run automated accessibility scans in Step 1, Step 2, and Step 3 for PASS, PASS WITH WARNINGS, FAIL, and parsing-failure states. The existing automated scan covers only the initial Step 1 state. |
+
 | A11Y-007 | High | Zoom and responsive behavior | Verify the complete workflow at 200% browser zoom and at 320 CSS pixels. Include the open format list, long and Unicode filenames, validation controls, result filters, and the horizontally scrollable data table. |
 | A11Y-008 | High | Screen readers and announcements | Verify the combobox, current-step status, upload errors, validation-start/completion announcements, filter pressed states, result counts, and table navigation with VoiceOver/Safari and at least one Windows screen-reader/browser combination. |
 | A11Y-009 | Medium | Results table overflow | Confirm that the intentionally wide result table remains keyboard operable and understandable when it scrolls in two dimensions at narrow widths. If its scroll region is difficult to discover, focus, or identify, add a labeled focusable scroll container and concise instructions. |
@@ -31,6 +31,7 @@ Audit date: 2026-09-17
 
 | ID | Resolved | Resolution | Remaining verification |
 | --- | --- | --- | --- |
+| A11Y-006 | 2026-09-18 | Added and ran axe scans for Upload, invalid-extension error, PASS, PASS WITH WARNINGS, FAIL, malformed XML, and worker-startup failure in Chromium, Firefox, and WebKit. Existing initial Step 1 scan retained. Full reports are browser-test attachments. | A11Y-001 remains explicitly allowed only for warning controls/chips; all other detected violations fail. Manual checks remain required. |
 | A11Y-002 | 2026-09-17 | Removed the yellow keyboard-focus outline. Focused controls now use an internal high-contrast teal treatment, with a pale internal treatment on teal primary controls. | Complete the all-control keyboard traversal recorded in A11Y-008. |
 | A11Y-004 | 2026-09-18 | The active visual step now receives `aria-current="step"`, and inactive steps have it removed during every render. | Complete the accessibility-tree and screen-reader checks already recorded in A11Y-008. |
 | A11Y-005 | 2026-09-18 | All four validation-result headers now declare `scope="col"`. | Complete the screen-reader table-navigation check already recorded in A11Y-008 and A11Y-009. |
@@ -54,6 +55,9 @@ Audit date: 2026-09-17
   programmatically focusable before focus is moved.
 
 ## Evidence boundary
+
+The 2026-09-18 automated run covers the states listed in A11Y-006. It does not close warning contrast, narrow-list reflow, manual screen-reader/zoom acceptance, or actual ReadMe integration. The initial visual-review boundary below is historical.
+
 
 This review used source inspection, existing unit/browser tests, computed color
 contrast, and current-run visual inspection of Steps 1 and 2. The browser did
