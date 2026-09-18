@@ -1,0 +1,128 @@
+[
+  {
+    "name": "01-xml-small-baseline-pass.xml",
+    "bytes": 286,
+    "sha256": "5445795b34207b29be165184c158fd78caf4e69fcb77d73f342635cc8173ca2b",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Small baseline for comparison.",
+    "expected": "PASS under current demo checks."
+  },
+  {
+    "name": "02-xml-empty-file.xml",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Empty input and syntax-error recovery.",
+    "expected": "Completed FAIL."
+  },
+  {
+    "name": "03-xml-invalid-utf8.xml",
+    "bytes": 227,
+    "sha256": "d73fdac011f34d7fff3033d17a887d16ad0ddf271529d9e35c2456b9131b7efa",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Decode failure rather than file FAIL.",
+    "expected": "UTF-8 error; no validation result."
+  },
+  {
+    "name": "04-xml-prohibited-dtd-and-entity.xml",
+    "bytes": 336,
+    "sha256": "849be0019c932dbdfec5801f8c177c10374e13a730b3460b0b9f783ed8ea4d03",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Early rejection of declarations; entity is local and harmless.",
+    "expected": "Completed FAIL for prohibited declarations."
+  },
+  {
+    "name": "05-xml-malformed-at-end-5MB.xml",
+    "bytes": 4999999,
+    "sha256": "1404fae612ccdea988a17d8e715e61ae422a731d8fb8f6cafce51b7e9f417250",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Syntax error after scanning a large input.",
+    "expected": "Completed FAIL."
+  },
+  {
+    "name": "06-xml-just-under-limit-24999999-bytes.xml",
+    "bytes": 24999999,
+    "sha256": "c03b15ab0c35b1d1637f216a1c57be4744ef0cb81bebec298ef4c33520146b02",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Large text node one byte under selection/worker limit.",
+    "expected": "Admitted; PASS if processing completes before deadline."
+  },
+  {
+    "name": "07-xml-exact-limit-25000000-bytes.xml",
+    "bytes": 25000000,
+    "sha256": "092d20a0c801367a9d2a05eec4ebcd64a0fdfa3141ebdde56772d6148c95c775",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Exact inclusive size boundary.",
+    "expected": "Admitted; PASS if processing completes before deadline."
+  },
+  {
+    "name": "08-xml-over-limit-25000001-bytes.xml",
+    "bytes": 25000001,
+    "sha256": "33a86492e03ba8df03f947d4a9a3b22e62e893a76be3558665b61e5d7bfeeea7",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Selection size rejection.",
+    "expected": "Rejected by file picker; prior selection preserved. Worker rejection is unit-tested separately."
+  },
+  {
+    "name": "09-xml-wide-tree-50000-payment-blocks.xml",
+    "bytes": 2639119,
+    "sha256": "bc18a9d3d95bf00e7c56654814097e4b97b326969c519dc5d48fb331fee05ccf",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "standard",
+    "purpose": "Many sibling objects rather than one large text node.",
+    "expected": "PASS under current demo checks if processing completes; not standards-conformance evidence."
+  },
+  {
+    "name": "10-xml-deep-nesting-5000-levels.xml",
+    "bytes": 85273,
+    "sha256": "921fdc0375115bbdc0302c4a92970324e56cf233f2d59d948e9a88c9d24b9633",
+    "profile": "pain.001 / pain.001.001.09",
+    "tier": "adversarial",
+    "purpose": "Deep recursion with small input; run after ordinary cases.",
+    "expected": "May produce ENGINE_ERROR or TIMEOUT. No fixed outcome across parser/browser versions."
+  },
+  {
+    "name": "11-edi-820-005010-baseline-pass.edi",
+    "bytes": 225,
+    "sha256": "6fff9ed61117025bb02eca3a6f6c046e978ac05af47b33f2e3d2c6014331174a",
+    "profile": "820 / 005010",
+    "tier": "standard",
+    "purpose": "Small EDI baseline.",
+    "expected": "PASS under current demo checks."
+  },
+  {
+    "name": "12-edi-820-005010-50000-transactions.edi",
+    "bytes": 2377971,
+    "sha256": "dff94aa801e80801b25d01f45fb6336da4edfcfd7fc1e230f5499906e52163ce",
+    "profile": "820 / 005010",
+    "tier": "standard",
+    "purpose": "Many segment/element arrays and envelope scans.",
+    "expected": "PASS under current demo checks if processing completes."
+  },
+  {
+    "name": "13-edi-820-005010-long-element-5MB.edi",
+    "bytes": 5000226,
+    "sha256": "78be948123bf457353680da9fd5f0f743771a29dfa6696a749b3912696feda80",
+    "profile": "820 / 005010",
+    "tier": "standard",
+    "purpose": "One large element versus many short segments.",
+    "expected": "PASS under current limited checks if processing completes; deliberately not a realistic payment."
+  },
+  {
+    "name": "14-edi-820-005010-dense-250000-segments.edi",
+    "bytes": 1250230,
+    "sha256": "946aea24e108d23b2dd2295f355f909924f7c415977c1a0ac1344f9b882952dc",
+    "profile": "820 / 005010",
+    "tier": "adversarial",
+    "purpose": "Allocation pressure from many tiny segments; run after ordinary cases.",
+    "expected": "May PASS limited checks, fail in the engine, or time out. Not a valid standard file."
+  }
+]

@@ -24,7 +24,7 @@ The current provisional limits are 5,000,000 decoded characters for a full viewe
 
 ## Generate the upload kit
 
-A ready-to-use generated archive is committed at [`demo-files/hnb-validator-stress-files.zip`](../demo-files/hnb-validator-stress-files.zip). It includes all 14 upload files, instructions, expected outcomes, checksums, and the initial local measurements described below.
+A ready-to-use generated directory is committed at [`demo-files/hnb-validator-stress-files/`](../demo-files/hnb-validator-stress-files/README.md). It includes all 14 upload files, instructions, expected outcomes, checksums, and the initial local measurements described below.
 
 From an absolute repository/worktree path, run:
 

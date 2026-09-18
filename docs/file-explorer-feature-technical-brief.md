@@ -1,9 +1,9 @@
 # File Explorer: Feature and Technical Brief
 
-**Project:** `antoniodowling/file-validation-wizard`
-**Prepared:** September 18, 2026
-**Repository baseline inspected:** `main` at `2c1fd68cef92817e75b4f2fce4d9915d97b4b1a7`
-**Baseline commit:** Merge PR #3, “Fix validator modal link routing in ReadMe,” committed September 18, 2026 at 02:03:22 UTC.
+**Project:** `antoniodowling/file-validation-wizard`  
+**Prepared:** September 18, 2026  
+**Repository baseline inspected:** `main` at `2c1fd68cef92817e75b4f2fce4d9915d97b4b1a7`  
+**Baseline commit:** Merge PR #3, “Fix validator modal link routing in ReadMe,” committed September 18, 2026 at 02:03:22 UTC.  
 **Status:** Proposed implementation specification. No feature implementation, benchmark, hosted acceptance, or Product/SC/FT approval is claimed by this brief.
 
 ## 1. Objective and assignment boundary
@@ -342,7 +342,7 @@ Do not push, merge, publish, or change permissions without separate authorizatio
 
 Repository observations above come from live read-only inspection of the pinned revision, not an assumption that earlier attachments represent every current file. Requirements and recommendations are the proposed design; they are not claims about already implemented capabilities.
 
-Repository: `https://github.com/antoniodowling/file-validation-wizard`
+Repository: `https://github.com/antoniodowling/file-validation-wizard`  
 Pinned tree: `https://github.com/antoniodowling/file-validation-wizard/tree/2c1fd68cef92817e75b4f2fce4d9915d97b4b1a7`
 
 | Reference | Source within that revision | Relevant evidence |

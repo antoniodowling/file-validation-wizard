@@ -1,0 +1,2 @@
+<!DOCTYPE Document [<!ENTITY stress "SYNTHETIC">]><?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"><CstmrCdtTrfInitn><GrpHdr><MsgId>SYNTHETIC-STRESS-ONLY</MsgId><NbOfTxs>1</NbOfTxs></GrpHdr><PmtInf><PmtInfId>SYNTHETIC-NOT-A-PAYMENT</PmtInfId></PmtInf></CstmrCdtTrfInitn></Document>
