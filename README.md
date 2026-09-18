@@ -59,6 +59,10 @@ Run `npm run build:readme` to generate the copy/paste artifacts in `readme-packa
 
 The JavaScript bundle includes the validation worker and requires no hosted validator assets or backend. Follow `readme-package/INSTALLATION.md` to install and test it in an unpublished ReadMe page.
 
+## Processing safeguards and test uploads
+
+The worker independently enforces the 25 MB limit. Runs have a provisional 10-second deadline and distinguish incomplete execution from a completed file FAIL. See [processing limits and the synthetic upload kit](docs/PROCESSING_LIMITS.md) for behavior, reproducible files, and remaining browser acceptance.
+
 ## Pre-finalization to-do
 
 - Resolve and verify the open WCAG 2.2 AA items in

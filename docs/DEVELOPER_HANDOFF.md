@@ -10,7 +10,9 @@ Use Node.js 22.12 or newer and `npm ci` from the repository root. Run `npm run d
 
 - `src/app.ts`: wizard UI and interaction flow.
 - `src/main.ts` and `src/readme-entry.ts`: standalone and ReadMe entry points.
-- `src/validation.worker.ts`: browser-local validation worker.
+- `src/validation.worker.ts` and `src/worker-request.ts`: browser-local validation worker and input/failure boundary.
+- `src/validation-failure.ts`: user-facing incomplete-run messages.
+- `scripts/generate-stress-files.mjs`: reproducible synthetic upload stress kit; see [processing limits](PROCESSING_LIMITS.md).
 - `src/format-catalog.ts`: display catalog.
 - `src/format-packs.ts`, `src/validation.ts`, and `src/parsers/`: executable demo profiles and validation rules.
 - `src/file-policy.ts`, `src/outcome.ts`, `src/pagination.ts`, and `src/csv.ts`: file handling, result classification, paging, and export.
