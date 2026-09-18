@@ -41,6 +41,7 @@ Select **PAIN.001**, choose version **pain.001.001.09**, and upload one of the s
 - `pain.001.001.09-pass.xml` — PASS with no errors or warnings.
 - `pain.001.001.09-pass-with-warnings.xml` — PASS WITH WARNINGS because the otherwise valid document omits the recommended XML declaration.
 - `pain.001.001.09-fail.xml` — FAIL with one format/version error. Namespace mismatches stop validation before format-specific structural rules run.
+- `pain.001.001.09-syntax-error.xml` — FAIL with the correct PAIN.001.001.09 namespace but an unclosed `PmtInf` element, exercising malformed-XML handling and parser-position navigation.
 
 ## Catalog and validation profiles
 
