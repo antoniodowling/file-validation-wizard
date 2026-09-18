@@ -48,7 +48,7 @@ Use a normal link to the dedicated page with the reserved fragment:
 [Validate a PAIN.001 file](/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.09&lockSelection=true)
 ```
 
-An ordinary click on a same-origin link with this fragment opens a modal on any portal page that loads the shared bundle. Page authors need only add the link. This fragment is reserved for validator triggers regardless of the link's path, so always point it at the real dedicated validator page for a useful fallback.
+An ordinary click on a same-origin link with this fragment opens a modal on any portal page that loads the shared bundle. The bundle intercepts the reserved fragment before ReadMe's client-side router; page authors need only add the link. This fragment is reserved for validator triggers regardless of the link's path, so always point it at the real dedicated validator page for a useful fallback.
 
 Modified clicks, downloads, links targeting another window, and external-origin links retain normal browser behavior. Without modal support or the shared bundle, the link navigates normally. Links from email or another website navigate to the dedicated page; they cannot open a modal inside that other site.
 

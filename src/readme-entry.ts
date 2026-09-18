@@ -72,7 +72,7 @@ function openModal(options: ValidatorOptions, trigger: HTMLElement): void {
   close.focus();
 }
 
-document.addEventListener("click", (event) => {
+window.addEventListener("click", (event) => {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
   if (!anchor || anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
@@ -81,8 +81,12 @@ document.addEventListener("click", (event) => {
   const options = fragmentOptions(url.hash);
   if (!options || typeof HTMLDialogElement === "undefined" || !HTMLDialogElement.prototype.showModal) return;
   event.preventDefault();
+  // ReadMe handles internal links through its client-side router. Capture this
+  // reserved trigger before the router sees it, otherwise it navigates to the
+  // Custom Page instead of opening the validator over the current Guide.
+  event.stopImmediatePropagation();
   openModal(options, anchor);
-});
+}, { capture: true });
 
 // Release file state when ReadMe navigates without a full page reload.
 let lastUrl = location.href;

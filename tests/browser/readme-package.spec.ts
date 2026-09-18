@@ -106,6 +106,29 @@ test("modal validates, exports, traps focus, and clears file state on close and 
   await expect(dialog).toHaveCount(0);
 });
 
+test("modal trigger runs before ReadMe-style client-side routing", async ({ page }) => {
+  await page.goto("/");
+  await page.setContent(`<main><h1>Guide</h1>
+    <a id="launch" href="/page/payment-file-validator#payment-file-validator">Validate your payment file</a>
+  </main>`);
+  await page.evaluate(() => {
+    document.addEventListener("click", (event) => {
+      const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!anchor) return;
+      document.body.dataset.readmeRouterRan = "true";
+      event.preventDefault();
+    }, { capture: true });
+  });
+  await page.addStyleTag({ path: packageFile("custom-css.css") });
+  await page.addScriptTag({ path: packageFile("custom-javascript.js") });
+
+  await page.getByRole("link", { name: "Validate your payment file" }).click();
+
+  await expect(page.getByRole("dialog", { name: "Payment File Validation Wizard" })).toBeVisible();
+  await expect(page.locator("body")).not.toHaveAttribute("data-readme-router-ran", "true");
+  await expect(page).toHaveURL(/\/$/);
+});
+
 test("dedicated-page fragments apply presets and modal leaves external and new-window links alone", async ({ page }) => {
   await page.goto("/#payment-file-validator?format=PAIN.001&version=pain.001.001.09");
   await page.setContent('<div id="hnb-payment-file-validator"></div>');
