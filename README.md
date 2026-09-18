@@ -32,7 +32,7 @@ npm ci
 npm run dev
 ```
 
-Use `npm run validate:core` for unit tests, stress-kit integrity, a production build, ReadMe-package regeneration, and static package checks without browser automation. `npm run validate` adds browser-level interaction tests; install those browsers first with `npx playwright install`. Use Node.js 22.12 or newer.
+Use `npm run validate:core` for unit tests, stress-kit integrity, a production build, ReadMe-package regeneration, and static package checks without browser automation. `npm run validate` adds browser-level interaction tests; install those browsers first with `npx playwright install`. Use Node.js 22.12 or newer (`nvm use` selects the version in `.nvmrc`). GitHub Actions runs core checks, generated-package drift detection, and all three browser projects. After regenerating and committing the ReadMe package, `npm run check:readme-drift` verifies it matches the checkpoint.
 
 ## Browser demo files
 
