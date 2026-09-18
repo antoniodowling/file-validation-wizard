@@ -76,7 +76,7 @@ describe("validation lifecycle", () => {
     expect(q("[data-explorer-expand]").textContent).toBe("Restore split");
     q("[data-explorer-hide]").click();
     expect(q(".validator-workspace").classList.contains("explorer-hidden")).toBe(true);
-    expect(q("[data-explorer-expand]").textContent).toBe("Expand file");
+    expect(q("[data-explorer-expand]").textContent).toBe("Expand explorer");
     q(".workspace-view-toggle .button:last-child").click();
     expect(q(".validator-workspace").classList.contains("explorer-hidden")).toBe(false);
     expect(q(".validator-workspace").dataset.mobileView).toBe("file");

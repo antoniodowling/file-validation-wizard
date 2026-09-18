@@ -41,7 +41,7 @@ The generated package now provides independent wizard-only and wizard-plus-explo
 
 The explorer finding view now keeps only Previous/Next finding navigation, presents Field/Path/Message in a responsive row, opens the primary mapped target, and uses red error or yellow warning source highlights. Search, go-to-line, related-location navigation, location explanations, and secondary focus/return actions have been removed without changing validation, location-sidecar, or CSV contracts.
 
-`npm run validate:core` passed: 99 Vitest tests across 17 files, the generated stress-kit integrity test, TypeScript checking, the standalone production build, regenerated ReadMe package, and the static self-contained-package contract test. The generated JavaScript was 407.52 kB (130.55 kB gzip). Playwright and Firefox were not rerun after the owner reported repeated unexpected exits, so no browser, real ReadMe, zoom/reflow, or screen-reader acceptance is claimed by this handoff.
+`npm run validate:core` passed: 99 Vitest tests across 17 files, the generated stress-kit integrity test, TypeScript checking, the standalone production build, regenerated ReadMe package, and the static self-contained-package contract test. The generated JavaScript is 407.53 kB (130.55 kB gzip). Playwright and Firefox were not rerun after the owner reported repeated unexpected exits, so no browser, real ReadMe, zoom/reflow, or screen-reader acceptance is claimed by this handoff.
 
 ## Handoff validation (2026-09-17)
 

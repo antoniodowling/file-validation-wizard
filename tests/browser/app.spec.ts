@@ -252,7 +252,7 @@ test("opens an exact source location in the read-only file explorer", async ({ p
   await expect(explorer.locator("[data-detail-message]")).toBeVisible();
   await expect(explorer.locator("[data-source-search], [data-go-line], [data-related-status], [data-focus-source]")).toHaveCount(0);
 
-  await explorer.getByRole("button", { name: "Hide file" }).click();
+  await explorer.getByRole("button", { name: "Hide explorer" }).click();
   await expect(explorer).toBeHidden();
   await page.getByRole("button", { name: "Show file explorer" }).click();
   await expect(explorer).toBeVisible();

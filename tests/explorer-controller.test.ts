@@ -46,6 +46,8 @@ describe("file explorer finding view", () => {
   });
 
   it("renders only finding navigation and a three-part detail row", () => {
+    expect(root.querySelector("[data-explorer-expand]")?.textContent).toBe("Expand explorer");
+    expect(root.querySelector("[data-explorer-hide]")?.textContent).toBe("Hide explorer");
     expect(root.querySelectorAll(".explorer-finding-data > div")).toHaveLength(3);
     expect(root.querySelector("[data-detail-field]")).toBeTruthy();
     expect(root.querySelector("[data-detail-locator]")).toBeTruthy();

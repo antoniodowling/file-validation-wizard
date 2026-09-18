@@ -43,8 +43,8 @@ export function explorerMarkup(): string {
           <p class="helper"><span data-explorer-file-size></span><span data-explorer-read-only hidden> · Read-only</span></p>
         </div>
         <div class="explorer-header-actions">
-          <button class="button text" type="button" data-explorer-expand>Expand file</button>
-          <button class="button text" type="button" data-explorer-hide>Hide file</button>
+          <button class="button text" type="button" data-explorer-expand>Expand explorer</button>
+          <button class="button text" type="button" data-explorer-hide>Hide explorer</button>
         </div>
       </header>
       <div class="explorer-toolbar" aria-label="File explorer controls">
@@ -85,7 +85,7 @@ export class FileExplorerController {
     this.q<HTMLButtonElement>("[data-explorer-hide]").addEventListener("click", options.onHide);
     this.q<HTMLButtonElement>("[data-explorer-expand]").addEventListener("click", () => {
       const expanded = options.onExpand();
-      this.q<HTMLButtonElement>("[data-explorer-expand]").textContent = expanded ? "Restore split" : "Expand file";
+      this.q<HTMLButtonElement>("[data-explorer-expand]").textContent = expanded ? "Restore split" : "Expand explorer";
     });
     this.q<HTMLButtonElement>("[data-finding-previous]").addEventListener("click", () => this.moveFinding("previous"));
     this.q<HTMLButtonElement>("[data-finding-next]").addEventListener("click", () => this.moveFinding("next"));

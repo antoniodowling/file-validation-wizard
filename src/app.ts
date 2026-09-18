@@ -360,7 +360,7 @@ function hideExplorer(): void {
   workspace.classList.add("explorer-hidden");
   workspace.classList.remove("explorer-expanded");
   const expandButton = workspace.querySelector<HTMLButtonElement>("[data-explorer-expand]");
-  if (expandButton) expandButton.textContent = "Expand file";
+  if (expandButton) expandButton.textContent = "Expand explorer";
   if (showExplorerButton) showExplorerButton.hidden = false;
   setMobileWorkspaceView("results");
 }
