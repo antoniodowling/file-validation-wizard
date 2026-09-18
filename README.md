@@ -42,7 +42,7 @@ Select **PAIN.001**, choose version **pain.001.001.09**, and upload one of the s
 - `pain.001.001.09-pass-with-warnings.xml` — PASS WITH WARNINGS because the otherwise valid document omits the recommended XML declaration.
 - `pain.001.001.09-fail.xml` — FAIL with one format/version error. Namespace mismatches stop validation before format-specific structural rules run.
 - `pain.001.001.09-syntax-error.xml` — FAIL with the correct PAIN.001.001.09 namespace but an unclosed `PmtInf` element, exercising malformed-XML handling and parser-position navigation.
-- `pain.001.001.09-multiple-errors.xml` — FAIL with the correct namespace and well-formed XML, producing five structural errors plus the missing-declaration warning for multi-finding explorer demonstrations.
+- `pain.001.001.09-multiple-errors.xml` — realistic-looking synthetic payment data with the correct namespace, a mistyped message-container name, a blank message ID, and a nonnumeric group transaction count. It produces five structural errors plus the missing-declaration warning, with each finding anchored to distinct source context.
 
 ## Catalog and validation profiles
 

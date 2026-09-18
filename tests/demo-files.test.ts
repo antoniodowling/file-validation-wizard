@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { findEnabledFormatPack } from "../src/format-packs";
 import { locateFindings } from "../src/finding-locations";
+import { sourceLineColumnAtOffset } from "../src/source-coordinates";
 import { validateSource } from "../src/validation";
 
 const fixtures = [
@@ -62,5 +63,18 @@ describe("PAIN.001.001.09 browser demo files", () => {
     const locations = locateFindings(source, pack, run);
     expect(locations).toHaveLength(6);
     expect(locations.every((entry) => entry.location.kind === "located")).toBe(true);
+    const targets = locations.map((entry) => entry.location.kind === "located" ? entry.location.primary : null);
+    expect(targets.map((target) => target && source.slice(target.span.start, target.span.end))).toEqual([
+      "<CstmrCdtTrfInit>",
+      "<GrpHdr>",
+      "<MsgId>",
+      "<PmtInf>",
+      "<NbOfTxs>",
+      "",
+    ]);
+    const lines = targets.map((target) => target
+      ? sourceLineColumnAtOffset(source, target.span.start)?.line
+      : null);
+    expect(new Set(lines).size).toBe(6);
   });
 });

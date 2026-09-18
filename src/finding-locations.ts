@@ -195,6 +195,9 @@ function locateXmlFinding(
   const identifiers = pack.identifiers as IsoVersionIdentifiers;
   const container = directXmlElement(source, root, identifiers.messageContainer);
   const groupHeader = directXmlElement(source, container, "GrpHdr");
+  const misplacedContainer = container ? null : directChildren(root)
+    .find((child) => child.name === "Element") ?? null;
+  const misplacedGroupHeader = directXmlElement(source, misplacedContainer, "GrpHdr");
 
   if (finding.ruleId === "iso.namespace-version") {
     const prefix = rootName.includes(":") ? rootName.split(":")[0] : null;
@@ -207,10 +210,22 @@ function locateXmlFinding(
     return rootTarget ? located([rootTarget]) : unavailable("The namespace declaration could not be located.");
   }
   if (finding.ruleId === "iso.message-container") {
+    const misplaced = contextForElement(
+      source,
+      misplacedContainer,
+      `Existing top-level element where ${identifiers.messageContainer} is required`,
+    );
+    if (misplaced) return located([misplaced]);
     const rootTarget = contextForElement(source, root, "Document root where the message container is expected");
     return rootTarget ? located([rootTarget]) : unavailable("The Document root could not be located.");
   }
   if (finding.ruleId === "iso.group-header") {
+    const misplaced = contextForElement(
+      source,
+      misplacedGroupHeader,
+      `Existing group header outside the required ${identifiers.messageContainer} container`,
+    );
+    if (misplaced) return located([misplaced]);
     const parent = contextForElement(source, container ?? root, "Nearest existing parent for the missing group header");
     return parent ? located([parent]) : unavailable("No reliable parent context could be located.");
   }
@@ -218,10 +233,22 @@ function locateXmlFinding(
     const messageId = directXmlElement(source, groupHeader, "MsgId");
     const exact = exactForElement(source, messageId, "Message ID evaluated by this rule");
     if (exact) return located([exact]);
+    const misplaced = contextForElement(
+      source,
+      directXmlElement(source, misplacedGroupHeader, "MsgId"),
+      `Existing Message ID outside the required ${identifiers.messageContainer} container`,
+    );
+    if (misplaced) return located([misplaced]);
     const parent = contextForElement(source, groupHeader ?? container ?? root, "Nearest existing parent for the missing Message ID");
     return parent ? located([parent]) : unavailable("No reliable Message ID context could be located.");
   }
   if (finding.ruleId === "iso.payment-information") {
+    const misplaced = contextForElement(
+      source,
+      directXmlElement(source, misplacedContainer, "PmtInf"),
+      `Existing payment information outside the required ${identifiers.messageContainer} container`,
+    );
+    if (misplaced) return located([misplaced]);
     const parent = contextForElement(source, container ?? root, "Nearest existing parent for the missing payment information");
     return parent ? located([parent]) : unavailable("No reliable payment-information context could be located.");
   }
@@ -229,6 +256,12 @@ function locateXmlFinding(
     const count = directXmlElement(source, groupHeader, "NbOfTxs");
     const exact = exactForElement(source, count, "Transaction count evaluated by this rule");
     if (exact) return located([exact]);
+    const misplaced = contextForElement(
+      source,
+      directXmlElement(source, misplacedGroupHeader, "NbOfTxs"),
+      `Existing transaction count outside the required ${identifiers.messageContainer} container`,
+    );
+    if (misplaced) return located([misplaced]);
     const parent = contextForElement(source, groupHeader ?? container ?? root, "Nearest existing parent for the missing transaction count");
     return parent ? located([parent]) : unavailable("No reliable transaction-count context could be located.");
   }
