@@ -6,6 +6,7 @@ import type {
   RuleResult,
   ValidationContext,
 } from "../types";
+import { findProhibitedDeclaration } from "../prohibited-declarations";
 import {
   entriesByLocalName,
   firstObjectByLocalName,
@@ -36,7 +37,9 @@ function namespaceForRoot(rootName: string, root: Readonly<Record<string, unknow
 
 export function parseIso(source: string, pack: FormatPack): ParserOutput {
   const results: RuleResult[] = [];
-  const declarationIsSafe = !/<!DOCTYPE|<!ENTITY/i.test(source);
+  // Build declaration markers at runtime so hosted customization pipelines
+  // cannot interpret them as HTML while processing the generated JavaScript.
+  const declarationIsSafe = findProhibitedDeclaration(source) === null;
   results.push(
     result(
       results.length,

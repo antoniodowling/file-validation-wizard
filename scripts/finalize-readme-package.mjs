@@ -3,6 +3,7 @@ import postcss from "postcss";
 
 const packageDirectory = new URL("../readme-package/", import.meta.url);
 const cssPath = new URL("custom-css.css", packageDirectory);
+const javascriptPath = new URL("custom-javascript.js", packageDirectory);
 const rootSelector = ":is(#hnb-payment-file-validator, [data-payment-file-validator])";
 const css = await readFile(cssPath, "utf8");
 const stylesheet = postcss.parse(css);
@@ -28,6 +29,14 @@ stylesheet.append({
 });
 
 await writeFile(cssPath, `${stylesheet.toString()}\n${await readFile(new URL("./readme-templates/modal.css", import.meta.url), "utf8")}`, "utf8");
+const javascript = await readFile(javascriptPath, "utf8");
+await writeFile(
+  javascriptPath,
+  javascript
+    .replaceAll("<!DOCTYPE", "\\x3c!DOCTYPE")
+    .replaceAll("<!ENTITY", "\\x3c!ENTITY"),
+  "utf8",
+);
 await writeFile(
   new URL("custom-page.html", packageDirectory),
   `<div id="hnb-payment-file-validator"><p>JavaScript is required to use the Payment File Validation Wizard.</p></div>\n<noscript>JavaScript is required to use the Payment File Validation Wizard.</noscript>\n`,
