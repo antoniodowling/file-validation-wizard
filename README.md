@@ -57,12 +57,13 @@ Selected files are read and validated in a Web Worker. The app has no backend, a
 
 Run `npm run build:readme` to generate the copy/paste artifacts in `readme-package/`:
 
-- `custom-page.html` — the mount element for a ReadMe Custom Page in HTML mode;
+- `custom-page.html` — the wizard-only ReadMe Custom Page mount;
+- `custom-page-file-explorer.html` — the independent wizard-plus-File-Explorer Custom Page mount;
 - `custom-css.css` — portal-scoped styles for Appearance > Custom CSS; and
 - `PaymentFileValidator.mdx` — a reusable inline Guide component with optional format/version presets;
 - `custom-javascript.js` — the site-wide guarded application bundle for Appearance > Custom JavaScript.
 
-The same engine supports a dedicated page, inline Guide components, and link-triggered modals. The source explorer is enabled only for the dedicated page; inline and modal instances keep the compact workflow. See the installation guide for ordinary Markdown links that open the modal while retaining a dedicated-page fallback.
+The same shared JavaScript and CSS support both dedicated demos, inline Guide components, and link-triggered modals. The explorer page opts in explicitly; the wizard-only page, inline instances, and modal instances keep the compact workflow. See the installation guide for page creation and linking details.
 
 The JavaScript bundle includes the validation worker and requires no hosted validator assets or backend. Follow `readme-package/INSTALLATION.md` to install and test it in an unpublished ReadMe page.
 

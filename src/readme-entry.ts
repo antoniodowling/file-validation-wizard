@@ -26,15 +26,16 @@ function synchronizeMounts(): void {
   }
   for (const root of document.querySelectorAll<HTMLDivElement>(selector)) {
     if (mounts.has(root) || root.dataset.validatorMounted === "true") continue;
-    const legacy = root.id === "hnb-payment-file-validator";
-    const options = legacy ? fragmentOptions(location.hash) : null;
+    const dedicated = root.id === "hnb-payment-file-validator"
+      || root.id === "hnb-payment-file-validator-file-explorer";
+    const options = dedicated ? fragmentOptions(location.hash) : null;
     mounts.set(root, mountPaymentFileValidator(root, {
       format: root.dataset.format,
       version: root.dataset.version,
       lockSelection: root.dataset.lockSelection === "true",
       ...options,
-      idPrefix: legacy ? "" : `hnb-validator-${++sequence}-`,
-      enableExplorer: legacy,
+      idPrefix: root.id === "hnb-payment-file-validator" ? "" : `hnb-validator-${++sequence}-`,
+      enableExplorer: root.dataset.fileExplorer === "true",
     }));
   }
 }

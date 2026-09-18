@@ -33,6 +33,11 @@ await writeFile(
   `<div id="hnb-payment-file-validator"><p>JavaScript is required to use the Payment File Validation Wizard.</p></div>\n<noscript>JavaScript is required to use the Payment File Validation Wizard.</noscript>\n`,
   "utf8",
 );
+await writeFile(
+  new URL("custom-page-file-explorer.html", packageDirectory),
+  `<div id="hnb-payment-file-validator-file-explorer" data-payment-file-validator data-file-explorer="true"><p>JavaScript is required to use the Payment File Validation Wizard with File Explorer.</p></div>\n<noscript>JavaScript is required to use the Payment File Validation Wizard with File Explorer.</noscript>\n`,
+  "utf8",
+);
 for (const name of ["INSTALLATION.md", "PaymentFileValidator.mdx"]) {
   await writeFile(new URL(name, packageDirectory), await readFile(new URL(`./readme-templates/${name}`, import.meta.url), "utf8"));
 }

@@ -37,9 +37,9 @@ Use synthetic files only in examples, tests, and public issues. Never commit cus
 
 ## File explorer validation (2026-09-18)
 
-The dedicated page and standalone preview now provide the read-only source explorer; inline and modal mounts remain compact. Validation completion is independent from optional location enrichment, and named limits provide deterministic excerpt or unavailable-location behavior.
+The generated package now provides independent wizard-only and wizard-plus-explorer Custom Page snippets backed by one shared JavaScript/CSS bundle. The standalone preview provides the read-only source explorer; wizard-only, inline, and modal mounts remain compact unless the mount explicitly opts in. Validation completion is independent from optional location enrichment, and named limits provide deterministic excerpt or unavailable-location behavior.
 
-`npm run validate:core` passed: 94 Vitest tests across 15 files, the generated stress-kit integrity test, TypeScript checking, the standalone production build, regenerated ReadMe package, and the static self-contained-package contract test. The generated JavaScript was 413.67 kB (131.93 kB gzip). Playwright and Firefox were not rerun after the owner reported repeated unexpected exits, so no browser, real ReadMe, zoom/reflow, or screen-reader acceptance is claimed by this handoff.
+`npm run validate:core` passed: 94 Vitest tests across 15 files, the generated stress-kit integrity test, TypeScript checking, the standalone production build, regenerated ReadMe package, and the static self-contained-package contract test. The generated JavaScript was 413.78 kB (131.94 kB gzip). Playwright and Firefox were not rerun after the owner reported repeated unexpected exits, so no browser, real ReadMe, zoom/reflow, or screen-reader acceptance is claimed by this handoff.
 
 ## Handoff validation (2026-09-17)
 

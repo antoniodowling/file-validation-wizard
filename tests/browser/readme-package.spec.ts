@@ -17,6 +17,7 @@ test("self-contained ReadMe package mounts on demand and validates locally", asy
   });
 
   await expect(page.locator("#format-search")).toBeVisible();
+  await expect(page.locator("[data-file-explorer]")).toHaveCount(0);
   await page.locator("#format-search").focus();
   await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(50);
   await page.locator("#format-search").fill("pain.001");
@@ -29,6 +30,19 @@ test("self-contained ReadMe package mounts on demand and validates locally", asy
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#finding-rows tr")).toHaveCount(11);
   await expect(page.getByText("Existing ReadMe page content")).toBeVisible();
+});
+
+test("wizard-only and explorer Custom Page roots mount independently from the shared bundle", async ({ page }) => {
+  await installPackage(page, `<main>
+    <div id="hnb-payment-file-validator"></div>
+    <div id="hnb-payment-file-validator-file-explorer" data-payment-file-validator data-file-explorer="true"></div>
+  </main>`);
+  const wizard = page.locator("#hnb-payment-file-validator");
+  const explorer = page.locator("#hnb-payment-file-validator-file-explorer");
+  await expect(wizard.getByRole("combobox", { name: "File format" })).toBeVisible();
+  await expect(wizard.locator("[data-file-explorer]")).toHaveCount(0);
+  await expect(explorer.getByRole("combobox", { name: "File format" })).toBeVisible();
+  await expect(explorer.getByRole("complementary", { name: "File explorer" })).toBeVisible();
 });
 
 async function installPackage(page: import("@playwright/test").Page, html: string): Promise<void> {

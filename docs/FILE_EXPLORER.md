@@ -1,6 +1,6 @@
 # File explorer implementation
 
-The dedicated validator page and standalone preview include a read-only source explorer beside the existing workflow. Inline Guide instances and link-triggered modals retain the original compact validator without the explorer.
+The dedicated File Explorer demo and standalone preview include a read-only source explorer beside the existing workflow. A separate dedicated wizard-only demo, inline Guide instances, and link-triggered modals retain the original compact validator without the explorer. Both ReadMe demos use the same shared generated JavaScript and CSS; the explorer mount opts in explicitly with `data-file-explorer="true"`.
 
 ## Source and location contract
 
