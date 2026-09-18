@@ -8,8 +8,10 @@
     "build": "tsc --noEmit && vite build",
     "build:readme": "vite build --config vite.readme.config.ts && node scripts/finalize-readme-package.mjs",
     "test": "vitest run",
+    "test:stress-files": "node --test tests/stress-files.test.mjs",
+    "generate:stress-files": "node scripts/generate-stress-files.mjs",
     "test:e2e": "playwright test",
-    "validate": "npm run test && npm run build && npm run build:readme && npm run test:e2e"
+    "validate": "npm run test && npm run test:stress-files && npm run build && npm run build:readme && npm run test:e2e"
   },
   "dependencies": {
     "bootstrap-icons": "^1.13.1",

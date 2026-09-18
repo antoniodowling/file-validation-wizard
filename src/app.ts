@@ -12,11 +12,14 @@ import { fileSelectionError } from "./file-policy";
 import { findEnabledFormatPack } from "./format-packs";
 import { overallStatusLabel } from "./outcome";
 import { pageWindow } from "./pagination";
+import { validationFailureMessage } from "./validation-failure";
+import { VALIDATION_DEADLINE_MS } from "./types";
 import type {
   FormatCatalogEntry,
   RuleOutcome,
   RuleResult,
   ValidationRun,
+  ValidationFailureCode,
   WorkerRequest,
   WorkerResponse,
 } from "./types";
@@ -239,8 +242,9 @@ let selectedFile: File | null = null;
 let currentRun: ValidationRun | null = null;
 let resultsPage = 1;
 let activeWorker: Worker | null = null;
-let validationGeneration = 0;
 let validating = false;
+let runGeneration = 0;
+let validationDeadline: number | null = null;
 let visibleFormats: readonly FormatCatalogEntry[] = FORMAT_CATALOG;
 let activeOptionIndex = -1;
 
@@ -272,7 +276,9 @@ function announce(message: string): void {
 }
 
 function stopWorker(): void {
-  validationGeneration++;
+  runGeneration += 1;
+  if (validationDeadline !== null) window.clearTimeout(validationDeadline);
+  validationDeadline = null;
   activeWorker?.terminate();
   activeWorker = null;
   validating = false;
@@ -349,7 +355,8 @@ function renderFormatList(): void {
 }
 
 function chooseFormat(item: FormatCatalogEntry): void {
-  if (item.id !== selectedFormatId) clearFileAndRun();
+  // Choosing even the same format resets its version, so invalidate any pending run.
+  clearFileAndRun();
   selectedFormatId = item.id;
   selectedVersionId = null;
   formatSearch.value = formatDisplay(item);
@@ -716,45 +723,61 @@ requiredElement<HTMLButtonElement>("#next-page").addEventListener("click", () =>
 validateButton.addEventListener("click", async () => {
   const profileId = selectedProfileId();
   if (!selectedFile || !profileId || validating) return;
-  const generation = ++validationGeneration;
   const file = selectedFile;
+  const generation = ++runGeneration;
   validating = true;
   clearRun();
+  setUploadError(null);
   validateButton.textContent = "Validating…";
   renderUpload();
   announce("Validation started.");
+
+  function failRun(code: ValidationFailureCode): void {
+    if (generation !== runGeneration) return;
+    stopWorker();
+    const message = validationFailureMessage(code);
+    setUploadError(message);
+    renderAll();
+    announce(message);
+  }
+
+  // The deadline lives outside the worker so a busy parser cannot block it.
+  // It includes file reading; invalidation prevents a late read from starting work.
+  validationDeadline = window.setTimeout(() => failRun("TIMEOUT"), VALIDATION_DEADLINE_MS);
+  let bytes: ArrayBuffer;
   try {
-    const bytes = await file.arrayBuffer();
-    if (generation !== validationGeneration) return;
-    const worker = new InlineValidationWorker();
-    activeWorker = worker;
-    worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {
-      if (worker !== activeWorker) return;
+    bytes = await file.arrayBuffer();
+  } catch {
+    failRun("FILE_READ_ERROR");
+    return;
+  }
+  if (generation !== runGeneration) return;
+
+  let worker: Worker;
+  try {
+    worker = new InlineValidationWorker();
+  } catch {
+    failRun("WORKER_UNAVAILABLE");
+    return;
+  }
+  activeWorker = worker;
+  worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {
+    if (generation !== runGeneration || worker !== activeWorker) return;
+    if (event.data.type === "complete") {
       stopWorker();
-      if (event.data.type === "complete") {
-        currentRun = event.data.run;
-        renderResults();
-      } else {
-        setUploadError(`Unable to validate the file: ${event.data.message}`);
-        renderAll();
-        announce("Validation failed.");
-      }
-    });
-    worker.addEventListener("error", () => {
-      if (worker !== activeWorker) return;
-      stopWorker();
-      setUploadError("Unable to validate the file because the local validation worker failed.");
-      renderAll();
-      announce("Validation failed.");
-    });
+      currentRun = event.data.run;
+      renderResults();
+    } else {
+      failRun(event.data.code);
+    }
+  });
+  worker.addEventListener("error", () => failRun("WORKER_ERROR"));
+  worker.addEventListener("messageerror", () => failRun("WORKER_ERROR"));
+  try {
     const request: WorkerRequest = { type: "validate", packId: profileId, fileName: file.name, bytes };
     worker.postMessage(request, [bytes]);
   } catch {
-    if (generation !== validationGeneration) return;
-    stopWorker();
-    setUploadError("The browser could not read this file.");
-    renderAll();
-    announce("Validation failed.");
+    failRun("WORKER_ERROR");
   }
 });
 

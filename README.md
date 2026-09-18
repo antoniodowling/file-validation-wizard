@@ -62,6 +62,10 @@ The same engine supports a dedicated page, inline Guide components, and link-tri
 
 The JavaScript bundle includes the validation worker and requires no hosted validator assets or backend. Follow `readme-package/INSTALLATION.md` to install and test it in an unpublished ReadMe page.
 
+## Processing safeguards and test uploads
+
+The worker independently enforces the 25 MB limit. Runs have a provisional 10-second deadline and distinguish incomplete execution from a completed file FAIL. The ready-to-use archive is [demo-files/hnb-validator-stress-files.zip](demo-files/hnb-validator-stress-files.zip); see [processing limits and the synthetic upload kit](docs/PROCESSING_LIMITS.md) for behavior, reproducible files, and remaining browser acceptance.
+
 ## Pre-finalization to-do
 
 - Resolve and verify the open WCAG 2.2 AA items in
