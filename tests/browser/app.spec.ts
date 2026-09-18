@@ -113,7 +113,7 @@ test("supports keyboard search and dependent version selection", async ({ page }
   await expect(page.getByText("Maximum size: 25MB")).toBeVisible();
   await expect(page.getByText("Use test data only")).toBeVisible();
   await expect(page.getByText(
-    "Selected files are never uploaded to Huntington, but using sensitive data is still not advised.",
+    "Selected files are never uploaded to Huntington, but using sensitive data is never advised.",
   )).toBeVisible();
   await expect(page.locator(".safety-notice")).toHaveCSS("background-color", "rgb(255, 251, 235)");
   await expect(page.locator(".safety-notice")).toHaveCSS("border-left-color", "rgb(204, 163, 0)");

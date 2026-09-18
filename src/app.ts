@@ -99,7 +99,7 @@ app.innerHTML = `
             <div>
               <strong id="safety-title">Use test data only</strong>
               <p>
-                Selected files are never uploaded to Huntington, but using sensitive data is still not advised.
+                Selected files are never uploaded to Huntington, but using sensitive data is never advised.
               </p>
             </div>
           </aside>
