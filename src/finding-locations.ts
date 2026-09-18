@@ -3,6 +3,7 @@ import { parser as xmlLocationParser } from "@lezer/xml";
 import { XMLValidator } from "fast-xml-parser";
 import { MAX_SOURCE_INDEX_CHARACTERS } from "./explorer-budget";
 import { scanEdiSegments, type LocatedEdiElement, type LocatedEdiSegment } from "./parsers/edi-source";
+import { findProhibitedDeclaration } from "./prohibited-declarations";
 import { isValidSourceSpan, sourceOffsetAtLineColumn, trimSourceSpan } from "./source-coordinates";
 import type {
   EdiVersionIdentifiers,
@@ -166,10 +167,10 @@ function locateXmlFinding(
   tree: ReturnType<typeof xmlLocationParser.parse> | null,
 ): FindingLocation {
   if (finding.ruleId === "iso.safe-declarations") {
-    const match = /<!DOCTYPE|<!ENTITY/i.exec(source);
-    return match?.index === undefined
+    const match = findProhibitedDeclaration(source);
+    return match === null
       ? unavailable("The prohibited declaration detector did not provide a source match.")
-      : located([target("exact", "Prohibited declaration", span(match.index, match.index + match[0].length))]);
+      : located([target("exact", "Prohibited declaration", span(match.index, match.index + match.length))]);
   }
   if (finding.ruleId === "iso.well-formed") return parserPosition(source);
   if (finding.ruleId === "demo.non-empty-source") {
