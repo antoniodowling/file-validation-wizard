@@ -1,0 +1,5 @@
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <DemoContent>
+    <Note>This synthetic file intentionally omits the required PAIN message structure.</Note>
+  </DemoContent>
+</Document>
