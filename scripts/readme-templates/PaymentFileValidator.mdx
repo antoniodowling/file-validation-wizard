@@ -1,0 +1,12 @@
+export const PaymentFileValidator = ({ format, version, lockSelection = false }) => (
+  <div
+    data-payment-file-validator=""
+    data-format={format}
+    data-version={version}
+    data-lock-selection={String(lockSelection)}
+  >
+    <p>The validator requires the portal's shared JavaScript. If it does not load, contact the documentation owner.</p>
+  </div>
+);
+
+<PaymentFileValidator />

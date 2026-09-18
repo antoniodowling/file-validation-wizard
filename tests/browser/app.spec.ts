@@ -18,7 +18,7 @@ async function openXmlUpload(page: Page, code: "pain.001" | "pain.008", version:
 
 test("starts with format search and keeps later-step messaging inside its step", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("main > :first-child")).toHaveClass(/steps/);
+  await expect(page.locator(".validator-content > :first-child")).toHaveClass(/steps/);
   await expect(page.locator(".intro, .eyebrow, .lede")).toHaveCount(0);
   await expect(page.locator(".step-number").first()).toHaveCSS(
     "clip-path",

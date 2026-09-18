@@ -21,11 +21,20 @@ import type {
   WorkerResponse,
 } from "./types";
 
-export function mountPaymentFileValidator(app: HTMLDivElement): () => void {
+export interface ValidatorOptions {
+  format?: string | undefined;
+  version?: string | undefined;
+  lockSelection?: boolean;
+  idPrefix?: string;
+}
+
+export function mountPaymentFileValidator(app: HTMLDivElement, options: ValidatorOptions = {}): () => void {
+const prefix = options.idPrefix ?? "";
+
 app.dataset.validatorMounted = "true";
 
 app.innerHTML = `
-  <main>
+  <div class="validator-content">
     <ol class="steps" aria-label="Validation steps">
       <li class="step active" data-step="1"><span class="step-number"><span>1</span></span><strong>Choose format</strong></li>
       <li class="step" data-step="2"><span class="step-number"><span>2</span></span><strong>Upload file</strong></li>
@@ -182,13 +191,20 @@ app.innerHTML = `
       </section>
     </div>
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
-  </main>
+  </div>
 `;
+
+for (const element of app.querySelectorAll<HTMLElement>("[id], [for], [aria-controls], [aria-labelledby], [aria-describedby]")) {
+  for (const attribute of ["id", "for", "aria-controls", "aria-labelledby", "aria-describedby"]) {
+    const value = element.getAttribute(attribute);
+    if (value) element.setAttribute(attribute, value.split(" ").map((id) => prefix + id).join(" "));
+  }
+}
 
 requiredElement<HTMLElement>("#safety-icon").innerHTML = warningTriangleIcon;
 
 function requiredElement<T extends Element>(selector: string): T {
-  const element = app.querySelector<T>(selector);
+  const element = app.querySelector<T>(selector.startsWith("#") ? `#${prefix}${selector.slice(1)}` : selector);
   if (!element) throw new Error(`Required element is missing: ${selector}`);
   return element;
 }
@@ -211,12 +227,19 @@ const outcomeFilters = new Set<RuleOutcome>(["ERROR", "WARNING", "PASS"]);
 const resultsPageSize = 25;
 
 let activeStep: 1 | 2 | 3 = 1;
-let selectedFormatId: string | null = null;
-let selectedVersionId: string | null = null;
+const presetFormat = FORMAT_CATALOG.find((item) =>
+  [item.id, item.code].some((value) => value.toLowerCase() === options.format?.toLowerCase()));
+const presetVersion = presetFormat?.versions.find((item) => item.id === options.version?.toLowerCase());
+const selectionLocked = Boolean(options.lockSelection && presetVersion?.validationProfileId);
+let selectedFormatId: string | null = presetFormat?.id ?? null;
+let selectedVersionId: string | null = presetVersion?.id ?? null;
+if (presetFormat) formatSearch.value = `${presetFormat.code} — ${presetFormat.name}`;
+if (presetVersion?.validationProfileId) activeStep = 2;
 let selectedFile: File | null = null;
 let currentRun: ValidationRun | null = null;
 let resultsPage = 1;
 let activeWorker: Worker | null = null;
+let validationGeneration = 0;
 let validating = false;
 let visibleFormats: readonly FormatCatalogEntry[] = FORMAT_CATALOG;
 let activeOptionIndex = -1;
@@ -249,6 +272,7 @@ function announce(message: string): void {
 }
 
 function stopWorker(): void {
+  validationGeneration++;
   activeWorker?.terminate();
   activeWorker = null;
   validating = false;
@@ -305,7 +329,7 @@ function renderFormatList(): void {
   formatListbox.append(header);
   visibleFormats.forEach((item, index) => {
     const option = document.createElement("li");
-    option.id = `format-option-${item.id}`;
+    option.id = `${prefix}format-option-${item.id}`;
     option.className = "format-option";
     option.setAttribute("role", "option");
     option.setAttribute("aria-selected", String(item.id === selectedFormatId));
@@ -320,7 +344,7 @@ function renderFormatList(): void {
     formatListbox.append(option);
   });
   if (activeOptionIndex >= 0) {
-    formatSearch.setAttribute("aria-activedescendant", `format-option-${visibleFormats[activeOptionIndex]?.id}`);
+    formatSearch.setAttribute("aria-activedescendant", `${prefix}format-option-${visibleFormats[activeOptionIndex]?.id}`);
   }
 }
 
@@ -452,6 +476,10 @@ function renderAll(): void {
   renderFormatSelection();
   renderUpload();
   renderWizard();
+  if (selectionLocked) {
+    formatSearch.disabled = true;
+    versionSelect.disabled = true;
+  }
 }
 
 formatSearch.addEventListener("focus", () => {
@@ -688,13 +716,16 @@ requiredElement<HTMLButtonElement>("#next-page").addEventListener("click", () =>
 validateButton.addEventListener("click", async () => {
   const profileId = selectedProfileId();
   if (!selectedFile || !profileId || validating) return;
+  const generation = ++validationGeneration;
+  const file = selectedFile;
   validating = true;
   clearRun();
   validateButton.textContent = "Validating…";
   renderUpload();
   announce("Validation started.");
   try {
-    const bytes = await selectedFile.arrayBuffer();
+    const bytes = await file.arrayBuffer();
+    if (generation !== validationGeneration) return;
     const worker = new InlineValidationWorker();
     activeWorker = worker;
     worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {
@@ -716,9 +747,10 @@ validateButton.addEventListener("click", async () => {
       renderAll();
       announce("Validation failed.");
     });
-    const request: WorkerRequest = { type: "validate", packId: profileId, fileName: selectedFile.name, bytes };
+    const request: WorkerRequest = { type: "validate", packId: profileId, fileName: file.name, bytes };
     worker.postMessage(request, [bytes]);
   } catch {
+    if (generation !== validationGeneration) return;
     stopWorker();
     setUploadError("The browser could not read this file.");
     renderAll();
@@ -741,7 +773,7 @@ exportButton.addEventListener("click", () => {
 renderAll();
 
 return () => {
-  stopWorker();
+  clearFileAndRun();
   app.replaceChildren();
   delete app.dataset.validatorMounted;
 };

@@ -1,0 +1,30 @@
+.hnb-validator-dialog {
+  width: min(1160px, calc(100% - 24px));
+  max-width: calc(100% - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid #b9cacc;
+  border-radius: 12px;
+  background: #fff;
+  color: #253f42;
+  box-sizing: border-box;
+}
+.hnb-validator-dialog::backdrop { background: rgb(8 33 35 / 65%); }
+.hnb-validator-close {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: block;
+  margin-left: auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #034f54;
+  border-radius: 6px;
+  background: #fff;
+  color: #034f54;
+  font: 600 16px Arial, sans-serif;
+  cursor: pointer;
+}
+.hnb-validator-close:focus-visible { outline: 3px solid #237a86; outline-offset: 2px; }
