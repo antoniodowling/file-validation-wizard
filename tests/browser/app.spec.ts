@@ -243,18 +243,14 @@ test("opens an exact source location in the read-only file explorer", async ({ p
   await expect(viewSource).toBeVisible();
   await viewSource.click();
   await expect(explorer).toContainText("iso.namespace-version");
-  await expect(explorer).toContainText("Exact source location");
-  await expect(explorer.locator(".cm-finding-range")).toContainText(
+  await expect(explorer.locator(".cm-finding-error")).toContainText(
     "urn:iso:std:iso:20022:tech:xsd:pain.007.001.09",
   );
   await expect(explorer.locator(".cm-content")).toHaveAttribute("contenteditable", "false");
-
-  await explorer.locator("[data-source-search]").fill("Document");
-  await expect(explorer.locator("[data-search-status]")).toHaveText("1 of 2 matches");
-  await explorer.locator("[data-search-next]").click();
-  await expect(explorer.locator("[data-search-status]")).toHaveText("2 of 2 matches");
-  await explorer.locator("[data-go-line]").fill("2");
-  await explorer.locator("[data-go-line-button]").click();
+  await expect(explorer.locator("[data-detail-field]")).toBeVisible();
+  await expect(explorer.locator("[data-detail-locator]")).toBeVisible();
+  await expect(explorer.locator("[data-detail-message]")).toBeVisible();
+  await expect(explorer.locator("[data-source-search], [data-go-line], [data-related-status], [data-focus-source]")).toHaveCount(0);
 
   await explorer.getByRole("button", { name: "Hide file" }).click();
   await expect(explorer).toBeHidden();

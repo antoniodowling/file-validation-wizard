@@ -1,7 +1,7 @@
 import { EditorState, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, EditorView, lineNumbers, type DecorationSet } from "@codemirror/view";
 import { normalizeSourceForViewer, sourceLineColumnAtOffset } from "./source-coordinates";
-import type { SourceSpan, SourceTarget } from "./types";
+import type { FindingSeverity, SourceSpan, SourceTarget } from "./types";
 
 const setDecorations = StateEffect.define<DecorationSet>();
 const decorationState = StateField.define<DecorationSet>({
@@ -31,7 +31,7 @@ export class ReadOnlySourceViewer {
   private displaySpan: SourceSpan;
   private mapping = normalizeSourceForViewer("");
   private findingTarget: SourceTarget | null = null;
-  private searchSpan: SourceSpan | null = null;
+  private findingSeverity: FindingSeverity | null = null;
 
   constructor(parent: HTMLElement, canonicalSource: string, displaySpan: SourceSpan) {
     this.canonicalSource = canonicalSource;
@@ -64,11 +64,12 @@ export class ReadOnlySourceViewer {
           ".cm-content": { caretColor: "transparent", padding: "12px 0" },
           ".cm-line": { padding: "0 12px" },
           ".cm-gutters": { backgroundColor: "#f3f8f8", color: "#52696c", borderRight: "1px solid #d1dfe0" },
-          ".cm-finding-range": { backgroundColor: "#fff0a8", outline: "2px solid #9b7300" },
-          ".cm-context-range": { backgroundColor: "#dff4f5", outline: "2px dashed #006f77" },
-          ".cm-parser-position": { backgroundColor: "#ffe0df", outline: "2px solid #a32929" },
-          ".cm-finding-line": { backgroundColor: "#fff7cf" },
-          ".cm-search-match": { backgroundColor: "#cfe8ff", outline: "1px solid #27648a" },
+          ".cm-finding-error": { backgroundColor: "#ffe0df", outline: "2px solid #a32929" },
+          ".cm-finding-warning": { backgroundColor: "#fff0a8", outline: "2px solid #9b7300" },
+          ".cm-finding-neutral": { backgroundColor: "#dff4f5", outline: "2px solid #006f77" },
+          ".cm-finding-line.cm-finding-error": { backgroundColor: "#ffe0df" },
+          ".cm-finding-line.cm-finding-warning": { backgroundColor: "#fff7cf" },
+          ".cm-finding-line.cm-finding-neutral": { backgroundColor: "#dff4f5" },
           ".cm-focused": { outline: "3px solid #006f77", outlineOffset: "-3px" },
         }),
       ],
@@ -98,26 +99,17 @@ export class ReadOnlySourceViewer {
     this.refreshDecorations();
   }
 
-  setFindingTarget(target: SourceTarget | null): void {
+  setFindingTarget(target: SourceTarget | null, severity: FindingSeverity | null): void {
     this.findingTarget = target;
+    this.findingSeverity = severity;
     this.refreshDecorations();
     if (target) this.scrollToCanonical(target.span.start);
   }
 
-  setSearchSpan(searchSpan: SourceSpan | null): void {
-    this.searchSpan = searchSpan;
-    this.refreshDecorations();
-    if (searchSpan) this.scrollToCanonical(searchSpan.start);
-  }
-
-  scrollToCanonical(offset: number): void {
+  private scrollToCanonical(offset: number): void {
     if (offset < this.displaySpan.start || offset > this.displaySpan.end) return;
     const viewerOffset = this.mapping.canonicalToViewer(offset - this.displaySpan.start);
     this.view.dispatch({ effects: EditorView.scrollIntoView(viewerOffset, { y: "center" }) });
-  }
-
-  focus(): void {
-    this.view.focus();
   }
 
   destroy(): void {
@@ -132,20 +124,19 @@ export class ReadOnlySourceViewer {
       const from = this.mapping.canonicalToViewer(clipped.start - this.displaySpan.start);
       const to = this.mapping.canonicalToViewer(clipped.end - this.displaySpan.start);
       if (from === to) {
-        ranges.push(Decoration.line({ class: "cm-finding-line" }).range(this.view.state.doc.lineAt(from).from));
+        ranges.push(Decoration.line({ class: `cm-finding-line ${className}` }).range(this.view.state.doc.lineAt(from).from));
       } else {
         ranges.push(Decoration.mark({ class: className }).range(from, to));
       }
     };
     if (this.findingTarget) {
-      const className = this.findingTarget.kind === "context"
-        ? "cm-context-range"
-        : this.findingTarget.kind === "parser-position"
-          ? "cm-parser-position"
-          : "cm-finding-range";
+      const className = this.findingSeverity === "ERROR"
+        ? "cm-finding-error"
+        : this.findingSeverity === "WARNING"
+          ? "cm-finding-warning"
+          : "cm-finding-neutral";
       addRange(this.findingTarget.span, className);
     }
-    if (this.searchSpan) addRange(this.searchSpan, "cm-search-match");
     this.view.dispatch({ effects: setDecorations.of(Decoration.set(ranges, true)) });
   }
 }

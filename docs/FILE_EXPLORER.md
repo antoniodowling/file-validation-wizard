@@ -19,7 +19,9 @@ Every non-PASS result receives one of these location outcomes:
 - **File-wide:** no single target truthfully represents the aggregate finding.
 - **Unavailable:** a reliable mapping could not be established or the index budget was exceeded.
 
-Locations are a run-scoped sidecar keyed by the result `ordinal`; the CSV schema and validation messages remain unchanged. Related targets are limited to 32 and disclose truncation.
+Locations are a run-scoped sidecar keyed by the result `ordinal`; the CSV schema and validation messages remain unchanged. The explorer opens the primary target only. Related-target metadata remains available to the mapping contract, is limited to 32 targets, and discloses truncation to non-UI consumers.
+
+The finding detail header presents Field, Path, and Message in one row at standard widths and stacks them at narrow widths. Selecting an error applies a red source highlight, while selecting a warning applies a yellow source highlight. Previous/Next finding navigation remains available; the explorer intentionally does not provide source search, go-to-line, related-target navigation, or secondary focus/return actions.
 
 ## Known limitation: cascading structural findings
 
@@ -33,7 +35,7 @@ Possible future treatments include grouping dependent findings under a parent/ro
 
 Validation completion is accepted before optional source-location enrichment. A mapper, viewer, or enrichment timeout cannot turn a completed PASS, PASS WITH WARNINGS, or FAIL into an incomplete run, and CSV export stays available. Replacing/removing a file, changing its profile, or unmounting invalidates the snapshot and ignores late worker messages. Source remains in memory only for the mount's accepted run.
 
-The app does not add network requests, persistence, telemetry, or source-bearing URLs. Filenames, source, findings, and search values are assigned through text APIs rather than `innerHTML`. The existing test-data-only warning still applies because other scripts on the same ReadMe page share the page context.
+The app does not add network requests, persistence, telemetry, or source-bearing URLs. Filenames, source, and findings are assigned through text APIs rather than `innerHTML`. The existing test-data-only warning still applies because other scripts on the same ReadMe page share the page context.
 
 ## Provisional resource budgets
 
@@ -46,7 +48,6 @@ These are conservative implementation guards, not a supported browser capacity o
 | Longest full-view line | 250,000 decoded characters | Use excerpt mode to avoid an extreme single-line editor document. |
 | Excerpt context | 12,000 decoded characters | Show explicit start/end scope and truncation. |
 | Related targets per finding | 32 | Mark the related-location count as truncated. |
-| Literal source-search matches | 10,000 | Show a capped count rather than claiming completeness. |
 
 The worker's existing 25,000,000-byte input limit and 10-second validation deadline are unchanged. Explorer enrichment has its own 10-second UI deadline after validation is accepted.
 

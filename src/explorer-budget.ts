@@ -4,7 +4,6 @@ export const MAX_FULL_VIEWER_CHARACTERS = 5_000_000;
 export const MAX_FULL_VIEWER_LINE_CHARACTERS = 250_000;
 export const MAX_SOURCE_INDEX_CHARACTERS = 5_000_000;
 export const EXCERPT_CONTEXT_CHARACTERS = 12_000;
-export const MAX_SOURCE_SEARCH_MATCHES = 10_000;
 
 export interface ExplorerBudgetDecision {
   readonly mode: "full" | "excerpt";

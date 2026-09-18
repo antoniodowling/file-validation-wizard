@@ -23,9 +23,9 @@ Audit date: 2026-09-17
 | A11Y-008 | High | Screen readers and announcements | Verify the combobox, current-step status, upload errors, validation-start/completion announcements, filter pressed states, result counts, and table navigation with VoiceOver/Safari and at least one Windows screen-reader/browser combination. |
 | A11Y-009 | Medium | Results table overflow | Confirm that the intentionally wide result table remains keyboard operable and understandable when it scrolls in two dimensions at narrow widths. If its scroll region is difficult to discover, focus, or identify, add a labeled focusable scroll container and concise instructions. |
 | A11Y-010 | High | ReadMe page integration | Confirm that the surrounding ReadMe Custom Page supplies one descriptive level-one heading above the validator. The embedded module intentionally omits a duplicate `h1` because its page introduction is owned by ReadMe. |
-| A11Y-011 | High | File explorer workspace | Verify the splitter, finding actions, source focus/return controls, search, go-to-line, related locations, hide/expand, and Results/File views with keyboard-only operation. Confirm focus remains predictable after filtering, pagination, and returning to a finding. |
+| A11Y-011 | High | File explorer workspace | Verify the splitter, finding actions, Previous/Next finding controls, hide/expand, and Results/File views with keyboard-only operation. Confirm focus remains predictable after filtering and pagination. |
 | A11Y-012 | High | File explorer reflow | Verify the complete explorer workflow at 320 CSS pixels and 200% zoom, including long filenames/paths, excerpt notices, source horizontal scrolling, and no page-level clipping. |
-| A11Y-013 | High | File explorer assistive technology | Verify location-quality announcements, selected-finding state, the read-only virtualized source, original line numbers, and forced-color highlights with VoiceOver/Safari and a Windows screen-reader/browser combination. |
+| A11Y-013 | High | File explorer assistive technology | Verify finding announcements, selected-finding state, the read-only virtualized source, original line numbers, severity-specific highlights, and forced-color highlights with VoiceOver/Safari and a Windows screen-reader/browser combination. |
 
 ## Resolved items
 
