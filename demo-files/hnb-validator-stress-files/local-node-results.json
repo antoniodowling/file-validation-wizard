@@ -1,0 +1,106 @@
+{
+  "runtime": "v26.5.0",
+  "platform": "darwin",
+  "workerHeapLimitMb": 256,
+  "deadlineMs": 10000,
+  "results": [
+    {
+      "file": "01-xml-small-baseline-pass.xml",
+      "bytes": 286,
+      "ms": 42,
+      "outcome": "PASS",
+      "findings": 11
+    },
+    {
+      "file": "02-xml-empty-file.xml",
+      "bytes": 0,
+      "ms": 22,
+      "outcome": "FAIL",
+      "findings": 2
+    },
+    {
+      "file": "03-xml-invalid-utf8.xml",
+      "bytes": 227,
+      "ms": 27,
+      "outcome": "INVALID_ENCODING",
+      "findings": 0
+    },
+    {
+      "file": "04-xml-prohibited-dtd-and-entity.xml",
+      "bytes": 336,
+      "ms": 21,
+      "outcome": "FAIL",
+      "findings": 1
+    },
+    {
+      "file": "05-xml-malformed-at-end-5MB.xml",
+      "bytes": 4999999,
+      "ms": 41,
+      "outcome": "FAIL",
+      "findings": 2
+    },
+    {
+      "file": "06-xml-just-under-limit-24999999-bytes.xml",
+      "bytes": 24999999,
+      "ms": 1243,
+      "outcome": "HARNESS_WORKER_ERROR",
+      "code": "ERR_WORKER_OUT_OF_MEMORY"
+    },
+    {
+      "file": "07-xml-exact-limit-25000000-bytes.xml",
+      "bytes": 25000000,
+      "ms": 1398,
+      "outcome": "HARNESS_WORKER_ERROR",
+      "code": "ERR_WORKER_OUT_OF_MEMORY"
+    },
+    {
+      "file": "08-xml-over-limit-25000001-bytes.xml",
+      "bytes": 25000001,
+      "ms": 18,
+      "outcome": "FILE_TOO_LARGE",
+      "findings": 0
+    },
+    {
+      "file": "09-xml-wide-tree-50000-payment-blocks.xml",
+      "bytes": 2639119,
+      "ms": 175,
+      "outcome": "PASS",
+      "findings": 11
+    },
+    {
+      "file": "10-xml-deep-nesting-5000-levels.xml",
+      "bytes": 85273,
+      "ms": 23,
+      "outcome": "ENGINE_ERROR",
+      "findings": 0
+    },
+    {
+      "file": "11-edi-820-005010-baseline-pass.edi",
+      "bytes": 225,
+      "ms": 17,
+      "outcome": "PASS",
+      "findings": 10
+    },
+    {
+      "file": "12-edi-820-005010-50000-transactions.edi",
+      "bytes": 2377971,
+      "ms": 99,
+      "outcome": "PASS",
+      "findings": 10
+    },
+    {
+      "file": "13-edi-820-005010-long-element-5MB.edi",
+      "bytes": 5000226,
+      "ms": 18,
+      "outcome": "PASS",
+      "findings": 10
+    },
+    {
+      "file": "14-edi-820-005010-dense-250000-segments.edi",
+      "bytes": 1250230,
+      "ms": 92,
+      "outcome": "PASS",
+      "findings": 10
+    }
+  ]
+}

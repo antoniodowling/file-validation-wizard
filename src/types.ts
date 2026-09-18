@@ -12,6 +12,34 @@ export type RuleOutcome = "PASS" | "ERROR" | "WARNING";
 export type FindingSeverity = "ERROR" | "WARNING";
 export type OverallStatus = "PASS" | "PASS_WITH_WARNINGS" | "FAIL";
 
+export interface SourceSpan {
+  readonly start: number;
+  readonly end: number;
+}
+
+export type SourceTargetKind = "exact" | "context" | "parser-position";
+
+export interface SourceTarget {
+  readonly span: SourceSpan;
+  readonly kind: SourceTargetKind;
+  readonly label: string;
+}
+
+export type FindingLocation =
+  | {
+      readonly kind: "located";
+      readonly primary: SourceTarget;
+      readonly related: readonly SourceTarget[];
+      readonly relatedTruncated?: boolean;
+    }
+  | { readonly kind: "file-wide"; readonly explanation: string }
+  | { readonly kind: "unavailable"; readonly explanation: string };
+
+export interface FindingLocationEntry {
+  readonly ordinal: number;
+  readonly location: FindingLocation;
+}
+
 export interface IsoVersionIdentifiers {
   readonly kind: "ISO_XML";
   readonly namespace: string;
@@ -134,8 +162,22 @@ export interface WorkerRequest {
   readonly packId: string;
   readonly fileName: string;
   readonly bytes: ArrayBuffer;
+  readonly includeExplorer?: boolean;
+  readonly snapshotId?: number;
 }
 
 export type WorkerResponse =
-  | { readonly type: "complete"; readonly run: ValidationRun }
+  | {
+      readonly type: "complete";
+      readonly run: ValidationRun;
+      readonly source?: string;
+      readonly snapshotId?: number;
+      readonly explorerPending?: boolean;
+    }
+  | {
+      readonly type: "explorer-ready";
+      readonly snapshotId: number;
+      readonly locations: readonly FindingLocationEntry[];
+    }
+  | { readonly type: "explorer-error"; readonly snapshotId: number }
   | { readonly type: "error"; readonly code: WorkerFailureCode };

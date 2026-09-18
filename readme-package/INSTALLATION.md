@@ -1,6 +1,6 @@
 # ReadMe installation
 
-This package supports a dedicated page, inline Guide components, and link-triggered modals. It remains a browser-local demo with nine executable profiles; embedding does not change validation coverage or production approval status.
+This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It remains a browser-local demo with nine executable profiles; embedding does not change validation coverage or production approval status.
 
 ## Shared installation
 
@@ -10,11 +10,28 @@ This package supports a dedicated page, inline Guide components, and link-trigge
 
 The bundle includes the worker, catalog, parsers, and rules. No validation backend or hosted validator assets are required if the portal permits Blob workers. Selected files are processed locally without application upload, analytics, or persistence. Use synthetic test files only. Portal scripts share the page context; this is not isolation from other portal code.
 
-## Dedicated page and link fallback
+## Two independent dedicated-page demos
 
-Create a ReadMe Custom Page in HTML mode and paste `custom-page.html`. Add a descriptive page heading above it. For the examples below, give it the path `/page/payment-file-validator` or substitute your actual page URL in every link. The package does not create or publish this page.
+Install `custom-css.css` and `custom-javascript.js` only once. Both Custom Pages use that same shared JavaScript and CSS, so fixes and validation behavior come from one generated source.
 
-Direct navigation to that page reads preset settings from its fragment. Without the shared JavaScript, the page's JavaScript-required message is the fallback; validation itself requires JavaScript.
+Create two unpublished ReadMe Custom Pages in HTML mode:
+
+| Demo | Paste this file | Suggested path |
+| --- | --- | --- |
+| Wizard only | `custom-page.html` | `/page/payment-file-validator` |
+| Wizard + File Explorer | `custom-page-file-explorer.html` | `/page/payment-file-validator-file-explorer` |
+
+Add a descriptive page heading above each snippet. The explorer page opts in through its generated `data-file-explorer="true"` mount attribute. Do not add that attribute to the wizard-only page. The explorer and its CodeMirror dependency are already bundled into the shared JavaScript; no separate editor script, CDN, or page-specific CSS is required.
+
+Direct links can expose both demos independently:
+
+```markdown
+[Open the validator wizard](/page/payment-file-validator)
+
+[Open the validator with File Explorer](/page/payment-file-validator-file-explorer)
+```
+
+Direct navigation to either page can read supported preset settings from the reserved fragment described below. Without the shared JavaScript, each page's JavaScript-required message is the fallback; validation itself requires JavaScript.
 
 ## Inline Guide component
 
@@ -40,7 +57,7 @@ For an HTML mount instead of MDX, use:
 
 ## Modal links on portal pages
 
-Use a normal link to the dedicated page with the reserved fragment:
+Use a normal link to the wizard-only page with the reserved fragment:
 
 ```markdown
 [Validate your payment file](/page/payment-file-validator#payment-file-validator)
@@ -48,7 +65,7 @@ Use a normal link to the dedicated page with the reserved fragment:
 [Validate a PAIN.001 file](/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.09&lockSelection=true)
 ```
 
-An ordinary click on a same-origin link with this fragment opens a modal on any portal page that loads the shared bundle. The bundle intercepts the reserved fragment before ReadMe's client-side router; page authors need only add the link. This fragment is reserved for validator triggers regardless of the link's path, so always point it at the real dedicated validator page for a useful fallback.
+An ordinary click on a same-origin link with this fragment opens the compact wizard modal on any portal page that loads the shared bundle. The bundle intercepts the reserved fragment before ReadMe's client-side router; page authors need only add the link. This fragment is reserved for modal triggers regardless of the link's path, so point modal links at the wizard-only page for the matching fallback. Use the direct explorer link above when the full two-pane demo is intended.
 
 Modified clicks, downloads, links targeting another window, and external-origin links retain normal browser behavior. Without modal support or the shared bundle, the link navigates normally. Links from email or another website navigate to the dedicated page; they cannot open a modal inside that other site.
 
@@ -56,6 +73,6 @@ Close or Escape stops active validation and clears selected files/results. Reope
 
 ## Verification before publication
 
-Check the actual ReadMe draft for component rendering, narrow article layouts and mobile widths, multiple inline instances, modal keyboard focus and Escape, page navigation/back/forward, presets, reference-only formats, file replacement, validation, and CSV downloads. Confirm a synthetic PASS/FAIL result and Blob-worker compatibility, coexistence with existing Custom JavaScript, and no selected-file network upload. Local browser tests do not establish ReadMe-hosted compatibility. Existing accessibility follow-ups in `docs/ACCESSIBILITY_FOLLOW_UPS.md` remain applicable.
+Check both actual ReadMe drafts independently: the wizard-only page must not render a File Explorer, while the explorer page must render the two-pane workspace and finding-to-source navigation. Also check narrow/mobile layouts, multiple inline instances, modal keyboard focus and Escape, page navigation/back/forward, presets, reference-only formats, file replacement, validation, and CSV downloads. Confirm synthetic PASS/FAIL results, Blob-worker compatibility, coexistence with existing Custom JavaScript, and no selected-file network upload. Local tests do not establish ReadMe-hosted compatibility. Existing accessibility follow-ups in `docs/ACCESSIBILITY_FOLLOW_UPS.md` remain applicable.
 
 Generated files: edit `src/`, `scripts/finalize-readme-package.mjs`, or `scripts/readme-templates/`, then run `npm run build:readme`. Do not edit generated copies directly.

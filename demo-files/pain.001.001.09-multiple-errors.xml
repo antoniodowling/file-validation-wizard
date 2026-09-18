@@ -1,0 +1,31 @@
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInit>
+    <GrpHdr>
+      <MsgId></MsgId>
+      <CreDtTm>2026-09-18T10:30:00-04:00</CreDtTm>
+      <NbOfTxs>five</NbOfTxs>
+      <CtrlSum>15250.00</CtrlSum>
+      <InitgPty><Nm>Example Manufacturing LLC</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>PAYROLL-2026-09-18</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>true</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>15250.00</CtrlSum>
+      <PmtTpInf><SvcLvl><Cd>NURG</Cd></SvcLvl></PmtTpInf>
+      <ReqdExctnDt><Dt>2026-09-19</Dt></ReqdExctnDt>
+      <Dbtr><Nm>Example Manufacturing LLC</Nm></Dbtr>
+      <DbtrAcct><Id><Othr><Id>DEMO-OPERATING-001</Id></Othr></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>DEMOUS00XXX</BICFI></FinInstnId></DbtrAgt>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>INVOICE-10482</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="USD">15250.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>TESTUS00XXX</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Sample Office Supplies Inc.</Nm></Cdtr>
+        <CdtrAcct><Id><Othr><Id>DEMO-VENDOR-10482</Id></Othr></Id></CdtrAcct>
+        <RmtInf><Ustrd>Invoice 10482 - synthetic demonstration payment</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInit>
+</Document>

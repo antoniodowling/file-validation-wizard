@@ -42,18 +42,46 @@ function expectIncomplete() {
   expect(q<HTMLButtonElement>("#validate-file").disabled).toBe(false);
 }
 
-beforeEach(() => {
-  vi.useFakeTimers(); control.workers = []; control.refuseStart = false; control.refuseSend = false;
-  root = document.createElement("div"); document.body.append(root);
-  unmount = mountPaymentFileValidator(root);
+function selectPainProfile() {
   q<HTMLInputElement>("#format-search").value = "pain.001";
   q("#format-search").dispatchEvent(new Event("input")); q('[role="option"]').click();
   q<HTMLSelectElement>("#version-select").value = "pain.001.001.09";
   q("#version-select").dispatchEvent(new Event("change")); q("#format-continue").click();
+}
+
+function remountWithExplorer() {
+  unmount();
+  unmount = mountPaymentFileValidator(root, { enableExplorer: true });
+  selectPainProfile();
+}
+
+beforeEach(() => {
+  vi.useFakeTimers(); control.workers = []; control.refuseStart = false; control.refuseSend = false;
+  root = document.createElement("div"); document.body.append(root);
+  unmount = mountPaymentFileValidator(root);
+  selectPainProfile();
 });
 afterEach(() => { unmount(); root.remove(); vi.clearAllTimers(); vi.useRealTimers(); });
 
 describe("validation lifecycle", () => {
+  it("scopes the explorer to opted-in mounts and keeps its workspace controls coherent", () => {
+    expect(root.querySelector("[data-file-explorer]")).toBeNull();
+    remountWithExplorer();
+    expect(q("[data-file-explorer]")).toBeTruthy();
+    expect(Array.from(root.querySelectorAll("thead th")).every((header) => header.getAttribute("scope") === "col")).toBe(true);
+    expect(q('[data-step="2"]').getAttribute("aria-current")).toBe("step");
+
+    q("[data-explorer-expand]").click();
+    expect(q(".validator-workspace").classList.contains("explorer-expanded")).toBe(true);
+    expect(q("[data-explorer-expand]").textContent).toBe("Restore split");
+    q("[data-explorer-hide]").click();
+    expect(q(".validator-workspace").classList.contains("explorer-hidden")).toBe(true);
+    expect(q("[data-explorer-expand]").textContent).toBe("Expand explorer");
+    q(".workspace-view-toggle .button:last-child").click();
+    expect(q(".validator-workspace").classList.contains("explorer-hidden")).toBe(false);
+    expect(q(".validator-workspace").dataset.mobileView).toBe("file");
+  });
+
   it("terminates a silent worker at the deadline, ignores late results, and permits retry", async () => {
     chooseFile("A.xml"); await start();
     const worker = control.workers[0]!;
@@ -124,6 +152,84 @@ describe("validation lifecycle", () => {
     chooseFile("A.xml"); await start();
     const worker = control.workers[0]!; worker.respond(validateWorkerRequest(worker.requests[0]!));
     q<HTMLButtonElement>('[data-open-step="2"].button').click(); chooseFile("B.xml");
+    expectIncomplete();
+  });
+
+  it("accepts validation before optional explorer enrichment completes", async () => {
+    remountWithExplorer();
+    chooseFile("A.xml"); await start();
+    const worker = control.workers[0]!;
+    const completion = validateWorkerRequest(worker.requests[0]!);
+    expect(completion.type).toBe("complete");
+    worker.respond(completion);
+    expect(q("#results-title").textContent).toBe("PASS");
+    expect(q<HTMLButtonElement>("#export-csv").disabled).toBe(false);
+    expect(worker.terminated).toBe(false);
+    expect(q("[data-explorer-notice]").textContent).toContain("preparing");
+
+    const snapshotId = worker.requests[0]!.snapshotId!;
+    worker.respond({ type: "explorer-ready", snapshotId, locations: [] });
+    expect(worker.terminated).toBe(true);
+    expect(q("#results-title").textContent).toBe("PASS");
+    expect(q<HTMLButtonElement>("#export-csv").disabled).toBe(false);
+  });
+
+  it("keeps completed results when explorer enrichment fails", async () => {
+    remountWithExplorer();
+    chooseFile("A.xml"); await start();
+    const worker = control.workers[0]!;
+    worker.respond(validateWorkerRequest(worker.requests[0]!));
+    worker.respond({ type: "explorer-error", snapshotId: worker.requests[0]!.snapshotId! });
+    expect(worker.terminated).toBe(true);
+    expect(q("#results-title").textContent).toBe("PASS");
+    expect(q<HTMLButtonElement>("#export-csv").disabled).toBe(false);
+    expect(q("[data-explorer-notice]").textContent).toContain("unavailable");
+  });
+
+  it("preserves finding-action focus when enrichment updates its label", async () => {
+    remountWithExplorer();
+    const warningSource = validPain001
+      .replace("pain.001.001.99", "pain.001.001.09")
+      .replace(/^<\?xml[^>]+>\n/u, "");
+    chooseFile("warning.xml", async () => new TextEncoder().encode(warningSource).buffer);
+    await start();
+    const worker = control.workers[0]!;
+    const completion = validateWorkerRequest(worker.requests[0]!);
+    expect(completion.type).toBe("complete");
+    if (completion.type !== "complete") return;
+    worker.respond(completion);
+    const finding = completion.run.results.find((entry) => entry.outcome === "WARNING");
+    expect(finding).toBeTruthy();
+    if (!finding) return;
+    const action = q<HTMLButtonElement>(`[data-finding-action="${finding.ordinal}"]`);
+    action.focus();
+    worker.respond({
+      type: "explorer-ready",
+      snapshotId: worker.requests[0]!.snapshotId!,
+      locations: [{
+        ordinal: finding.ordinal,
+        location: {
+          kind: "located",
+          primary: { kind: "context", label: "Test context.", span: { start: 0, end: 0 } },
+          related: [],
+        },
+      }],
+    });
+    const updatedAction = q(`[data-finding-action="${finding.ordinal}"]`);
+    expect(document.activeElement).toBe(updatedAction);
+    expect(updatedAction.textContent).toBe("View ›");
+  });
+
+  it("ignores late explorer data after a same-name file replacement", async () => {
+    remountWithExplorer();
+    chooseFile("same.xml"); await start();
+    const worker = control.workers[0]!;
+    worker.respond(validateWorkerRequest(worker.requests[0]!));
+    const snapshotId = worker.requests[0]!.snapshotId!;
+    q<HTMLButtonElement>('[data-open-step="2"].button').click();
+    chooseFile("same.xml");
+    worker.respond({ type: "explorer-ready", snapshotId, locations: [] });
+    expect(q("[data-explorer-notice]").textContent).toContain("after this file is validated");
     expectIncomplete();
   });
 });

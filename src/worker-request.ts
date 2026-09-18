@@ -15,7 +15,16 @@ export function validateWorkerRequest(request: WorkerRequest): WorkerResponse {
     return { type: "error", code: "INVALID_ENCODING" };
   }
   try {
-    return { type: "complete", run: validateSource(request.fileName, source, pack) };
+    const run = validateSource(request.fileName, source, pack);
+    return request.includeExplorer
+      ? {
+          type: "complete",
+          run,
+          source,
+          ...(request.snapshotId === undefined ? {} : { snapshotId: request.snapshotId }),
+          explorerPending: true,
+        }
+      : { type: "complete", run };
   } catch {
     // Parser exceptions can contain file content. Send a category, not raw exception text.
     return { type: "error", code: "ENGINE_ERROR" };

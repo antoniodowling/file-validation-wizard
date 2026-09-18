@@ -16,9 +16,15 @@ A completed validation can produce PASS, PASS WITH WARNINGS, or FAIL. Malformed 
 
 The worker returns typed failure codes. Unexpected engine exceptions do not forward raw exception text, which could contain source-file values. Syntax findings continue to use the existing safe text rendering.
 
+## File explorer budgets
+
+Explorer work is optional enrichment after validation completes. If it fails or exceeds its separate 10-second preparation window, completed results and CSV export remain available.
+
+The current provisional limits are 5,000,000 decoded characters for a full viewer document and the companion location index, 250,000 characters for the longest line in full-view mode, 12,000 characters for an excerpt, and 32 related targets per finding. Files outside the viewer or long-line budget use an explicitly scoped original-source excerpt. Findings outside the index budget use an explicit unavailable location instead of a guessed highlight. These values are implementation guards, not measured browser support claims; see [FILE_EXPLORER.md](FILE_EXPLORER.md).
+
 ## Generate the upload kit
 
-A ready-to-use generated archive is committed at [`demo-files/hnb-validator-stress-files.zip`](../demo-files/hnb-validator-stress-files.zip). It includes all 14 upload files, instructions, expected outcomes, checksums, and the initial local measurements described below.
+A ready-to-use generated directory is committed at [`demo-files/hnb-validator-stress-files/`](../demo-files/hnb-validator-stress-files/README.md). It includes all 14 upload files, instructions, expected outcomes, checksums, and the initial local measurements described below.
 
 From an absolute repository/worktree path, run:
 
@@ -48,3 +54,7 @@ The 24,999,999-byte and 25,000,000-byte XML text-node cases exhausted that artif
 ## Safeguard validation
 
 All 50 Vitest tests and the generated-kit integrity test passed. TypeScript checking, the standalone production build, and ReadMe package generation passed. The tests reused installed dependencies through a temporary worktree dependency link and a temporary Vite filesystem allow-list for that link; neither changes production configuration. Browser/Playwright and hosted ReadMe testing were not run; they remain acceptance work.
+
+## File explorer safeguard validation (2026-09-18)
+
+The non-browser `npm run validate:core` path passed 99 Vitest tests across 17 files, the generated-kit integrity test, TypeScript/standalone build, ReadMe package generation, and a static package-contract test. Coverage includes canonical line-ending/Unicode/EOF mappings, UTF-8 BOM handling, legacy-equivalent EDI tokenization, XML/EDI rule locations, duplicate EDI occurrences, related-target truncation, index-budget degradation, filtered finding navigation, severity-specific source highlights, the simplified finding-details interface, pagination, accepted-run lifecycle, enrichment failure, stale messages, focus preservation, the six-location multi-finding PAIN demo, and its clean resolved companion. Browser performance and hosted ReadMe acceptance were not run and remain unverified.
