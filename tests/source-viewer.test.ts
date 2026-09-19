@@ -22,9 +22,9 @@ describe("read-only source viewer finding highlights", () => {
     expect(host.querySelector(".cm-finding-warning")).toBeNull();
   });
 
-  it("uses a yellow line decoration for a warning point", () => {
+  it("uses a neutral line decoration for an uncertain parser stop", () => {
     viewer.setFindingTarget({ kind: "parser-position", label: "Warning", span: { start: 6, end: 6 } }, "WARNING");
-    expect(host.querySelector(".cm-finding-line.cm-finding-warning")).toBeTruthy();
+    expect(host.querySelector(".cm-finding-line.cm-finding-neutral")).toBeTruthy();
     expect(host.querySelector(".cm-finding-error")).toBeNull();
   });
 

@@ -1,3 +1,5 @@
+import { provenanceFor } from "./coverage";
+import { MAX_DECODED_UNITS, ResourceLimitError, UnsupportedInputError } from "./resource-policy";
 import { deriveOverallStatus } from "./outcome";
 import { parseEdi } from "./parsers/edi";
 import { parseIso } from "./parsers/iso";
@@ -9,7 +11,15 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
     throw new Error("The selected validation profile is not available.");
   }
 
-  const parsed = pack.parserKind === "ISO_XML" ? parseIso(source, pack) : parseEdi(source, pack);
+  if (source.length > MAX_DECODED_UNITS) throw new ResourceLimitError();
+  const provenance = provenanceFor(pack);
+  let parsed;
+  try { parsed = pack.parserKind === "ISO_XML" ? parseIso(source, pack) : parseEdi(source, pack); } catch (error) {
+    if (!(error instanceof UnsupportedInputError)) throw error;
+    return Object.freeze({ fileName, formatId: pack.id, formatLabel: pack.label, version: pack.version, provenance,
+      executionStatus: "UNSUPPORTED", executionReason: error.message, verdict: null, results: [], checks: provenance.coverage.map(rule => ({ ruleId: rule.id, state: "not-evaluated" as const, findingOrdinals: [] })),
+      errorCount: 0, warningCount: 0, overallStatus: "UNSUPPORTED" });
+  }
   const results: RuleResult[] = [...parsed.results];
   if (parsed.context) {
     for (const rule of pack.rules) {
@@ -27,10 +37,19 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
     }
   }
 
+  if (results.length > 5000) throw new ResourceLimitError();
   const frozenResults = Object.freeze(results.map((entry) => Object.freeze(entry)));
   const errorCount = frozenResults.filter((entry) => entry.outcome === "ERROR").length;
   const warningCount = frozenResults.filter((entry) => entry.outcome === "WARNING").length;
   return Object.freeze({
+    provenance,
+    executionStatus: "COMPLETED",
+    verdict: deriveOverallStatus(frozenResults) as "PASS" | "PASS_WITH_WARNINGS" | "FAIL",
+    checks: provenance.coverage.map(rule => {
+      const evaluated = frozenResults.filter(r => r.ruleId === rule.id);
+      return { ruleId: rule.id, state: evaluated.length === 0 ? "not-evaluated" as const : evaluated.some(r => r.outcome !== "PASS") ? "failed" as const : "passed" as const,
+        findingOrdinals: evaluated.filter(r => r.outcome !== "PASS").map(r => r.ordinal) };
+    }),
     fileName,
     formatId: pack.id,
     formatLabel: pack.label,

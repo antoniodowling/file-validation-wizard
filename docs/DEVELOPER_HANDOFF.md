@@ -1,5 +1,8 @@
 # Developer handoff
 
+> Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
+
+
 ## What to use
 
 The source of truth is `src/`. The files in `readme-package/` are generated from it and `scripts/readme-templates/` and committed for developers who only need the ReadMe copy/paste deliverable. The former root-level package has moved into that directory. Do not edit generated artifacts directly.
@@ -69,3 +72,9 @@ If CSP blocks the worker, record the failure and agree a deployment approach bef
 ## Data and ownership
 
 Use synthetic files only in examples, tests, and issues. Never commit customer payment files, credentials, local environment files, or private validation exports. No license has been selected; the repository owner must choose any intended reuse license.
+
+## Ruleset 2 handoff
+
+Use [IMPLEMENTATION_EVIDENCE.md](IMPLEMENTATION_EVIDENCE.md) as the current requirement-to-evidence ledger, [coverage/README.md](coverage/README.md) for report semantics, and [the local receipt](evidence/ruleset-2/receipt.json) for exact tested bundle hashes. `node scripts/export-coverage.mjs` produces the pinned per-profile coverage snapshot; change its filename/revision for future semantic changes. Preserve the old snapshot for historical reports.
+
+The checked-in ReadMe files are regenerated and remain self-contained. All profiles remain DEMO, with additional revision-bound production gates. Do not promote pain.001.001.09 or any X12 profile from these local results. Obtain the specifically listed authoritative artifacts, independent fixtures, bank/workflow decisions, hosted acceptance and sign-offs first.

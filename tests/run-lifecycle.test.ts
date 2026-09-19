@@ -217,7 +217,7 @@ describe("validation lifecycle", () => {
     });
     const updatedAction = q(`[data-finding-action="${finding.ordinal}"]`);
     expect(document.activeElement).toBe(updatedAction);
-    expect(updatedAction.textContent).toBe("View ›");
+    expect(updatedAction.textContent).toBe("View context");
   });
 
   it("ignores late explorer data after a same-name file replacement", async () => {
@@ -232,4 +232,37 @@ describe("validation lifecycle", () => {
     expect(q("[data-explorer-notice]").textContent).toContain("after this file is validated");
     expectIncomplete();
   });
+});
+
+it("terminates pending enrichment before revalidating the same file", async () => {
+  remountWithExplorer(); chooseFile("same.xml"); await start();
+  const old = control.workers[0]!;
+  const response = validateWorkerRequest(old.requests[0]!);
+  old.respond(response);
+  expect(old.terminated).toBe(false);
+  q('[data-open-step="2"]').click(); await start();
+  expect(old.terminated).toBe(true);
+  expect(control.workers).toHaveLength(2);
+  old.respond({ type: "explorer-error", snapshotId: old.requests[0]!.snapshotId! });
+  expect(control.workers[1]!.terminated).toBe(false);
+});
+
+it("disables Continue while search text disagrees and restores abandoned selection", () => {
+  q('[data-open-step="1"]').click();
+  const search = q<HTMLInputElement>("#format-search");
+  search.value = "MT940"; search.dispatchEvent(new Event("input"));
+  expect(q<HTMLButtonElement>("#format-continue").disabled).toBe(true);
+  search.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+  vi.advanceTimersByTime(1);
+  expect(search.value).toContain("pain.001");
+  expect(q<HTMLButtonElement>("#format-continue").disabled).toBe(false);
+});
+
+it("announces completion without hiding the format field the user moved to", async () => {
+  chooseFile("same.xml"); await start();
+  q('[data-open-step="1"]').click(); q("#format-search").focus();
+  const worker = control.workers[0]!; worker.respond(validateWorkerRequest(worker.requests[0]!));
+  expect(document.activeElement).toBe(q("#format-search"));
+  expect(q("#step-1-panel").hidden).toBe(false);
+  expect(q<HTMLButtonElement>('[data-open-step="3"]').disabled).toBe(false);
 });

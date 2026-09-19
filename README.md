@@ -79,3 +79,5 @@ See [the file explorer implementation](docs/FILE_EXPLORER.md) for coordinate sem
   [`docs/ACCESSIBILITY_FOLLOW_UPS.md`](docs/ACCESSIBILITY_FOLLOW_UPS.md) before finalization.
 - Verify the generated package in ReadMe staging, including Blob-worker compatibility and coexistence with the portal's existing Custom JavaScript.
 - Document the smallest hosted-asset fallback only if ReadMe's content security policy blocks the embedded worker.
+
+Ruleset 2: [coverage and export semantics](docs/coverage/README.md), [implementation evidence and remaining gates](docs/IMPLEMENTATION_EVIDENCE.md), and [exact local bundle receipt](docs/evidence/ruleset-2/receipt.json). All executable profiles remain DEMO.

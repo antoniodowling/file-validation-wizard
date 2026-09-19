@@ -45,10 +45,10 @@ describe("file explorer finding view", () => {
     root.innerHTML = explorerMarkup();
   });
 
-  it("renders only finding navigation and a three-part detail row", () => {
+  it("renders only finding navigation and a detail row with location confidence", () => {
     expect(root.querySelector("[data-explorer-expand]")?.textContent).toBe("Expand explorer");
     expect(root.querySelector("[data-explorer-hide]")?.textContent).toBe("Hide explorer");
-    expect(root.querySelectorAll(".explorer-finding-data > div")).toHaveLength(3);
+    expect(root.querySelectorAll(".explorer-finding-data > div")).toHaveLength(4);
     expect(root.querySelector("[data-detail-field]")).toBeTruthy();
     expect(root.querySelector("[data-detail-locator]")).toBeTruthy();
     expect(root.querySelector("[data-detail-message]")).toBeTruthy();

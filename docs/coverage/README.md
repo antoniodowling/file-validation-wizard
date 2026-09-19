@@ -1,0 +1,17 @@
+# Coverage and report interpretation
+
+`ruleset-2.0.0.json` freezes the exact coverage of all nine executable DEMO profile versions. Regenerate it from the registry with `node scripts/export-coverage.mjs` only while preparing this ruleset revision; subsequent changes require a new revision/file. The same coverage is embedded in every run and export, so a moved URL does not erase the meaning of a historical report.
+
+PASS means the matching profile's promised checks completed with no errors or warnings. PASS WITH WARNINGS means those checks completed with advisory warnings. FAIL is a completed assessment with a failed prerequisite or rule; dependent checks are explicitly not evaluated. Unsupported XML versions/encodings or multiple complete EDI interchanges receive no validity verdict. Read, decode, engine, resource and timeout failures are incomplete, with no completed assessment or result export. The UI keeps previous-run results and source out of incomplete runs.
+
+Check evaluations are distinct from occurrence results: one EDI control/version rule can evaluate many envelopes. UI error/warning counts count finding occurrences; check counts and skipped states are in the coverage details/JSON. `ordinal` identifies an occurrence only inside its run. Rule IDs retain their subject; ruleset 2 changes semantics and must not be compared to ruleset 1 without its snapshot. Existing legacy location mapping is isolated to reports without schema 2; it cannot establish new validity.
+
+CSV export schema 2 retains the original first ten columns and adds repeated provenance columns plus row kinds. `evaluation-occurrence` rows contain performed checks, including passes; `check-state` rows record suppressed evaluations. The first data row carries the complete coverage/exclusions/check snapshot; later rows reference its coverage revision. JSON schema 2 retains nested coverage, checks, occurrence locations and provenance. Coordinates are half-open zero-based UTF-16 offsets into the original UTF-8-decoded, post-BOM source, never byte offsets. Lines/columns are one-based. Context, exact, parser-position, file-wide and unavailable are explicit. A parser stop may follow the cause. XML namespace mismatch uses root context, not a falsely exact namespace highlight.
+
+## Version-specific usage
+
+Select the exact profile/version listed in the snapshot before loading a file. XML requires that exact namespace, one Document, one matching message container, one group header, scalar MsgId/NbOfTxs and payment information. These are a **DEMO structural subset**, not XSD validation. EDI uses the profile's exact ISA12/GS08 DEMO mapping, validates envelope ownership/counts/controls, and excludes ST03 implementation-guide requirements. ISA12 mappings for newer releases remain DEMO assumptions pending independent X12 artifacts; they are not standards approval.
+
+The in-app PASS/FAIL samples are synthetic wiring examples for each selected version. They are not complete payment instructions or independent conformance fixtures. The external Huntington link is labeled as a family guide with unverified version applicability. Reference-only catalogue entries never enable Continue; supported DEMO validators appear first and disclose support before version selection.
+
+No report proves bank acceptance, funds availability, authorization, fraud approval, execution, or historical duplicate detection. Production activation requires revision-bound specification/ruleset/fixture/acceptance evidence plus every existing approval gate.

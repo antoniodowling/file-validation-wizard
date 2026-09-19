@@ -42,7 +42,7 @@
     "profile": "pain.001 / pain.001.001.09",
     "tier": "standard",
     "purpose": "Syntax error after scanning a large input.",
-    "expected": "Completed FAIL."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: scalar budget is reached before the late syntax error."
   },
   {
     "name": "06-xml-just-under-limit-24999999-bytes.xml",
@@ -51,7 +51,7 @@
     "profile": "pain.001 / pain.001.001.09",
     "tier": "standard",
     "purpose": "Large text node one byte under selection/worker limit.",
-    "expected": "Admitted; PASS if processing completes before deadline."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: decoded-source budget exceeded after byte admission."
   },
   {
     "name": "07-xml-exact-limit-25000000-bytes.xml",
@@ -60,7 +60,7 @@
     "profile": "pain.001 / pain.001.001.09",
     "tier": "standard",
     "purpose": "Exact inclusive size boundary.",
-    "expected": "Admitted; PASS if processing completes before deadline."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: decoded-source budget exceeded after byte admission."
   },
   {
     "name": "08-xml-over-limit-25000001-bytes.xml",
@@ -78,7 +78,7 @@
     "profile": "pain.001 / pain.001.001.09",
     "tier": "standard",
     "purpose": "Many sibling objects rather than one large text node.",
-    "expected": "PASS under current demo checks if processing completes; not standards-conformance evidence."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: structural-node budget exceeded."
   },
   {
     "name": "10-xml-deep-nesting-5000-levels.xml",
@@ -87,7 +87,7 @@
     "profile": "pain.001 / pain.001.001.09",
     "tier": "adversarial",
     "purpose": "Deep recursion with small input; run after ordinary cases.",
-    "expected": "May produce ENGINE_ERROR or TIMEOUT. No fixed outcome across parser/browser versions."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: XML depth budget exceeded."
   },
   {
     "name": "11-edi-820-005010-baseline-pass.edi",
@@ -105,7 +105,7 @@
     "profile": "820 / 005010",
     "tier": "standard",
     "purpose": "Many segment/element arrays and envelope scans.",
-    "expected": "PASS under current demo checks if processing completes."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: EDI segment budget exceeded."
   },
   {
     "name": "13-edi-820-005010-long-element-5MB.edi",
@@ -114,7 +114,7 @@
     "profile": "820 / 005010",
     "tier": "standard",
     "purpose": "One large element versus many short segments.",
-    "expected": "PASS under current limited checks if processing completes; deliberately not a realistic payment."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: EDI segment-length budget exceeded."
   },
   {
     "name": "14-edi-820-005010-dense-250000-segments.edi",
@@ -123,6 +123,6 @@
     "profile": "820 / 005010",
     "tier": "adversarial",
     "purpose": "Allocation pressure from many tiny segments; run after ordinary cases.",
-    "expected": "May PASS limited checks, fail in the engine, or time out. Not a valid standard file."
+    "expected": "INCOMPLETE / RESOURCE_LIMIT: EDI segment budget exceeded; not a valid standard file."
   }
 ]

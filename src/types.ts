@@ -1,7 +1,7 @@
 export const MAX_FILE_BYTES = 25_000_000;
 export const VALIDATION_DEADLINE_MS = 10_000;
 
-export type WorkerFailureCode = "FILE_TOO_LARGE" | "PROFILE_UNAVAILABLE" | "INVALID_ENCODING" | "ENGINE_ERROR";
+export type WorkerFailureCode = "FILE_TOO_LARGE" | "PROFILE_UNAVAILABLE" | "INVALID_ENCODING" | "ENGINE_ERROR" | "RESOURCE_LIMIT";
 export type ValidationFailureCode = WorkerFailureCode | "FILE_READ_ERROR" | "WORKER_UNAVAILABLE" | "WORKER_ERROR" | "TIMEOUT";
 
 export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820";
@@ -10,7 +10,7 @@ export type FormatPackMode = "DEMO" | "PRODUCTION";
 export type CatalogStatus = "DEMO_SUPPORTED" | "REFERENCE_ONLY";
 export type RuleOutcome = "PASS" | "ERROR" | "WARNING";
 export type FindingSeverity = "ERROR" | "WARNING";
-export type OverallStatus = "PASS" | "PASS_WITH_WARNINGS" | "FAIL";
+export type OverallStatus = "PASS" | "PASS_WITH_WARNINGS" | "FAIL" | "UNSUPPORTED" | "INCOMPLETE";
 
 export interface SourceSpan {
   readonly start: number;
@@ -103,6 +103,7 @@ export interface FormatPack {
   readonly mode: FormatPackMode;
   readonly identifiers: VersionIdentifiers | null;
   readonly approval: ReleaseApproval;
+  readonly releaseEvidence?: { readonly specificationRevision: string; readonly rulesetRevision: string; readonly fixtureRevision: string; readonly acceptanceRevision: string };
   readonly rules: readonly ValidationRule[];
 }
 
@@ -124,6 +125,7 @@ export interface FormatCatalogEntry {
 }
 
 export interface RuleResult {
+  readonly location?: FindingLocation;
   readonly ruleId: string;
   readonly outcome: RuleOutcome;
   readonly severity: FindingSeverity | null;
@@ -134,6 +136,11 @@ export interface RuleResult {
 }
 
 export interface ValidationRun {
+  readonly provenance?: RunProvenance;
+  readonly checks?: readonly CheckEvaluation[];
+  readonly executionReason?: string;
+  readonly executionStatus?: "COMPLETED" | "INCOMPLETE" | "UNSUPPORTED";
+  readonly verdict?: "PASS" | "PASS_WITH_WARNINGS" | "FAIL" | null;
   readonly fileName: string;
   readonly formatId: string;
   readonly formatLabel: string;
@@ -151,6 +158,7 @@ export interface EdiSegment {
 }
 
 export interface EdiDocument {
+  readonly groups?: readonly import("./parsers/edi").EdiGroup[];
   readonly elementSeparator: string;
   readonly componentSeparator: string;
   readonly segmentTerminator: string;
@@ -181,3 +189,31 @@ export type WorkerResponse =
     }
   | { readonly type: "explorer-error"; readonly snapshotId: number }
   | { readonly type: "error"; readonly code: WorkerFailureCode };
+
+export interface CoverageRule {
+  readonly id: string;
+  readonly description: string;
+  readonly ruleClass: "xml-syntax" | "demo-structure" | "iso-schema" | "advisory" | "tool-policy";
+  readonly severity: "ERROR" | "WARNING";
+  readonly applicability: string;
+  readonly prerequisite: string;
+  readonly reference: string;
+  readonly evidence: string;
+}
+export interface CheckEvaluation {
+  readonly ruleId: string;
+  readonly state: "passed" | "failed" | "not-applicable" | "not-evaluated";
+  readonly findingOrdinals: readonly number[];
+}
+export interface RunProvenance {
+  readonly schemaVersion: "2";
+  readonly profileId: string;
+  readonly messageVersion: string;
+  readonly implementationGuideRevision: string;
+  readonly mode: FormatPackMode;
+  readonly rulesetRevision: string;
+  readonly coverageRevision: string;
+  readonly buildRevision: string;
+  readonly coverage: readonly CoverageRule[];
+  readonly exclusions: readonly string[];
+}

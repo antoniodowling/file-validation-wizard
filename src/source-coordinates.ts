@@ -54,9 +54,15 @@ export function sourceOffsetAtLineColumn(source: string, line: number, column: n
 
 export function sourceLineColumnAtOffset(source: string, offset: number): { readonly line: number; readonly column: number } | null {
   if (!Number.isInteger(offset) || offset < 0 || offset > source.length) return null;
-  const starts = sourceLineStarts(source);
-  const lineIndex = Math.max(0, upperBound(starts, offset) - 1);
-  return { line: lineIndex + 1, column: offset - (starts[lineIndex] ?? 0) + 1 };
+  let line = 1, start = 0;
+  for (let i = 0; i < offset; i++) {
+    if (source[i] === "\r") {
+      const next = i + (source[i + 1] === "\n" ? 2 : 1);
+      if (next <= offset) { line++; start = next; }
+      if (source[i + 1] === "\n") i++;
+    } else if (source[i] === "\n") { line++; start = i + 1; }
+  }
+  return { line, column: offset - start + 1 };
 }
 
 export function normalizeSourceForViewer(source: string): ViewerDocument {

@@ -1,0 +1,55 @@
+{
+  "date": "2026-09-19",
+  "environment": "local macOS; generated ReadMe mounts and standalone app, not actual ReadMe hosting",
+  "runtime": "Node 26.5.0 / npm 11.17.0",
+  "browserInstallMetadata": [
+    {
+      "name": "chromium",
+      "revision": "1243",
+      "installByDefault": true,
+      "browserVersion": "153.0.8010.12",
+      "title": "Chrome for Testing"
+    },
+    {
+      "name": "firefox",
+      "revision": "1543",
+      "installByDefault": true,
+      "browserVersion": "155.0",
+      "title": "Firefox"
+    },
+    {
+      "name": "webkit",
+      "revision": "2359",
+      "installByDefault": true,
+      "revisionOverrides": {
+        "mac14": "2251",
+        "mac14-arm64": "2251"
+      },
+      "browserVersion": "26.6",
+      "title": "WebKit"
+    }
+  ],
+  "bundleSha256": {
+    "readme-package/custom-javascript.js": "242a04017250ac84e9f69f9c4532aaa9fb86d22f29e4a4707ca09a137d8742b1",
+    "readme-package/custom-css.css": "4247380a9b0836b00cc1036c65d18bae89d74f0b0e50566423a974fd4ccf4459"
+  },
+  "validation": [
+    "151 tests passed in broad Vitest run before final focused changes",
+    "51 focused hardening/lifecycle/CSV/sample checks passed after semantic changes",
+    "24 final lifecycle and coverage checks passed",
+    "21 pinned W3C subset checks passed (included in broad count)",
+    "14 stress-policy checks passed; generated stress-kit integrity passed",
+    "TypeScript and standalone/ReadMe builds passed; static package contract passed",
+    "Full browser run: 93/96 passed; three identical stale multiline-highlight assertions corrected",
+    "30 affected follow-up browser cases passed across Chromium/Firefox/WebKit",
+    "Final bundle: 9/9 affected layout/summary/resource browser cases passed across all three browsers",
+    "Visual inspection of final generated 30-percent pane screenshot passed"
+  ],
+  "excludedAcceptance": [
+    "actual hosted ReadMe CSP/Blob-worker/routing/customization integration",
+    "manual screen readers and actual 200-percent zoom",
+    "full process memory/GC recovery and performance envelope",
+    "complete ISO/X12 conformance and bank implementation rules",
+    "production or domain approval"
+  ]
+}

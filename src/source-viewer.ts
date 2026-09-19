@@ -130,7 +130,7 @@ export class ReadOnlySourceViewer {
       }
     };
     if (this.findingTarget) {
-      const className = this.findingSeverity === "ERROR"
+      const className = this.findingTarget.kind !== "exact" ? "cm-finding-neutral" : this.findingSeverity === "ERROR"
         ? "cm-finding-error"
         : this.findingSeverity === "WARNING"
           ? "cm-finding-warning"
