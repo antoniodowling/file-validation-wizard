@@ -8,7 +8,7 @@ A browser-local demo for exploring and validating common payment-file formats. I
 - reference-only metadata for every other catalog entry; and
 - a dedicated-page, read-only file explorer that links current findings to exact source, honest context, or an explicit unavailable state.
 
-Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee Huntington acceptance or payment readiness.
+Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee ABC Bank acceptance or payment readiness.
 
 ## Developer handoff
 

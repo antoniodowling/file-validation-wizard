@@ -65,7 +65,7 @@ Field, Path, and Message respectively.
   Grotesque.
 - Spacing and layout rhythm: the number and heading share one centered row; the
   callout icon and copy are vertically centered with balanced padding.
-- Colors and visual tokens: the established Huntington teal, `#fffbeb` warning
+- Colors and visual tokens: the established ABC Bank teal, `#fffbeb` warning
   fill, `#cca300` left border, and `#6d590a` icon color are retained.
 - Image and icon fidelity: the warning mark comes from the Bootstrap Icons
   `exclamation-triangle` source asset and is an outline icon rather than a custom
