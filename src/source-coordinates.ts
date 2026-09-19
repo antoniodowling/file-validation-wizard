@@ -1,5 +1,8 @@
 import type { SourceSpan } from "./types";
 
+// Canonical positions refer to the worker-decoded string, not UTF-8 bytes:
+// zero-based UTF-16 offsets, half-open [start, end) spans, and one-based lines
+// and columns. Columns also count UTF-16 code units. See docs/FILE_EXPLORER.md.
 export interface ViewerDocument {
   readonly text: string;
   readonly canonicalToViewer: (offset: number) => number;
@@ -59,6 +62,12 @@ export function sourceLineColumnAtOffset(source: string, offset: number): { read
   return { line: lineIndex + 1, column: offset - (starts[lineIndex] ?? 0) + 1 };
 }
 
+/**
+ * Normalize CRLF and lone CR to LF for the viewer without changing canonical
+ * source. CRLF loses one code unit, so use these mappings for selections and
+ * highlights; never apply a viewer offset directly to the original string.
+ * Lone CR replacement preserves length. Canonical text retains copy/export data.
+ */
 export function normalizeSourceForViewer(source: string): ViewerDocument {
   const removedCanonicalOffsets: number[] = [];
   let text = "";
