@@ -29,6 +29,10 @@ stylesheet.append({
 });
 
 await writeFile(cssPath, `${stylesheet.toString()}\n${await readFile(new URL("./readme-templates/modal.css", import.meta.url), "utf8")}`, "utf8");
+// ReadMe's customization pipeline can interpret raw declaration openers as HTML
+// even inside the generated JavaScript. Escape them after bundling so runtime
+// string values still match XML declarations. Preserve this step if the bundler
+// changes; tests/readme-package-contract.test.mjs guards the delivered artifact.
 const javascript = await readFile(javascriptPath, "utf8");
 await writeFile(
   javascriptPath,

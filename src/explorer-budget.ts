@@ -1,5 +1,10 @@
 import type { SourceSpan } from "./types";
 
+// Provisional guards for editor rendering and source-index preparation, separate
+// from the worker's file-size limit. Exceeding them limits explorer detail, not
+// validation. Before raising them, measure memory and responsiveness with the
+// synthetic stress kit in supported browsers, including long single-line files.
+// These values are not claims of supported browser capacity (docs/FILE_EXPLORER.md).
 export const MAX_FULL_VIEWER_CHARACTERS = 5_000_000;
 export const MAX_FULL_VIEWER_LINE_CHARACTERS = 250_000;
 export const MAX_SOURCE_INDEX_CHARACTERS = 5_000_000;
