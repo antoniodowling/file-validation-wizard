@@ -51,22 +51,26 @@ Generated fixtures use synthetic data. The BAI2 kit also preserves the public gu
 
 ### Starter demos
 
-Select the format and version shown, upload a linked file, and press **Validate**. Start with the three PAIN.001 files to compare PASS, PASS WITH WARNINGS, and FAIL, then try a pair for the ACH family you are working on.
+Select the format and version shown, upload a linked file, and press **Validate**. Start with the three PAIN.001 files to compare PASS, PASS WITH WARNINGS, and FAIL, then try the examples for the ACH family you are working on.
 
-| Select format | Select version / profile | Files and expected results |
-| --- | --- | --- |
-| PAIN.001 | pain.001.001.09 | [PASS](demo-files/pain.001.001.09-pass.xml), [PASS WITH WARNINGS](demo-files/pain.001.001.09-pass-with-warnings.xml), [FAIL](demo-files/pain.001.001.09-fail.xml) |
-| 820 (ASC X12) | 005010 | [PASS](demo-files/hnb-validator-stress-files/11-edi-820-005010-baseline-pass.edi), the small baseline from the stress kit |
-| NACHA | Expanded entries and declared healthcare — candidate (2026 r2) | [PASS](demo-files/ach-candidates/origination-healthcare-pass.ach), [FAIL](demo-files/ach-candidates/origination-healthcare-missing-fail.ach) |
-| ACH Returns | General network returns — public-source candidate (2026 r1) | [PASS](demo-files/ach-candidates/returns-ccd-pass.ach), [FAIL](demo-files/ach-candidates/returns-trace-fail.ach) |
-| ACH Control Totals | 58-column standalone candidate (2026 r1) | [PASS](demo-files/ach-candidates/totals-pass.txt), [FAIL](demo-files/ach-candidates/totals-date-fail.txt) |
-| File Received ACK | Single pipe-delimited scenario — candidate (1.0 r1) | [PASS](demo-files/ach-candidates/ack-received-pass.txt), [FAIL](demo-files/ach-candidates/ack-date-fail.txt) |
-| BAI2 | Huntington public-guide candidate (BAI2 2026 r1) | [PASS](demo-files/bai2/balances-pass.bai2), [FAIL](demo-files/bai2/account-total-fail.bai2), [UNSUPPORTED](demo-files/bai2/funds-unsupported.bai2) |
-| CSV Wire | Huntington CSV Wire — USD candidate (2026 r1) | [Domestic PASS](demo-files/csv-wire/domestic-pass.csv), [International USD PASS](demo-files/csv-wire/international-usd-pass.csv), [FAIL](demo-files/csv-wire/amount-fail.csv), [UNSUPPORTED](demo-files/csv-wire/cad-unsupported.csv) |
+| Select format | Select version / profile | Files and expected results | Advisory checks currently implemented |
+| --- | --- | --- | --- |
+| PAIN.001 | pain.001.001.09 | [PASS](demo-files/pain.001.001.09-pass.xml), [PASS WITH WARNINGS](demo-files/pain.001.001.09-pass-with-warnings.xml), [FAIL](demo-files/pain.001.001.09-fail.xml) | Missing XML declaration |
+| 820 (ASC X12) | 005010 | [PASS](demo-files/hnb-validator-stress-files/11-edi-820-005010-baseline-pass.edi), the small baseline from the stress kit | None implemented |
+| NACHA | Expanded entries and declared healthcare — candidate (2026 r2) | [PASS](demo-files/ach-candidates/origination-healthcare-pass.ach), [PASS WITH WARNINGS](demo-files/nacha-expanded/effective-weekend-warning.ach), [FAIL](demo-files/ach-candidates/origination-healthcare-missing-fail.ach) | Weekend effective date; populated operator settlement date |
+| ACH Returns | General network returns — public-source candidate (2026 r1) | [PASS](demo-files/ach-candidates/returns-ccd-pass.ach), [FAIL](demo-files/ach-candidates/returns-trace-fail.ach) | None implemented |
+| ACH Control Totals | 58-column standalone candidate (2026 r1) | [PASS](demo-files/ach-candidates/totals-pass.txt), [FAIL](demo-files/ach-candidates/totals-date-fail.txt) | None implemented |
+| File Received ACK | Single pipe-delimited scenario — candidate (1.0 r1) | [PASS](demo-files/ach-candidates/ack-received-pass.txt), [FAIL](demo-files/ach-candidates/ack-date-fail.txt) | None for ACK syntax; see disposition note below |
+| BAI2 | Huntington public-guide candidate (BAI2 2026 r1) | [PASS](demo-files/bai2/balances-pass.bai2), [FAIL](demo-files/bai2/account-total-fail.bai2), [UNSUPPORTED](demo-files/bai2/funds-unsupported.bai2) | None implemented |
+| CSV Wire | Huntington CSV Wire — USD candidate (2026 r1) | [Domestic PASS](demo-files/csv-wire/domestic-pass.csv), [International USD PASS](demo-files/csv-wire/international-usd-pass.csv), [FAIL](demo-files/csv-wire/amount-fail.csv), [UNSUPPORTED](demo-files/csv-wire/cad-unsupported.csv) | None implemented |
 
 The PAIN.001 warning example omits the recommended XML declaration. Its FAIL example has a namespace mismatch, which stops validation before structural checks run. Use these examples to inspect finding locations and CSV exports as well as the result summary.
 
-For ACK, format validity and reported disposition are separate. [ack-rejected-pass.txt](demo-files/ach-candidates/ack-rejected-pass.txt) passes format checks while reporting REJECTED for the original file.
+The NACHA warning example has a weekend effective entry date and is also valid under the selected r2 profile, although it is stored in the retained r1 fixture kit. It produces PASS WITH WARNINGS with no errors; it does not exercise the healthcare-specific checks.
+
+“None implemented” means the current profile has no advisory warning rules; it does not mean warnings could never apply to that format. PASS WITH WARNINGS requires an implemented advisory rule to fire without an error. Any error makes the overall result FAIL, even if warnings are also present. PAIN.008 has the same missing-XML-declaration advisory as PAIN.001; its wiring samples are described below.
+
+For ACK, format validity and reported disposition are separate. [ack-rejected-pass.txt](demo-files/ach-candidates/ack-rejected-pass.txt) passes format checks while reporting REJECTED for the original file. Likewise, a bank-reported WARNING inside an ACK does not itself create a validator warning or change its syntax verdict.
 
 PAIN.008 and the other ISO/X12 versions have synthetic wiring samples in [src/samples.ts](src/samples.ts), exercised by unit tests. There is no separate PAIN.008 upload kit; the starter table covers the checked-in upload examples available here.
 
