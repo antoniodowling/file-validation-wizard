@@ -17,7 +17,7 @@ export function validateWorkerRequest(request: WorkerRequest): WorkerResponse {
   }
   try {
     const run = validateSource(request.fileName, source, pack);
-    return request.includeExplorer
+    return request.includeExplorer || request.includeFindingLines
       ? {
           type: "complete",
           run,

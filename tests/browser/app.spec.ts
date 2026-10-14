@@ -285,6 +285,7 @@ test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration"
     };
   });
   expect(new Set(resultLayout.controlHeights).size).toBe(1);
+  expect(resultLayout.columnRatios).toHaveLength(5);
   expect(resultLayout.columnRatios[0]).toBeGreaterThanOrEqual(0.10);
   const severityWidth = await page.locator("thead th").first().evaluate(e => e.getBoundingClientRect().width);
   expect(severityWidth).toBeGreaterThanOrEqual(95);
@@ -484,7 +485,13 @@ test("uses the embedded portal presentation and has no detectable accessibility 
   await expect(page.locator(".accordion-trigger strong").first()).toHaveCSS("font-family", /Huntington Serif/);
   await expect(page.locator("body")).toHaveCSS("font-family", /ABC Monument Grotesk/);
   await expect(page.locator(".card").first()).toHaveCSS("border-radius", "8px");
-  await expect(page.locator(".steps")).toHaveCSS("justify-content", "center");
+  expect(await page.locator(".steps").evaluate(element => {
+    const bounds = element.getBoundingClientRect();
+    return [...element.querySelectorAll("strong")].every(label => {
+      const box = label.getBoundingClientRect();
+      return box.left >= bounds.left && box.right <= bounds.right;
+    });
+  })).toBe(true);
   // The validator is an embedded module; its ReadMe host page owns the single page-level h1.
   const scan = await new AxeBuilder({ page }).disableRules(["page-has-heading-one"]).analyze();
   expect(scan.violations).toEqual([]);
