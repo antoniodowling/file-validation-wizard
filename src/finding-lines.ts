@@ -33,7 +33,8 @@ export function findingLines(source: string, entries: readonly FindingLocationEn
     const range = start === end ? String(start) : `${start}–${end}`;
     return {
       ordinal,
-      label: kind === "context" ? `Context: ${range}` : range,
+      label: range,
+      ...(kind === "context" ? { context: true } : {}),
       description: `${kind === "context" ? "Source context" : kind === "parser-position" ? "Parser position" : "Source location"}: ${label}. Lines are numbered from 1.`,
     };
   });

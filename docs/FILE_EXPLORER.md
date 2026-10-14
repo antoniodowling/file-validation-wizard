@@ -1,5 +1,7 @@
 # File explorer implementation
 
+> Explorer display update (2026-10-14): full-source browsing replaces the earlier clipped source windows. The editor and fallback have no separate character or long-line cutoff, and source-window buttons are removed.
+
 > Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
 
 
@@ -48,11 +50,11 @@ These are conservative implementation guards, not a supported browser capacity o
 
 | Guard | Value | Behavior beyond it |
 | --- | ---: | --- |
-| Full CodeMirror document | 5,000,000 decoded characters | Show a bounded original-source excerpt. |
+| Full CodeMirror document | No separate character cutoff | Display the entire accepted source; CodeMirror renders the visible viewport. |
 | Location companion index | 5,000,000 decoded characters | Preserve validation and report location as unavailable unless a bounded mapping is possible. |
-| Longest full-view line | 250,000 decoded characters | Use excerpt mode to avoid an extreme single-line editor document. |
-| Excerpt context | 12,000 decoded characters | Show explicit start/end scope and truncation. |
 | Related targets per finding | 32 | Mark the related-location count as truncated. |
+
+There are no source-window controls or viewer long-line cutoff. If the interactive editor cannot start, the fallback displays the full source. This does not establish a measured browser capacity.
 
 The worker's existing 25,000,000-byte input limit and 10-second validation deadline are unchanged. Explorer enrichment has its own 10-second UI deadline after validation is accepted.
 

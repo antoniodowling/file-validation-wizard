@@ -160,6 +160,9 @@ table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 
 .column-line { width: 12%; }
 .column-message { width: 30%; }
 .finding-line { overflow-wrap: anywhere; }
+.line-context-number { text-decoration: underline dotted; text-underline-offset: 4px; cursor: help; }
+.line-context-number:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.line-context-tooltip { position: fixed; inset: auto; margin: 0; max-width: min(320px, calc(100vw - 16px)); padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--deep); color: var(--page); font-size: .85rem; line-height: 1.4; box-shadow: 0 3px 12px #0002; }
 th, td { padding: 14px 16px; border-bottom: 1px solid #d7e1e2; overflow-wrap: anywhere; text-align: left; vertical-align: top; }
 th { position: sticky; top: 0; z-index: 1; background: var(--deep); color: var(--page); font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
 td code { color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
@@ -420,8 +423,9 @@ th, .severity { overflow-wrap: normal; }
 .file-explorer { container-type: inline-size; }
 .explorer-toolbar { flex-wrap: wrap; }
 .results-actions { flex-wrap: wrap; }
-.results-actions details { min-width: 0; max-width: 100%; }
-.results-actions details[open] { flex-basis: 100%; }
+.results-technical-details { display: grid; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.results-technical-details details { min-width: 0; max-width: 100%; }
+.results-technical-details summary { cursor: pointer; }
 #diagnostics-output { white-space: pre-wrap; overflow-wrap: anywhere; }
 @container (max-width: 600px) {
   .explorer-header { flex-direction: column; align-items: stretch; }

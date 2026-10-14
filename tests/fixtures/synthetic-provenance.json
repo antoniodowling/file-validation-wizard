@@ -43,8 +43,8 @@
   },
   {
     "path": "tests/hardening.test.ts",
-    "sha256": "4e85efb1ffe71d7e5cc5edb8e89b937dafed6a36465d5b82a13f06717dac6993",
-    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "sha256": "f6395f6689cff20e4f9f7b1f27b81b5f74882e3c59e1f2e41545694d51d88b04",
+    "sourceRevision": "full-source-explorer-local-candidate",
     "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
     "reviewState": "implementation-agent reviewed; independent human/domain review pending"
   },
