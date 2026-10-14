@@ -85,7 +85,7 @@ const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>
     rules: Object.freeze([nonEmptyRule]),
   });
 
-export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
+const LEGACY_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
   isoPack("pain-001-03", "PAIN.001", "pain.001.001.03", "CstmrCdtTrfInitn"),
   isoPack("pain-001-09", "PAIN.001", "pain.001.001.09", "CstmrCdtTrfInitn"),
   isoPack("pain-001-13", "PAIN.001", "pain.001.001.13", "CstmrCdtTrfInitn"),
@@ -123,6 +123,16 @@ export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
     })]),
   } as FormatPack),
 ]);
+
+export const EXPANDED_NACHA_PACK: FormatPack = Object.freeze({
+  ...LEGACY_FORMAT_PACKS.find(pack => pack.id === "nacha-origination-public-2026")!,
+  id: "nacha-origination-expanded-public-2026-r1",
+  label: "NACHA / ACH — expanded entry types (public-source candidate)",
+  version: "origination-expanded-public-2026-r1",
+  identifiers: Object.freeze({ kind: "NACHA_FIXED", profile: "origination-expanded-public-2026-r1", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]) }),
+});
+
+export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.enabled) return [];

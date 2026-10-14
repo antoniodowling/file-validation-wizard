@@ -1,3 +1,6 @@
+import { UnsupportedInputError } from "../resource-policy";
+import { ACH_ENTRY_TYPES } from "./nacha-entry-types";
+import { ctxX12Syntax } from "./ach-remittance";
 import { frameFixedRecords, totals, slice, digits, number, HASH_MOD, date, routingPrefix, routing, type RecordRow } from "./fixed-record";
 import type { FindingLocation, FormatPack, RuleOutcome, RuleResult } from "../types";
 import type { ParserOutput } from "./iso";
@@ -19,7 +22,9 @@ const IDS = [
   "file-batches", "file-blocks", "file-count", "file-hash", "file-debit", "file-credit",
 ] as const;
 export const NACHA_RULE_IDS: readonly string[] = Object.freeze(IDS.map((id) => `nacha.${id}`));
-type Id = typeof IDS[number];
+const EXPANDED_IDS = ["field-padding", "reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const;
+export const NACHA_EXPANDED_RULE_IDS: readonly string[] = Object.freeze([...NACHA_RULE_IDS, ...EXPANDED_IDS.map(id => `nacha.${id}`)]);
+type Id = typeof IDS[number] | typeof EXPANDED_IDS[number];
 interface Check { outcome: RuleOutcome; count: number; field: string; message: string; row: RecordRow | undefined; from: number; to: number }
 function location(check: Check): FindingLocation {
   if (!check.row) return { kind: "file-wide", explanation: "This check applies to the entire ACH file." };
@@ -28,7 +33,9 @@ function location(check: Check): FindingLocation {
 }
 
 export function parseNacha(source: string, pack: FormatPack): ParserOutput {
+  const expanded = pack.identifiers?.kind === "NACHA_FIXED" && pack.identifiers.profile === "origination-expanded-public-2026-r1";
   const checks = new Map<Id, Check>();
+  const conditionalAbsent = new Set<Id>(["addenda-type", "addenda-sequence", "addenda-link", "web-credit-originator", ...(expanded ? ["reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const : [])]);
   // Aggregate by rule, retain the first offending field, and count every violation.
   // Memory and output remain bounded even for a 25 MB file with repeated errors.
   const check = (id: Id, ok: boolean, field: string, message: string, row?: RecordRow, from = 1, to = 94, warning = false): void => {
@@ -45,7 +52,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     checks.set(id, { outcome: warning ? "WARNING" : "ERROR", count: 1, field, message, row, from, to });
   };
   const finish = (parseable: boolean): ParserOutput => ({
-    notApplicable: parseable ? ["addenda-type", "addenda-sequence", "addenda-link", ...(checks.get("transaction-code")?.outcome === "ERROR" ? [] : ["web-credit-originator"])].filter(id => !checks.has(id as Id)).map(id => `nacha.${id}`) : [],
+    notApplicable: parseable ? [...conditionalAbsent].filter(id => !checks.has(id) && (id !== "web-credit-originator" || expanded || checks.get("transaction-code")?.outcome !== "ERROR")).map(id => `nacha.${id}`) : [],
     context: parseable ? ({ source, parserKind: "NACHA_FIXED" }) : null,
     results: [...checks].map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
       severity: c.outcome === "PASS" ? null : c.outcome, field: c.field,
@@ -103,7 +110,13 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   check("creation-date", !!date(slice(header, 24, 29)), "File creation date", "File creation date must be a real calendar date in YYMMDD format.", header, 24, 29);
   const time = slice(header, 30, 33);
   check("creation-time", time === "    " || (/^\d{4}$/.test(time) && Number(time.slice(0, 2)) < 24 && Number(time.slice(2)) < 60), "File creation time", "Optional file creation time must be blank or a valid HHMM time.", header, 30, 33);
+  const padding = (row: RecordRow, fields: readonly (readonly [number, number])[]): void => {
+    if (!expanded) return;
+    for (const [from, to] of fields) { const value = slice(row, from, to); check("field-padding", !value.trim() || !value.startsWith(" "), "Alphanumeric field padding", "Nonblank alphanumeric fields must be left justified with trailing space padding.", row, from, to); }
+  };
+  padding(header, [[41, 63], [64, 86], [87, 94]]);
   const file = totals();
+  let fileHashKnown = true;
   let fileAmountsKnown = true;
   const traces = new Set<string>();
   let previousBatch = 0n;
@@ -113,12 +126,17 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const bc = batch.control;
     const sec = slice(bh, 51, 53);
     const service = slice(bh, 2, 4);
+    if (expanded && !["CCD", "PPD", "CTX", "WEB", "TEL"].includes(sec)) for (const id of ["web-credit-originator", "remittance-required", "ctx-remittance"] as const) conditionalAbsent.delete(id);
     check("service-class", ["200", "220", "225"].includes(service), "Service class", "Ordinary origination uses service class 200, 220, or 225.", bh, 2, 4);
     check("sec-code", ["CCD", "PPD", "CTX", "WEB", "TEL"].includes(sec) && supported.includes(sec), "Standard entry class", "This profile supports only CCD, PPD, CTX, WEB, and TEL batches.", bh, 51, 53);
     required(bh, 5, 20, "batch-required", "Company name");
     required(bh, 41, 50, "batch-required", "Company identification");
     required(bh, 54, 63, "batch-required", "Company entry description");
-    check("batch-required", slice(bh, 54, 63).trim() !== "REVERSAL", "Company entry description", "Reversal batches are outside this ordinary origination profile.", bh, 54, 63);
+    if (!expanded) check("batch-required", slice(bh, 54, 63).trim() !== "REVERSAL", "Company entry description", "Reversal batches are outside this ordinary origination profile.", bh, 54, 63);
+    const description = slice(bh, 54, 63);
+    const reversal = expanded && description.includes("REVERSAL");
+    if (expanded && description.toUpperCase().includes("REVERSAL")) check("reversal-marker", reversal, "Reversal description", "A declared reversal must include uppercase REVERSAL within the Company Entry Description.", bh, 54, 63);
+    padding(bh, [[5, 20], [21, 40], [41, 50], [54, 63], [64, 69]]);
     const effective = date(slice(bh, 70, 75));
     check("effective-date", !!effective, "Effective entry date", "Effective entry date must be a real calendar date in YYMMDD format.", bh, 70, 75);
     if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
@@ -135,12 +153,27 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     if (batchNumber !== null) previousBatch = batchNumber;
     const bt = totals();
     let batchAmountsKnown = true;
+    let batchHashKnown = true;
     let previousTrace = 0n;
     let current: RecordRow | undefined;
     let addenda = 0;
+    let payload: string[] = [];
+    let payloadKnown = true;
     const finishEntry = (): void => {
       if (!current) return;
       const indicator = slice(current, 79, 79);
+      if (expanded) {
+        const entryType = ACH_ENTRY_TYPES[slice(current, 2, 3)];
+        if (!entryType) {
+          conditionalAbsent.delete("remittance-required"); conditionalAbsent.delete("ctx-remittance");
+        } else if (entryType.kind === "remittance" || (sec === "CTX" && entryType.kind !== "prenote")) {
+          check("remittance-required", addenda > 0, "Required remittance addenda", "Zero-dollar remittance entries and live CTX entries require payment addenda; prenotes do not require associated live-entry addenda.", current, 79, 79);
+        }
+        if (sec === "CTX" && addenda > 0) {
+          if (payloadKnown) check("ctx-remittance", ctxX12Syntax(payload.join(""), pack), "CTX remittance syntax", "CTX X12 requires a complete transaction set with BPR or BPS and matching envelope references/counts. Complete X12 business-guide conformance is outside scope.", current, 55, 58);
+          else conditionalAbsent.delete("ctx-remittance");
+        }
+      }
       check("addenda-indicator", indicator === (addenda ? "1" : "0"), "Addenda indicator", "Addenda indicator must be 0 without addenda or 1 when addenda are present.", current, 79, 79);
       check("addenda-count", addenda <= (sec === "CTX" ? 9999 : sec === "TEL" ? 0 : 1), "Addenda count", "TEL prohibits addenda; CCD, PPD, and WEB permit at most one, and CTX at most 9,999.", current, 79, 79);
       if (sec === "CTX") check("addenda-count", number(slice(current, 55, 58)) === BigInt(addenda), "CTX addenda count", "CTX entry addenda count must match its following addenda records.", current, 55, 58);
@@ -149,28 +182,45 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       bt.count += 1n;
       if (row.text[0] === "7") {
         addenda += 1;
+        if (expanded && sec === "CTX") { payload.push(slice(row, 4, 83)); payloadKnown = payloadKnown && slice(row, 2, 3) === "05"; }
         check("addenda-type", slice(row, 2, 3) === "05", "Addenda type", "Only payment-related addenda type 05 is supported; return and notification addenda are outside this profile.", row, 2, 3);
         check("addenda-sequence", number(slice(row, 84, 87)) === BigInt(addenda), "Addenda sequence", "Addenda sequence must begin at 0001 and increase consecutively for each entry.", row, 84, 87);
         check("addenda-link", !!current && digits(slice(row, 88, 94)) && slice(row, 88, 94) === slice(current, 88, 94), "Addenda entry sequence", "Addenda entry sequence must match the final seven digits of its preceding entry trace.", row, 88, 94);
         continue;
       }
-      finishEntry(); current = row; addenda = 0;
+      finishEntry(); current = row; addenda = 0; payload = []; payloadKnown = true;
       const code = slice(row, 2, 3);
-      const credit = ["22", "32", "52"].includes(code);
-      const debit = ["27", "37"].includes(code);
-      check("transaction-code", credit || debit, "Transaction code", "Only ordinary checking/savings credits and debits (22, 27, 32, 37) and loan credits (52) are supported; prenotes and nonmonetary entries are excluded.", row, 2, 3);
-      check("sec-transaction", (service !== "220" || credit) && (service !== "225" || debit) && (sec !== "TEL" || debit), "SEC and service class transaction", "Entry direction must match service class; TEL permits debits only.", row, 2, 3);
+      const entryType = expanded ? ACH_ENTRY_TYPES[code] : undefined;
+      if (expanded && entryType?.loan && ["WEB", "TEL"].includes(sec)) throw new UnsupportedInputError("Loan account combinations with WEB/TEL are not source-qualified in this candidate. No format verdict is issued.");
+      const credit = expanded ? entryType?.direction === "credit" : ["22", "32", "52"].includes(code);
+      const debit = expanded ? entryType?.direction === "debit" : ["27", "37"].includes(code);
+      check("transaction-code", credit || debit, "Transaction code", expanded ? "Use a supported checking/savings/loan monetary, prenote or remittance transaction code. Return/NOC codes are outside origination." : "Only ordinary checking/savings credits and debits (22, 27, 32, 37) and loan credits (52) are supported; prenotes and nonmonetary entries are excluded.", row, 2, 3);
+      const secKnown = ["CCD", "PPD", "CTX", "WEB", "TEL"].includes(sec) && supported.includes(sec);
+      if (!expanded || (entryType && secKnown && ["200", "220", "225"].includes(service))) {
+        check("sec-transaction", (service !== "220" || credit) && (service !== "225" || debit) &&
+          (sec !== "TEL" || debit || (reversal && entryType?.kind === "monetary" && !entryType.loan)) &&
+          (!expanded || entryType?.kind !== "remittance" || ["CCD", "CTX"].includes(sec)) &&
+          (!expanded || !entryType?.loan || ["CCD", "CTX", "PPD"].includes(sec)),
+          "SEC and service class transaction", expanded ? "Direction must match service class. Zero-dollar remittance is CCD/CTX only; loan types are qualified here only for CCD/CTX/PPD. TEL credits are checking/savings monetary reversals only." : "Entry direction must match service class; TEL permits debits only.", row, 2, 3);
+      }
+      if (expanded && (reversal || code === "55")) {
+        if (entryType) check("reversal-transaction", reversal && entryType.kind === "monetary", "Reversal entry type", "Reversal entries must be monetary and loan debit 55 requires the REVERSAL description. Original matching, purpose and deadlines are unverified.", row, 2, 3);
+        else conditionalAbsent.delete("reversal-transaction");
+      }
+      if (!entryType && expanded) conditionalAbsent.delete("web-credit-originator");
       required(row, 13, 29, "entry-required", "Receiving account");
       required(row, sec === "CTX" ? 59 : 55, sec === "CTX" ? 74 : 76, "entry-required", "Receiving name");
       if (sec === "CTX") reserved(row, 75, 76);
       if (sec === "WEB" && credit) required(row, 40, 54, "web-credit-originator", "WEB credit originator name");
+      padding(row, [[13, 29], [40, 54], [sec === "CTX" ? 59 : 55, sec === "CTX" ? 74 : 76], [77, 78]]);
       const amount = number(slice(row, 30, 39));
-      check("entry-amount", amount !== null && amount > 0n, "Entry amount", "Ordinary monetary entries require a positive ten-digit amount in integer cents.", row, 30, 39);
+      if (!expanded || entryType) check("entry-amount", amount !== null && (expanded && entryType?.kind !== "monetary" ? amount === 0n : amount > 0n), "Entry amount", expanded ? "Monetary entries require positive integer cents; prenotes and remittance-only codes require exactly zero cents in the ten-digit amount field." : "Ordinary monetary entries require a positive ten-digit amount in integer cents.", row, 30, 39);
       if (amount === null || (!credit && !debit)) batchAmountsKnown = false;
       if (amount !== null) { if (credit) bt.credit += amount; if (debit) bt.debit += amount; }
       const rdfi = slice(row, 4, 12);
       check("routing", routing(rdfi), "Receiving routing number", "Receiving routing number must have a valid nonzero routing prefix and ABA check digit.", row, 4, 12);
       const prefix = number(slice(row, 4, 11));
+      if (prefix === null) batchHashKnown = false;
       if (prefix !== null) bt.hash = (bt.hash + prefix) % HASH_MOD;
       const trace = slice(row, 80, 94);
       const sequence = number(trace.slice(8));
@@ -184,13 +234,14 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     check("batch-mirror", slice(bc, 2, 4) === service && slice(bc, 45, 54) === slice(bh, 41, 50) && slice(bc, 80, 94) === slice(bh, 80, 94), "Batch control identifiers", "Batch control must mirror service class, company identification, originating DFI, and batch number from its header.", bc, 2, 94);
     reserved(bc, 74, 79);
     for (const [id, from, to, expected] of [["batch-count", 5, 10, bt.count], ["batch-hash", 11, 20, bt.hash], ["batch-debit", 21, 32, bt.debit], ["batch-credit", 33, 44, bt.credit]] as const)
-      if (batchAmountsKnown || (id !== "batch-debit" && id !== "batch-credit")) check(id, number(slice(bc, from, to)) === expected, "Batch control total", "Batch control numeric count, routing hash, or integer-cent total must equal its entry detail records.", bc, from, to);
+      if ((batchAmountsKnown || (id !== "batch-debit" && id !== "batch-credit")) && (!expanded || batchHashKnown || id !== "batch-hash")) check(id, number(slice(bc, from, to)) === expected, "Batch control total", "Batch control numeric count, routing hash, or integer-cent total must equal its entry detail records.", bc, from, to);
+    fileHashKnown = fileHashKnown && batchHashKnown;
     fileAmountsKnown = fileAmountsKnown && batchAmountsKnown;
     file.count += bt.count; file.hash = (file.hash + bt.hash) % HASH_MOD; file.debit += bt.debit; file.credit += bt.credit;
   }
   const fc = control!;
   reserved(fc, 56, 94);
   for (const [id, from, to, expected] of [["file-batches", 2, 7, BigInt(batches.length)], ["file-blocks", 8, 13, BigInt(Math.floor(rows.length / 10))], ["file-count", 14, 21, file.count], ["file-hash", 22, 31, file.hash], ["file-debit", 32, 43, file.debit], ["file-credit", 44, 55, file.credit]] as const)
-    if (fileAmountsKnown || (id !== "file-debit" && id !== "file-credit")) check(id, number(slice(fc, from, to)) === expected && (id !== "file-blocks" || rows.length % 10 === 0), "File control total", "File control numeric count, block count, routing hash, or integer-cent total must equal the complete file records.", fc, from, to);
+    if ((fileAmountsKnown || (id !== "file-debit" && id !== "file-credit")) && (!expanded || fileHashKnown || id !== "file-hash")) check(id, number(slice(fc, from, to)) === expected && (id !== "file-blocks" || rows.length % 10 === 0), "File control total", "File control numeric count, block count, routing hash, or integer-cent total must equal the complete file records.", fc, from, to);
   return finish(true);
 }

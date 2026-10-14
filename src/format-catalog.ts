@@ -66,6 +66,11 @@ export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
     label: "Public specification profile (2026 review)",
     extensions: ACH_EXTENSIONS,
     validationProfileId: "nacha-origination-public-2026",
+  }), Object.freeze({
+    id: "origination-expanded-public-2026-r1",
+    label: "Expanded entry types — public-source candidate (2026 r1)",
+    extensions: ACH_EXTENSIONS,
+    validationProfileId: "nacha-origination-expanded-public-2026-r1",
   })]),
 ]);
 

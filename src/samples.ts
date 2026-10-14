@@ -1,8 +1,11 @@
+import expandedPass from "../demo-files/nacha-expanded/mixed-entry-types-pass.ach?raw";
+import expandedFail from "../demo-files/nacha-expanded/prenote-amount-fail.ach?raw";
 import nachaPass from "../demo-files/nacha/ccd-pass.ach?raw";
 import nachaFail from "../demo-files/nacha/routing-check-digit-fail.ach?raw";
 import type { FormatPack, IsoVersionIdentifiers, EdiVersionIdentifiers } from "./types";
 /** Synthetic wiring samples, intentionally not represented as conformant payment messages. */
 export function syntheticSample(pack: FormatPack, fail: boolean): string {
+  if (pack.id === "nacha-origination-expanded-public-2026-r1") return fail ? expandedFail : expandedPass;
   if (pack.parserKind === "NACHA_FIXED") return fail ? nachaFail : nachaPass;
   if (pack.parserKind === "ISO_XML") {
     const ids = pack.identifiers as IsoVersionIdentifiers;

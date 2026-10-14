@@ -47,7 +47,7 @@ Create a component in **Settings → Custom Components**, using `PaymentFileVali
 />
 ```
 
-The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. Use `format="NACHA"` and `version="origination-public-2026"` for the public NACHA candidate. Multiple inline instances keep independent file state and unique control IDs.
+The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. Use `format="NACHA"` and `version="origination-public-2026"` for the historical public NACHA candidate. The expanded candidate uses `version="origination-expanded-public-2026-r1"`; its source/qualification gates remain visible in coverage. Multiple inline instances keep independent file state and unique control IDs.
 
 For an HTML mount instead of MDX, use:
 

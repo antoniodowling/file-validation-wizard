@@ -19,3 +19,5 @@ No report proves bank acceptance, funds availability, authorization, fraud appro
 ## NACHA candidate coverage
 
 `nacha-public-1.0.0.json` freezes the separate NACHA public-specification coverage and exclusions. Generate it with `node scripts/export-nacha-coverage.mjs`; the legacy ruleset 2 snapshot remains unchanged. The candidate supports CCD, PPD, CTX, WEB and TEL in separate batches, including mixed files. It validates file structure and reconciliation within its declared scope; it does not establish complete 2026 Rules compliance or bank approval. Optional checks without applicable records are marked not applicable, while checks suppressed by malformed prerequisites remain not evaluated. See [the source review](../NACHA_SOURCE_REVIEW.md) and [synthetic fixtures](../../demo-files/nacha/README.md).
+
+The separate expanded revision is frozen in [nacha-expanded-public-1.0.0.json](nacha-expanded-public-1.0.0.json). Its new coverage does not alter predecessor snapshots.

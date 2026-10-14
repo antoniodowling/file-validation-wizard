@@ -18,7 +18,7 @@ describe("focused format catalog", () => {
 
   it("connects the public NACHA candidate without claiming an embedded annual version", () => {
     const nacha = findCatalogEntry("nacha");
-    expect(nacha?.versions).toEqual([{
+    expect(nacha?.versions.slice(0, 1)).toEqual([{
       id: "origination-public-2026",
       label: "Public specification profile (2026 review)",
       validationProfileId: "nacha-origination-public-2026",
@@ -30,11 +30,11 @@ describe("focused format catalog", () => {
     }
   });
 
-  it("maps exactly ten supported versions to executable profiles", () => {
+  it("maps exactly eleven supported versions to executable profiles", () => {
     const profileIds = FORMAT_CATALOG.flatMap((item) =>
       item.versions.flatMap((version) => version.validationProfileId ? [version.validationProfileId] : []),
     );
-    expect(profileIds).toHaveLength(10);
+    expect(profileIds).toHaveLength(11);
     expect(new Set(profileIds)).toEqual(new Set(FORMAT_PACKS.map((pack) => pack.id)));
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").map((item) => item.code)).toEqual([
       "pain.001",

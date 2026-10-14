@@ -1,3 +1,4 @@
+import { expandedNachaCoverageFor, NACHA_EXPANDED_REVISION, NACHA_EXPANDED_GUIDE, NACHA_EXPANDED_EXCLUSIONS } from "./nacha-expanded-coverage";
 import type { CoverageRule, FormatPack, RunProvenance } from "./types";
 import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
@@ -38,6 +39,7 @@ const descriptions: Record<string, readonly [string, string]> = {
 };
 
 export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
+  if (pack.id === "nacha-origination-expanded-public-2026-r1") return expandedNachaCoverageFor(pack);
   if (pack.parserKind === "NACHA_FIXED") return nachaCoverageFor(pack);
   const xml = pack.parserKind === "ISO_XML";
   return [...(xml ? xmlRules.map(id => `iso.${id}`) : ediRules.map(id => `edi.${id}`)), ...pack.rules.map(r => r.id)].map(id => ({
@@ -52,11 +54,12 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
 }
 export function provenanceFor(pack: FormatPack): RunProvenance {
   const nacha = pack.parserKind === "NACHA_FIXED";
-  const revision = nacha ? NACHA_RULESET_REVISION : RULESET_REVISION;
+  const expanded = pack.id === "nacha-origination-expanded-public-2026-r1";
+  const revision = expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : RULESET_REVISION;
   return Object.freeze({ schemaVersion: "2", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
-    implementationGuideRevision: nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated", mode: pack.mode,
+    implementationGuideRevision: expanded ? NACHA_EXPANDED_GUIDE : nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated", mode: pack.mode,
     rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}`,
     buildRevision: typeof __BUILD_REVISION__ === "string" ? __BUILD_REVISION__ : "source-development",
-    coverage: coverageFor(pack), exclusions: nacha ? NACHA_EXCLUSIONS : EXCLUSIONS });
+    coverage: coverageFor(pack), exclusions: expanded ? NACHA_EXPANDED_EXCLUSIONS : nacha ? NACHA_EXCLUSIONS : EXCLUSIONS });
 }
 declare const __BUILD_REVISION__: string;

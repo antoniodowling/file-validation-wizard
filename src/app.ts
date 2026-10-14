@@ -607,6 +607,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         sampleLink.textContent = "sample file";
         if (format.id === "nacha") helper.append("See ", guideLink, ". Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.");
         else helper.append("See ", guideLink, " and ", sampleLink);
+        if (version.validationProfileId === "nacha-origination-expanded-public-2026-r1") helper.append(" Expanded candidate: monetary, prenote, zero-dollar remittance and reversal entries. CTX X12 syntax is checked; UN/EDIFACT, opt-in XML and WEB/TEL loan combinations remain unavailable pending qualification.");
       } else {
         helper.textContent = "File Format Guide unavailable.";
       }
@@ -943,6 +944,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (runController.acceptedRun.formatId === "nacha-origination-public-2026") {
       requiredElement<HTMLElement>("#result-basis").textContent += " Public specification profile: file fields, addenda relationships, counts, hashes, and amounts. Holidays, cutoffs, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance.";
     }
+    if (runController.acceptedRun.formatId === "nacha-origination-expanded-public-2026-r1") requiredElement<HTMLElement>("#result-basis").textContent += " Expanded public-source candidate; original matching, real purpose, deadlines and complete remittance business guides are unverified. See coverage for source gates.";
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
     requiredElement<HTMLElement>("#check-summary").textContent = `${runController.acceptedRun.checks?.length ?? runController.acceptedRun.results.length} distinct checks; ${runController.acceptedRun.results.length} evaluated occurrence rows; ${runController.acceptedRun.checks?.filter(check => check.state === "not-evaluated").length ?? 0} checks not evaluated. Metrics below count occurrences.`;

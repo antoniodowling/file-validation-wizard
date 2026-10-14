@@ -7,7 +7,7 @@ import { result } from "./shared";
 export interface EdiTransaction { readonly start: LocatedEdiSegment; readonly end: LocatedEdiSegment; readonly segments: readonly LocatedEdiSegment[] }
 export interface EdiGroup { readonly start: LocatedEdiSegment; readonly end: LocatedEdiSegment; readonly transactions: readonly EdiTransaction[] }
 const value = (segment: LocatedEdiSegment, n: number): string => segment.elements[n - 1]?.trim() ?? "";
-export function parseEdi(source: string, pack: FormatPack): ParserOutput {
+export function parseEdi(source: string, pack: FormatPack, ctx = false): ParserOutput {
   const results: RuleResult[] = [];
   const add = (id: string, ok: boolean, field: string, message: string, segment?: LocatedEdiSegment, context = false): void => {
     if (results.length >= 5000) throw new ResourceLimitError();
@@ -46,7 +46,7 @@ export function parseEdi(source: string, pack: FormatPack): ParserOutput {
   if (multiple) {
     const starts = segments.filter(segment => segment.id === "ISA").map(segment => segment.span.start);
     for (let index = 0; index < starts.length; index++) {
-      const part = parseEdi(source.slice(starts[index], starts[index + 1] ?? source.length), pack);
+      const part = parseEdi(source.slice(starts[index], starts[index + 1] ?? source.length), pack, ctx);
       if (!part.context) { add("edi.envelope-nesting", false, "Envelope ownership", "A subsequent interchange is malformed; no recovery is attempted."); return { context: null, results }; }
     }
     throw new UnsupportedInputError("Multiple complete interchanges are outside the supported assessment scope.");
@@ -59,18 +59,18 @@ export function parseEdi(source: string, pack: FormatPack): ParserOutput {
   add("edi.group-count", /^\d+$/.test(value(iea,1)) && Number(value(iea,1)) === groups.length, "Group count", "IEA01 must equal the number of groups in this interchange.", iea);
   add("edi.control-numbers", Boolean(value(isa,13)) && value(isa,13) === value(iea,2), "Interchange controls", "ISA13 and IEA02 must match.", iea);
   const ids = pack.identifiers as EdiVersionIdentifiers;
-  add("edi.version", value(isa,12) === ids.isa12, "Interchange version", "ISA12 must match the selected profile.", isa);
+  if (!ctx) add("edi.version", value(isa,12) === ids.isa12, "Interchange version", "ISA12 must match the selected profile.", isa);
   for (const group of groups) {
     add("edi.functional-group-envelope", group.start.elements.length >= 8 && group.end.elements.length === 2, "Functional group", "GS and GE have their required envelope fields.", group.start);
-    add("edi.version", value(group.start,8) === ids.gs08, "Group version", "Every GS08 must match the selected profile. ST03 guide requirements are not evaluated.", group.start);
+    if (!ctx) add("edi.version", value(group.start,8) === ids.gs08, "Group version", "Every GS08 must match the selected profile. ST03 guide requirements are not evaluated.", group.start);
     add("edi.transaction-count", /^\d+$/.test(value(group.end,1)) && Number(value(group.end,1)) === group.transactions.length, "Transaction count", "GE01 must equal this group's transaction count.", group.end);
     add("edi.control-numbers", Boolean(value(group.start,6)) && value(group.start,6) === value(group.end,2), "Group controls", "GS06 and GE02 must match within their group.", group.end);
     for (const tx of group.transactions) {
       add("edi.transaction-set-envelope", tx.start.elements.length >= 2 && tx.end.elements.length === 2, "Transaction envelope", "ST and SE have their required envelope fields.", tx.start);
-      add("edi.transaction-set-code", value(tx.start,1) === "820", "Transaction code", "Every ST01 must declare 820.", tx.start);
+      add("edi.transaction-set-code", ctx ? /^\d{3}$/.test(value(tx.start,1)) : value(tx.start,1) === "820", "Transaction code", ctx ? "CTX must identify an X12 transaction set; it is not restricted to 820." : "Every ST01 must declare 820.", tx.start);
       add("edi.control-numbers", Boolean(value(tx.start,2)) && value(tx.start,2) === value(tx.end,2), "Transaction controls", "ST02 and SE02 must match within their transaction.", tx.end);
       add("edi.segment-count", /^\d+$/.test(value(tx.end,1)) && Number(value(tx.end,1)) === tx.segments.length, "Segment count", "SE01 must equal the segment count from this ST through its SE.", tx.end);
-      add("edi.payment-remittance", tx.segments.filter(s => s.id === "BPR").length === 1, "Payment/remittance", "The DEMO profile expects exactly one BPR within each transaction; full 820 content is not assessed.", tx.start, true);
+      add("edi.payment-remittance", tx.segments.filter(s => s.id === "BPR" || (ctx && s.id === "BPS")).length === 1, "Payment/remittance", ctx ? "CTX X12 transaction sets require a BPR or BPS payment segment." : "The DEMO profile expects exactly one BPR within each transaction; full 820 content is not assessed.", tx.start, true);
     }
   }
   const edi: EdiDocument = { elementSeparator: sep, componentSeparator: component, segmentTerminator: term, segments, groups };
