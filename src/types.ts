@@ -4,8 +4,8 @@ export const VALIDATION_DEADLINE_MS = 10_000;
 export type WorkerFailureCode = "FILE_TOO_LARGE" | "PROFILE_UNAVAILABLE" | "INVALID_ENCODING" | "ENGINE_ERROR" | "RESOURCE_LIMIT";
 export type ValidationFailureCode = WorkerFailureCode | "FILE_READ_ERROR" | "WORKER_UNAVAILABLE" | "WORKER_ERROR" | "TIMEOUT";
 
-export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820" | "NACHA" | "NACHA Returns" | "Huntington Control Totals" | "Huntington ACK";
-export type ParserKind = "ISO_XML" | "EDI_X12" | "NACHA_FIXED" | "NACHA_RETURN_FIXED" | "ACH_CONTROL_FIXED" | "HUNTINGTON_ACK";
+export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820" | "NACHA" | "NACHA Returns" | "Huntington Control Totals" | "Huntington ACK" | "BAI2";
+export type ParserKind = "ISO_XML" | "EDI_X12" | "NACHA_FIXED" | "NACHA_RETURN_FIXED" | "ACH_CONTROL_FIXED" | "HUNTINGTON_ACK" | "BAI2";
 export type FormatPackMode = "DEMO" | "CANDIDATE" | "PRODUCTION";
 export type CatalogStatus = "DEMO_SUPPORTED" | "CANDIDATE_SUPPORTED" | "REFERENCE_ONLY";
 export type RuleOutcome = "PASS" | "ERROR" | "WARNING";
@@ -79,8 +79,12 @@ export interface AckVersionIdentifiers {
   readonly kind: "HUNTINGTON_ACK";
   readonly profile: "huntington-ack-pipe-1.0-candidate-r1";
 }
+export interface Bai2VersionIdentifiers {
+  readonly kind: "BAI2";
+  readonly profile: "huntington-bai2-public-2026-r1";
+}
 export type VersionIdentifiers = IsoVersionIdentifiers | EdiVersionIdentifiers | NachaVersionIdentifiers
-  | NachaReturnVersionIdentifiers | ControlTotalVersionIdentifiers | AckVersionIdentifiers;
+  | NachaReturnVersionIdentifiers | ControlTotalVersionIdentifiers | AckVersionIdentifiers | Bai2VersionIdentifiers;
 
 /** Bank-reported status is independent of document validity. */
 export type ReportedStatus = "RECEIVED" | "ACCEPTED" | "REJECTED";

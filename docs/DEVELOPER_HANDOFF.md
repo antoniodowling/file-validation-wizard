@@ -31,7 +31,7 @@ Use Node.js 22.12 or newer and run `npm ci` from the repository root. `npm run d
 
 ## Current scope and acceptance
 
-The catalog has seven format families and fifteen executable profiles: nine ISO/X12 DEMO profiles and six ACH CANDIDATE profiles. PAIN.001, PAIN.008, and EDI 820 each offer three versions. The ACH profiles are:
+The catalog has eight format families and sixteen executable profiles: nine ISO/X12 DEMO profiles, six ACH CANDIDATE profiles and one BAI2 CANDIDATE profile. PAIN.001, PAIN.008, and EDI 820 each offer three versions. The candidate profiles are:
 
 | Format | Version ID (for presets) | Scope |
 | --- | --- | --- |
@@ -41,8 +41,9 @@ The catalog has seven format families and fifteen executable profiles: nine ISO/
 | ACH Returns | `returns-network-public-2026-r1` | [Ordinary network Returns/COR](ACH_RETURNS_CANDIDATE.md); specialized layouts remain gated |
 | ACH Control Totals | `control-total-public-2026-r1` | [One standalone 58-column record](HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md); no companion-file matching |
 | File Received ACK | `pipe-1.0-candidate-r1` | [One pipe-delimited scenario](HUNTINGTON_ACK_CANDIDATE.md); reported disposition is separate from format validity |
+| BAI2 | `huntington-bai2-public-2026-r1` | [Huntington-guide candidate scope](BAI2_SOURCE_SCOPE.md); multiple groups/accounts, continuations, exact controls; unqualified funds/currency/code scenarios receive no verdict |
 
-The four latest candidates use report/export schema 3; the original NACHA profile, r1, and ISO/X12 profiles retain schema 2. A valid ACK reporting REJECTED can pass format checks. Unsupported inputs receive no format verdict. See [coverage and export semantics](coverage/README.md).
+The four latest ACH candidates and BAI2 use report/export schema 3; the original NACHA profile, r1, and ISO/X12 profiles retain schema 2. A valid ACK reporting REJECTED can pass format checks. Unsupported inputs receive no format verdict. See [coverage and export semantics](coverage/README.md).
 
 No profile establishes full standards conformance, complete 2026 Operating Rules compliance, or production approval. The profile documents list implemented checks and exclusions.
 
@@ -54,15 +55,15 @@ No profile establishes full standards conformance, complete 2026 Operating Rules
 | Actual ReadMe integration | Unverified. Local generated-mount tests simulate the portal, including presets and routing; they do not establish actual CSP or customization coexistence. | Portal maintainer: supply an unpublished staging mount and execute the hosted procedure below. |
 | Manual accessibility | Screen-reader, actual 200% zoom, and complete manual workflow acceptance remain unverified. | Accessibility tester: complete the outstanding checks in the follow-up log. |
 | Supported capacity | Byte, decoded-source, structure, and deadline guards exist; representative peak memory and recovery evidence remain deferred. | Performance maintainer: follow [processing limits](PROCESSING_LIMITS.md) before claiming a supported workload. |
-| Standards and production approval | Deep ISO/X12 rules and the ACH profiles' declared exclusions remain outside the implemented checks. No profile has production sign-offs. | API/Product owners: use the current profile documents above for qualification gaps. The [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) and [ACH phase gates](ACH_EXPANSION_SOURCES.md) retain planning history. |
+| Standards and production approval | Deep ISO/X12 rules and the ACH/BAI2 profiles' declared exclusions remain outside the implemented checks. No profile has production sign-offs. | API/Product owners: use the current profile documents above for qualification gaps. The [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) and [ACH phase gates](ACH_EXPANSION_SOURCES.md) retain planning history. |
 
 Roles identify responsibilities, not an assigned successor or approval. Passing local checks does not establish hosted compatibility, bank acceptance, full standards conformance, production approval, or WCAG conformance.
 
 ## Demo and test files
 
-Use the [README starter set](../README.md#starter-demos) for a manual walkthrough. It lists exact browser selections and expected results for small XML, EDI, and ACH examples.
+Use the [README starter set](../README.md#starter-demos) for a manual walkthrough. It lists exact browser selections and expected results for small XML, EDI, ACH and BAI2 examples.
 
-The larger kits are regression fixtures: [original NACHA](../demo-files/nacha/README.md) has 69 files, [expanded r1](../demo-files/nacha-expanded/README.md) has 159, and [the latest four ACH candidates](../demo-files/ach-candidates/README.md) have 57. Six PAIN.001 XML files sit directly in `demo-files/`. Their expected results and hashes are preserved in tests and manifests.
+The larger kits are regression fixtures: [original NACHA](../demo-files/nacha/README.md) has 69 files, [expanded r1](../demo-files/nacha-expanded/README.md) has 159, and [the latest four ACH candidates](../demo-files/ach-candidates/README.md) have 57. Six PAIN.001 XML files sit directly in `demo-files/`. Their expected results and hashes are preserved in tests and manifests. The [BAI2 kit](../demo-files/bai2/README.md) adds 21 synthetic fixtures and one preserved public guide sample, bound to [its separate coverage revision](coverage/bai2-candidate-1.0.0.json).
 
 The separate [14-file stress kit](../demo-files/hnb-validator-stress-files/README.md) exercises processing limits, encoding errors, and incomplete runs. Follow its instructions before running adversarial cases. Preserve every fixture, including malformed bytes, fixed-width spaces, line endings, and earlier profile expectations.
 
@@ -94,7 +95,7 @@ Use synthetic files only in examples, tests, and issues. Never commit customer p
 
 Use [IMPLEMENTATION_EVIDENCE.md](IMPLEMENTATION_EVIDENCE.md) for hardening history and [coverage/README.md](coverage/README.md) for report semantics. Read the [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) alongside the current profile documents; some of its planned ACH work now has executable candidates. The [September receipt](evidence/ruleset-2/receipt.json) records its original bundle hashes; do not overwrite it to represent later builds. Coverage exporters prepare named revisions and are not routine build steps. Rule changes that alter validation behavior require new revisions and snapshots; preserve published snapshots and fixture bytes.
 
-The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remain DEMO and the six ACH profiles remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
+The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remain DEMO and the six ACH profiles and the BAI2 profile remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
 
 ## Maintenance tools and conventions
 
@@ -102,6 +103,7 @@ The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remai
 - `npm run generate:stress-files -- /private/tmp/hnb-stress-review`, `npm run generate:nacha-files -- /private/tmp/nacha-review`, and `npm run generate:nacha-expanded-files -- /private/tmp/nacha-expanded-review` produce disposable comparison kits. Preserve intentionally malformed bytes, fixed-width spaces, line endings, manifests, and historical expectations.
 - `npm run generate:ach-candidate-files` rewrites `demo-files/ach-candidates/` and `docs/coverage/ach-candidates-1.0.0.json`. It has no output-directory argument; use a disposable repository copy for comparisons, and do not overwrite historical coverage during routine maintenance.
 - `npm run export:coverage` and `npm run export:nacha-coverage` invoke the existing revision-preparation exporters. They write the named coverage snapshots; do not run them to silently revise published history.
+- `node scripts/generate-bai2-files.mjs` regenerates synthetic BAI2 fixtures and their manifest, preserving the source sample. `node scripts/export-bai2-coverage.mjs` prepares only the named BAI2 coverage revision; do not use it to silently revise published coverage.
 - `.editorconfig` supplies basic editor conventions while excluding fixture bytes and generated artifacts from normalization. Markdown hard-break spaces are retained. There is no bulk formatting pass or new lint gate.
 - Keep the legacy mapper in `src/finding-locations.ts` and its dependencies for older reports without parser-supplied locations. Current schema-2 and schema-3 runs use parser-supplied locations; see [report semantics](coverage/README.md).
 

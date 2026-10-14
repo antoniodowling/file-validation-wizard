@@ -1,0 +1,234 @@
+{
+  "revision": "bai2-fixtures-1.0.0",
+  "profile": "huntington-bai2-public-2026-r1",
+  "fixtures": [
+    {
+      "file": "balances-pass.bai2",
+      "sha256": "b5b8e5275b82b33eb287f3e1a06256bb06fca74cdf969c39fb8aaacd14e5a455",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "balances-pass.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "multi-group-pass.bai2",
+      "sha256": "78c3f3d71f48545910487ed53df06296ca5fddfe86e0e19579c8b4f0d96e2331",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "multi-group-pass.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "summary-only-pass.bai2",
+      "sha256": "097aae1fc64fdecf71266a0c5548c5b098feca831f8c6099af7ec0ef2932bd1a",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "summary-only-pass.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "crlf-pass.txt",
+      "sha256": "77169ede6afdadff30e4ba2505ec2d122f6994ebaf25fe29d04f119a3dadd81e",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "crlf-pass.txt",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "account-total-fail.bai2",
+      "sha256": "cdad3048cf9867149abbcbca20ea560f066b394c095818f24ad855b2182aa761",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.account-total",
+        "bai2.group-total"
+      ],
+      "scenario": "account-total-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "account-count-fail.bai2",
+      "sha256": "a2d880432992c2518499e23eefb5887af6abbbbced3e95ecabd7273db6d20924",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.account-count"
+      ],
+      "scenario": "account-count-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "group-total-fail.bai2",
+      "sha256": "fbc0117bb5b2181acf9b3be94fd33a525ca23f3232959ab67889c67669856f82",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.group-total",
+        "bai2.file-total"
+      ],
+      "scenario": "group-total-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "group-count-fail.bai2",
+      "sha256": "4658a997862e2382e42f240605e11529d5f19bbd8b19ef73ab460a3ef1f39f8e",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.group-accounts",
+        "bai2.group-count"
+      ],
+      "scenario": "group-count-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "file-total-fail.bai2",
+      "sha256": "cf4528fffc681bc688cf2f3be6a831fa65a3f79ed0cb85243a54a0680e45356b",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.file-total"
+      ],
+      "scenario": "file-total-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "file-count-fail.bai2",
+      "sha256": "ba7d94b3e54790dbbd27ce9c661c0d09cc8050082cd1caa053d80d2df564e335",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.file-groups",
+        "bai2.file-count"
+      ],
+      "scenario": "file-count-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "date-fail.bai2",
+      "sha256": "1a4f7b8cb2375cfd52a9160712ec90b43ac03a181ea37d44574ee0cc32c402f0",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.file-header"
+      ],
+      "scenario": "date-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "amount-fail.bai2",
+      "sha256": "e5c1676df5bc030e95870d72df71d684ab27e3a8ae3ddbeabb966fcfa2ca4cb1",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.amount"
+      ],
+      "scenario": "amount-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "hierarchy-fail.bai2",
+      "sha256": "ee05adc07e8fe27c57eb14e0ec8e09cc3767739ed5ab069c790fc3014886d64f",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.hierarchy"
+      ],
+      "scenario": "hierarchy-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "termination-fail.bai2",
+      "sha256": "b976318c231bb140ff189f49c2f564bb91df02b3f6c3f77371659bfa9e50669c",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.framing"
+      ],
+      "scenario": "termination-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "leading-zero-fail.bai2",
+      "sha256": "d6579bc45035e24491f3780e1f161af677f72c7e65252e90b308c39feca1a57f",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.account-id"
+      ],
+      "scenario": "leading-zero-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "code-level-fail.bai2",
+      "sha256": "516f61d38f70733bbadb0cbcb48fe6a4f40221b7f45826ec34879c47f450cd2e",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.detail-code"
+      ],
+      "scenario": "code-level-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "bom-fail.bai2",
+      "sha256": "3d3ba0f11acb58687ab93655533479ec8477ff40f84679989c5fa0e7d5b353cc",
+      "expected": "FAIL",
+      "rules": [
+        "bai2.characters"
+      ],
+      "scenario": "bom-fail.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "funds-unsupported.bai2",
+      "sha256": "468ceeec803459d0d4d8abb3826bf458ae39451463945bf7360bb9bb93729de6",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "funds-unsupported.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "code-unsupported.bai2",
+      "sha256": "9e57bcf881d2442e385e78bbc62eddb19c0027c3bb78e1f6aa20f4f9938f4a81",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "code-unsupported.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "currency-unsupported.bai2",
+      "sha256": "220ca91e1ab938202b766a91f6242cb09e710db6570479d85760407db0388437",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "currency-unsupported.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "modifier-unsupported.bai2",
+      "sha256": "800dced30cb014f5de95d824062bb4bc5dfb4405363ca98986fc34f42090613b",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "modifier-unsupported.bai2",
+      "provenance": "Synthetic fixture generated locally; no customer/bank acceptance data",
+      "profile": "huntington-bai2-public-2026-r1"
+    },
+    {
+      "file": "huntington-guide-sample.txt",
+      "sha256": "48c45a3e265574c4b4af62fdd813f532b2edfac8be1ec9fbd60a0bdc1ed5c88e",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "Exact illustrative sample from supplied Huntington guide; 4 accounts, 27 physical records, total 245520532",
+      "provenance": "Public guide example from owner-supplied 2026-09-17 source; illustrative, not independent bank conformance evidence",
+      "profile": "huntington-bai2-public-2026-r1"
+    }
+  ]
+}

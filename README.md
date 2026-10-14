@@ -2,9 +2,10 @@
 
 A browser-local demo for exploring and validating payment-file formats. The wizard includes:
 
-- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, and File Received ACK;
+- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, File Received ACK, and BAI2;
 - nine ISO/X12 profiles, with three versions per format;
-- six ACH candidates across four format families, including three origination revisions for CCD, PPD, CTX, WEB, and TEL; and
+- six ACH candidates across four format families, including three origination revisions for CCD, PPD, CTX, WEB, and TEL;
+- one Huntington-guide BAI2 reporting candidate with multiple groups/accounts, continuations, and exact trailer controls; and
 - a read-only file explorer on the dedicated explorer page. Findings link to the source or nearby context; findings without a source location are labeled explicitly.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee bank acceptance or payment readiness.
@@ -45,7 +46,7 @@ Before running browser tests, install Chromium, Firefox, and WebKit with `npx pl
 
 Most files in `demo-files/` are regression fixtures for automated tests. Start with the examples below for a manual walkthrough. They link to existing fixtures; the larger kits remain in their original locations.
 
-All files use synthetic data. PASS means that the file passes the selected profile's implemented checks. These files are not approved payment instructions.
+Generated fixtures use synthetic data. The BAI2 kit also preserves the public guide’s illustrative sample separately; it is not customer data or independently accepted bank conformance evidence. PASS means that the file passes the selected profile's implemented checks. These files are not approved payment instructions.
 
 ### Starter demos
 
@@ -59,6 +60,7 @@ Select the format and version shown, upload a linked file, and press **Validate*
 | ACH Returns | General network returns — public-source candidate (2026 r1) | [PASS](demo-files/ach-candidates/returns-ccd-pass.ach), [FAIL](demo-files/ach-candidates/returns-trace-fail.ach) |
 | ACH Control Totals | 58-column standalone candidate (2026 r1) | [PASS](demo-files/ach-candidates/totals-pass.txt), [FAIL](demo-files/ach-candidates/totals-date-fail.txt) |
 | File Received ACK | Single pipe-delimited scenario — candidate (1.0 r1) | [PASS](demo-files/ach-candidates/ack-received-pass.txt), [FAIL](demo-files/ach-candidates/ack-date-fail.txt) |
+| BAI2 | Huntington public-guide candidate (BAI2 2026 r1) | [PASS](demo-files/bai2/balances-pass.bai2), [FAIL](demo-files/bai2/account-total-fail.bai2), [UNSUPPORTED](demo-files/bai2/funds-unsupported.bai2) |
 
 The PAIN.001 warning example omits the recommended XML declaration. Its FAIL example has a namespace mismatch, which stops validation before structural checks run. Use these examples to inspect finding locations and CSV exports as well as the result summary.
 
@@ -68,7 +70,7 @@ PAIN.008 and the other ISO/X12 versions have synthetic wiring samples in [src/sa
 
 ### Regression fixtures
 
-Each kit covers valid inputs, specific errors, warnings, or unsupported cases. The manifest records the expected result, byte count, and SHA-256 for each file, along with the profile or rule expectations. Use the profile named in the kit when comparing results.
+Each kit covers valid inputs, specific errors, warnings, or unsupported cases. Each manifest records expected results, SHA-256 checksums and profile or rule expectations; the existing XML/ACH/stress kits also record byte counts. Use the profile named in the kit when comparing results.
 
 | Location | Files | Profile / purpose |
 | --- | ---: | --- |
@@ -76,6 +78,7 @@ Each kit covers valid inputs, specific errors, warnings, or unsupported cases. T
 | [nacha/](demo-files/nacha/README.md) | 69 | Original **Public specification profile (2026 review)**, retained for regression and historical comparisons |
 | [nacha-expanded/](demo-files/nacha-expanded/README.md) | 159 | **Expanded entry types — public-source candidate (2026 r1)**, retained alongside r2 |
 | [ach-candidates/](demo-files/ach-candidates/README.md) | 57 | Latest origination r2, ordinary Returns/COR, control totals, and ACK candidates; each manifest entry names its profile |
+| [bai2/](demo-files/bai2/README.md) | 22 | Huntington BAI2 candidate: 21 synthetic fixtures and one preserved public guide sample |
 
 The remaining PAIN.001 examples cover:
 
@@ -95,6 +98,8 @@ The display catalog is defined in `src/format-catalog.ts`; executable parsers an
 For NACHA origination, r2 is the latest candidate; the original profile and r1 remain selectable. The original **Public specification profile (2026 review)** supports ordinary monetary transaction codes 22, 27, 32, 37, and 52 across the five supported SEC codes in separate batches. It accepts balanced and unbalanced files when controls reconcile, with LF, CRLF, CR, or concatenated 94-character framing. See [original NACHA scope](docs/NACHA_SOURCE_REVIEW.md), [expanded r1 scope and gates](docs/ACH_ORIGINATION_EXPANDED.md), and [origination r2](docs/ACH_ORIGINATION_R2.md) for revision-specific rules.
 
 The other ACH candidates cover [ordinary network Returns/COR](docs/ACH_RETURNS_CANDIDATE.md), [Huntington standalone control totals](docs/HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md), and [Huntington single-scenario ACK](docs/HUNTINGTON_ACK_CANDIDATE.md). Their supported checks and exclusions are recorded in [version-bound coverage](docs/coverage/ach-candidates-1.0.0.json). These four latest candidates export schema 3; the earlier profiles retain schema 2. ACK exports record reported disposition separately from the validation verdict.
+
+BAI2 adds a seventh CANDIDATE profile, **Huntington public-guide candidate (BAI2 2026 r1)**. It checks the declared line-based USD reporting scenario, continuations, hierarchy, fields and trailer controls, with schema-3 exports. Funds availability layouts and other unqualified scenarios receive no verdict. See [source scope and assumptions](docs/BAI2_SOURCE_SCOPE.md) and [fixtures](demo-files/bai2/README.md).
 
 To enable a production pack, provide its exact version identifiers, approved guide URL, approved rules and fixtures, and Product/SC/FT sign-offs. The registry fails closed when any of those production release gates are missing.
 
