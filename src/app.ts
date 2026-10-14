@@ -19,6 +19,7 @@ import { pageForFinding } from "./finding-navigation";
 import { validationFailureMessage } from "./validation-failure";
 import { VALIDATION_DEADLINE_MS } from "./types";
 import type {
+  FindingLineEntry,
   FormatCatalogEntry,
   RuleOutcome,
   RuleResult,
@@ -215,6 +216,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       </section>
     </div>
     ${explorerEnabled ? explorerMarkup() : ""}
+    <div id="line-context-descriptions" class="visually-hidden"></div>
+    <div id="line-context-tooltip" class="line-context-tooltip" role="tooltip" popover="manual"></div>
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
   </div>
 `;
@@ -317,13 +320,52 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   if (presetFormat) formatSearch.value = `${presetFormat.code} — ${presetFormat.name}`;
   if (presetVersion?.validationProfileId) activeStep = 2;
   let selectedFile: File | null = null;
-  let resultLines = new Map<number, { readonly label: string; readonly description: string }>();
+  let resultLines = new Map<number, FindingLineEntry>();
   let linesPending = false;
 
 
   let resultsPage = 1;
   const runController = new RunController();
   let validating = false;
+  const lineTooltip = requiredElement<HTMLElement>("#line-context-tooltip");
+  const lineDescriptions = requiredElement<HTMLElement>("#line-context-descriptions");
+  let lineTooltipTrigger: HTMLElement | null = null;
+
+  function hideLineTooltip(): void {
+    runController.clearTimer("line-tooltip");
+    if (lineTooltip.matches(":popover-open")) lineTooltip.hidePopover();
+    lineTooltip.textContent = "";
+    lineTooltipTrigger = null;
+  }
+
+  function showLineTooltip(trigger: HTMLElement, message: string): void {
+    runController.clearTimer("line-tooltip");
+    lineTooltipTrigger = trigger;
+    lineTooltip.textContent = message;
+    lineTooltip.showPopover();
+    const anchor = trigger.getBoundingClientRect();
+    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - lineTooltip.offsetWidth - 8));
+    const top = anchor.bottom + lineTooltip.offsetHeight + 8 <= window.innerHeight
+      ? anchor.bottom + 8 : Math.max(8, anchor.top - lineTooltip.offsetHeight - 8);
+    lineTooltip.style.left = `${left}px`;
+    lineTooltip.style.top = `${top}px`;
+  }
+
+  function scheduleLineTooltipHide(): void {
+    runController.schedule("line-tooltip", () => {
+      if (document.activeElement !== lineTooltipTrigger && !lineTooltipTrigger?.matches(":hover") && !lineTooltip.matches(":hover")) hideLineTooltip();
+    }, 150);
+  }
+  lineTooltip.addEventListener("mouseenter", () => runController.clearTimer("line-tooltip"));
+  lineTooltip.addEventListener("mouseleave", scheduleLineTooltipHide);
+  const dismissLineTooltip = (event: KeyboardEvent): void => {
+    if (event.key === "Escape" && lineTooltip.matches(":popover-open")) {
+      hideLineTooltip();
+      event.stopPropagation();
+    }
+  };
+  app.addEventListener("keydown", dismissLineTooltip);
+  app.addEventListener("scroll", hideLineTooltip, true);
 
 
 
@@ -454,6 +496,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   }
 
   function invalidateActiveWork(): void {
+    hideLineTooltip();
     runController.dispose();
     terminateWorker();
   }
@@ -467,6 +510,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   function clearRun(): void {
     runController.acceptedRun = null;
     resultLines.clear();
+    lineDescriptions.replaceChildren();
     linesPending = false;
     runController.acceptedSnapshotId = null;
     resultsPage = 1;
@@ -857,8 +901,10 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       if (activeFindingAction === undefined) return;
       app.querySelector<HTMLButtonElement>(`[data-finding-action="${activeFindingAction}"]`)?.focus();
     };
+    hideLineTooltip();
     const body = requiredElement<HTMLTableSectionElement>("#finding-rows");
     body.replaceChildren();
+    lineDescriptions.replaceChildren();
     const rows = visibleFindings();
     const window = pageWindow(rows.length, resultsPage, resultsPageSize);
     resultsPage = window.page;
@@ -901,6 +947,27 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       const sourceLine = resultLines.get(finding.ordinal);
       line.textContent = finding.outcome === "PASS" ? "—" : sourceLine?.label ?? (linesPending ? "Locating…" : "Unavailable");
       line.title = sourceLine?.description ?? (finding.outcome === "PASS" ? "Line locations are shown for errors and warnings." : "A reliable source line is not available.");
+      if (finding.outcome !== "PASS" && sourceLine?.context) {
+        line.removeAttribute("title");
+        const number = document.createElement("span");
+        number.className = "line-context-number";
+        number.tabIndex = 0;
+        number.textContent = sourceLine.label;
+        const explanation = finding.ruleId === "demo.xml-declaration"
+          ? "XML declaration missing. Expected at the file’s start."
+          : "Nearby context for this finding.";
+        const description = document.createElement("span");
+        description.id = `${prefix}line-context-description-${finding.ordinal}`;
+        description.textContent = explanation;
+        lineDescriptions.append(description);
+        number.setAttribute("aria-describedby", description.id);
+        const show = (): void => showLineTooltip(number, explanation);
+        number.addEventListener("mouseenter", show);
+        number.addEventListener("focus", show);
+        number.addEventListener("mouseleave", scheduleLineTooltipHide);
+        number.addEventListener("blur", scheduleLineTooltipHide);
+        line.replaceChildren(number);
+      }
       const message = document.createElement("td");
       const messageText = document.createElement("span");
       messageText.textContent = finding.message;
@@ -1135,6 +1202,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   renderAll();
 
   return () => {
+    app.removeEventListener("keydown", dismissLineTooltip);
+    app.removeEventListener("scroll", hideLineTooltip, true);
     explorerController?.destroy();
     explorerController = null;
     clearFileAndRun();

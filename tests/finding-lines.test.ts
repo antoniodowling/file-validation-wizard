@@ -21,10 +21,10 @@ describe("finding line summaries", () => {
     const source = `first${newline}value${newline}last`;
     const start = source.indexOf("value");
     expect(findingLines(source, [entry(start, source.indexOf("last"))])[0]!.label).toBe("2");
-    expect(findingLines(source, [entry(0, source.length, "context")])[0]!.label).toBe("Context: 1–3");
+    expect(findingLines(source, [entry(0, source.length, "context")])[0]!.label).toBe("1–3");
   });
   it("handles zero-width and EOF context, malformed spans, and whole-file findings", () => {
-    expect(findingLines("one\ntwo", [entry(7, 7, "context")])[0]!.label).toBe("Context: 2");
+    expect(findingLines("one\ntwo", [entry(7, 7, "context")])[0]!.label).toBe("2");
     expect(findingLines("", [entry(0, 0, "parser-position")])[0]!.label).toBe("1");
     expect(findingLines("test", [entry(-1, 1), entry(1, 5), entry(3, 1)]).map(line => line.label)).toEqual(["Unavailable", "Unavailable", "Unavailable"]);
     expect(findingLines("test", [entry(3, 4), entry(3, 1)]).map(line => line.label)).toEqual(["1", "Unavailable"]);
@@ -36,7 +36,9 @@ describe("finding line summaries", () => {
   it("maps invalid XML values and distinguishes context for the missing declaration", () => {
     const source = validPain001.replace("pain.001.001.99", "pain.001.001.09").replace("<NbOfTxs>1", "<NbOfTxs>bad");
     expect(mapped(source, "pain-001-09", "iso.transaction-count-type").label).toBe("4");
-    expect(mapped(source.replace(/^<\?xml[^>]+>\n/u, ""), "pain-001-09", "demo.xml-declaration").label).toBe("Context: 1");
+    expect(mapped(source, "pain-001-09", "iso.transaction-count-type").context).toBeUndefined();
+    expect(mapped(source.replace(/^<\?xml[^>]+>\n/u, ""), "pain-001-09", "demo.xml-declaration").context).toBe(true);
+    expect(mapped(source.replace(/^<\?xml[^>]+>\n/u, ""), "pain-001-09", "demo.xml-declaration").label).toBe("1");
   });
   it("maps pretty-printed and single-line EDI to physical lines", () => {
     const source = validEdi820.replace("SE*3*", "SE*999*");
