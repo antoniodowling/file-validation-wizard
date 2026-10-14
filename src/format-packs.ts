@@ -9,6 +9,9 @@ const noApprovals: ReleaseApproval = Object.freeze({
 });
 
 const PAIN_001_GUIDE_URL = "https://developer.huntington.com/enterprisepayments/docs/iso-pain001";
+const PAIN_008_GUIDE_URL = "https://developer.huntington.com/enterprisepayments/docs/iso-pain008";
+const EDI_820_GUIDE_URL = "https://developer.huntington.com/enterprisepayments/docs/edi-820";
+const NACHA_GUIDE_URL = "https://developer.huntington.com/enterprisepayments/docs/nacha";
 
 const nonEmptyRule: ValidationRule = Object.freeze({
   id: "demo.non-empty-source",
@@ -53,7 +56,7 @@ const isoPack = (
     version,
     parserKind: "ISO_XML",
     extensions: Object.freeze([".xml"]),
-    guideUrl: family === "PAIN.001" ? PAIN_001_GUIDE_URL : null,
+    guideUrl: family === "PAIN.001" ? PAIN_001_GUIDE_URL : PAIN_008_GUIDE_URL,
     enabled: true,
     mode: "DEMO",
     identifiers: Object.freeze({
@@ -73,7 +76,7 @@ const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>
     version,
     parserKind: "EDI_X12",
     extensions: Object.freeze([".edi", ".x12", ".820", ".txt"]),
-    guideUrl: null,
+    guideUrl: EDI_820_GUIDE_URL,
     enabled: true,
     mode: "DEMO",
     identifiers: Object.freeze({
@@ -102,7 +105,7 @@ const LEGACY_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
     version: "origination-public-2026",
     parserKind: "NACHA_FIXED",
     extensions: Object.freeze([".ach", ".txt"]),
-    guideUrl: "https://achdevguide.nacha.org/ach-file-details",
+    guideUrl: NACHA_GUIDE_URL,
     enabled: true,
     mode: "CANDIDATE",
     identifiers: Object.freeze({
@@ -146,7 +149,7 @@ const flatCandidate = (id: string, family: FormatPack["family"], version: string
   rules: Object.freeze([Object.freeze({ ...nonEmptyRule, id: `${id}.non-empty-source` })]),
 });
 export const RETURNS_PACK = flatCandidate("nacha-returns-network-public-2026-r1", "NACHA Returns", "returns-network-public-2026-r1",
-  Object.freeze({ kind: "NACHA_RETURN_FIXED", profile: "returns-network-public-2026-r1", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL", "COR"]) }), "https://www.nacha.org/content/iso-20022-ach-mapping-guide-tools");
+  Object.freeze({ kind: "NACHA_RETURN_FIXED", profile: "returns-network-public-2026-r1", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL", "COR"]) }), "https://developer.huntington.com/enterprisepayments/docs/nacha-returns");
 export const CONTROL_TOTAL_PACK = flatCandidate("huntington-control-total-public-2026-r1", "Huntington Control Totals", "control-total-public-2026-r1",
   Object.freeze({ kind: "ACH_CONTROL_FIXED", profile: "control-total-public-2026-r1" }), "https://developer.huntington.com/enterprisepayments/docs/ach-control-total-flat-file");
 export const ACK_PACK = flatCandidate("huntington-ack-pipe-1.0-candidate-r1", "Huntington ACK", "pipe-1.0-candidate-r1",

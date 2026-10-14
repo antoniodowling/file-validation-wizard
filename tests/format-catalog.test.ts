@@ -41,10 +41,22 @@ describe("focused format catalog", () => {
       "pain.008",
       "820",
     ]);
-    expect(FORMAT_PACKS.filter((pack) => pack.family === "PAIN.001").every(
-      (pack) => pack.guideUrl === "https://developer.huntington.com/enterprisepayments/docs/iso-pain001",
-    )).toBe(true);
-    expect(FORMAT_PACKS.filter((pack) => pack.mode === "DEMO" && pack.family !== "PAIN.001").every((pack) => pack.guideUrl === null)).toBe(true);
+  });
+
+  it("links every executable profile to its Huntington format-family guide", () => {
+    const slugs: Record<string, string> = {
+      "PAIN.001": "iso-pain001",
+      "PAIN.008": "iso-pain008",
+      "EDI 820": "edi-820",
+      "NACHA": "nacha",
+      "NACHA Returns": "nacha-returns",
+      "Huntington Control Totals": "ach-control-total-flat-file",
+      "Huntington ACK": "file-received-ack-flat-file",
+    };
+    for (const pack of FORMAT_PACKS) {
+      expect(slugs[pack.family]).toBeDefined();
+      expect(pack.guideUrl).toBe(`https://developer.huntington.com/enterprisepayments/docs/${slugs[pack.family]}`);
+    }
   });
 
   it("searches codes, names, standards, and aliases case-insensitively", () => {
