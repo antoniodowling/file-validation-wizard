@@ -6,11 +6,11 @@ In the Wizard select **NACHA**, choose **Public specification profile (2026 revi
 
 The 69 files cover all five SEC codes individually and together, balanced/unbalanced totals, optional fields, multiple CTX addenda, hash truncation, four record framings, and targeted invalid inputs. `manifest.json` records exact bytes, hashes, expected status, and the named failing/warning rules. The test suite verifies every fixture and requires coverage of every parser rule. Additional parser tests cover boundaries and combined-error conditions.
 
-Regenerate from the explicit worktree root:
+Regenerate for comparison from your explicit repository/worktree root, replacing the placeholder with its actual absolute path:
 
 ```sh
-cd '/Volumes/CodexData/Worktrees/nacha-production-preparation/HNB File Validation Wizard'
-node scripts/generate-nacha-files.mjs /private/tmp/nacha-fixture-review
+cd '/absolute/path/to/file-validation-wizard'
+npm run generate:nacha-files -- /private/tmp/nacha-fixture-review
 ```
 
 The generator only replaces its named outputs in the selected directory. The tests prove byte-for-byte reproducibility. Malformed files intentionally violate widths, characters, sequences, or totals; do not normalize their spaces or line endings. Fixed-width trailing spaces are intentional.

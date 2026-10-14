@@ -1,0 +1,22 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+# Markdown may use two trailing spaces for an intentional line break.
+trim_trailing_whitespace = false
+
+[{demo-files,tests/fixtures,readme-package}/**]
+# Preserve fixture bytes and generated artifacts; use their generators instead.
+charset = unset
+indent_style = unset
+indent_size = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = false
