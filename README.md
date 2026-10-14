@@ -2,10 +2,9 @@
 
 A browser-local demo for exploring and validating common payment-file formats. Its format-first wizard provides:
 
-- a searchable, frozen catalog of 50 legitimate payments and treasury format/message profiles;
-- three relevant versions for each catalog entry;
-- nine executable demo profiles covering PAIN.001, PAIN.008, and ASC X12 EDI 820; and
-- reference-only metadata for every other catalog entry; and
+- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, and NACHA / ACH;
+- nine existing executable profiles across the three ISO/X12 formats, with three versions each;
+- one pending NACHA selection for the planned CCD, PPD, CTX, WEB, and TEL scope; and
 - a dedicated-page, read-only file explorer that links current findings to exact source, honest context, or an explicit unavailable state.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee ABC Bank acceptance or payment readiness.
@@ -47,7 +46,7 @@ Select **PAIN.001**, choose version **pain.001.001.09**, and upload one of the s
 
 ## Catalog and validation profiles
 
-Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The current nine packs are explicitly marked `DEMO` and cannot claim release approvals.
+Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The current nine ISO/X12 packs are explicitly marked `DEMO` and cannot claim release approvals. Their parser and rule behavior is retained. The former reference-only catalog placeholders have been removed; NACHA is the sole pending entry and cannot advance to Upload or validate files. Its 2026 label identifies the intended rules baseline, not implemented coverage. See [the NACHA source review](docs/NACHA_SOURCE_REVIEW.md) for authoritative-source access and remaining verification.
 
 To enable a production pack, provide its exact version identifiers, approved guide URL, approved rules and fixtures, and Product/SC/FT sign-offs. The registry fails closed when any of those production release gates are missing.
 

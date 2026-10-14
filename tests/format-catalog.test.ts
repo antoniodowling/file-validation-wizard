@@ -8,11 +8,25 @@ import {
 } from "../src/format-catalog";
 import { FORMAT_PACKS } from "../src/format-packs";
 
-describe("demo format catalog", () => {
-  it("contains exactly 50 unique payments and treasury entries", () => {
-    expect(FORMAT_CATALOG).toHaveLength(50);
-    expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(50);
-    expect(FORMAT_CATALOG.every((item) => item.versions.length === 3)).toBe(true);
+describe("focused format catalog", () => {
+  it("retains executable formats and one pending NACHA entry", () => {
+    expect(FORMAT_CATALOG.map((item) => item.id)).toEqual(["pain-001", "pain-008", "x12-820", "nacha"]);
+    expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(4);
+    expect(FORMAT_CATALOG.filter((item) => item.status === "REFERENCE_ONLY").map((item) => item.id)).toEqual(["nacha"]);
+    expect(FORMAT_CATALOG.filter((item) => item.id !== "nacha").every((item) => item.versions.length === 3)).toBe(true);
+  });
+
+  it("keeps NACHA unavailable until a validation pack exists", () => {
+    const nacha = findCatalogEntry("nacha");
+    expect(nacha?.versions).toEqual([{
+      id: "2026 nacha rules",
+      label: "2026 Nacha Rules",
+      extensions: [".ach", ".txt"],
+    }]);
+    expect(FORMAT_PACKS.some((pack) => pack.id.includes("nacha"))).toBe(false);
+    for (const code of ["CCD", "PPD", "CTX", "WEB", "TEL"]) {
+      expect(searchFormatCatalog(code).map((item) => item.id)).toEqual(["nacha"]);
+    }
   });
 
   it("maps exactly nine supported versions to executable profiles", () => {
@@ -34,9 +48,9 @@ describe("demo format catalog", () => {
 
   it("searches codes, names, standards, and aliases case-insensitively", () => {
     expect(searchFormatCatalog("credit transfer").map((item) => item.code)).toContain("pain.001");
-    expect(searchFormatCatalog("SWIFT MT")).toHaveLength(11);
-    expect(searchFormatCatalog("nacha ccd").map((item) => item.code)).toEqual(["CCD"]);
-    expect(searchFormatCatalog("x12 823").map((item) => item.code)).toEqual(["823"]);
+    expect(searchFormatCatalog("SWIFT MT")).toEqual([]);
+    expect(searchFormatCatalog("nacha ccd").map((item) => item.code)).toEqual(["NACHA"]);
+    expect(searchFormatCatalog("x12 823").map((item) => item.code)).toEqual([]);
   });
 
   it("resolves dependent versions and extension labels", () => {

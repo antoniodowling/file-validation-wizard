@@ -55,7 +55,7 @@ test("starts with format search and keeps later-step messaging inside its step",
   await page.locator("#format-search").focus();
   await expect(page.locator("#format-search")).toHaveCSS("outline-style", "none");
   await expect(page.locator("#format-search")).toHaveCSS("box-shadow", /rgb\(3, 79, 84\).*inset/);
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(50);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(4);
   await expect(page.locator(".format-list-header")).toHaveText("FormatCodeStandard");
   await expect(page.locator(".support-badge")).toHaveCount(0);
   await expect(page.locator('#format-listbox [role="option"]').first().locator("span")).toHaveCount(3);
@@ -137,11 +137,13 @@ test("known layout defect: format controls align in the explorer pane", async ({
   expect(Math.max(...positions) - Math.min(...positions)).toBeLessThan(1);
 });
 
-test("lets users explore reference formats without advancing", async ({ page }) => {
+test("keeps pending NACHA unavailable and removes unsupported catalog formats", async ({ page }) => {
   await page.goto("/");
-  await chooseFormat(page, "MT940", /MT940.*Customer Statement/i, "sr2025");
-  await expect(page.getByText("Accepted extensions: FIN, MT, TXT")).toBeVisible();
-  await expect(page.getByText("Reference only — validation is unavailable in this demo.")).toBeVisible();
+  await page.locator("#format-search").fill("MT940");
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(0);
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "2026 nacha rules");
+  await expect(page.getByText("File extensions: ACH, TXT", { exact: false })).toBeVisible();
+  await expect(page.getByText("Validation is not yet available for this selection.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
   await expect(page.locator('[data-open-step="2"]').first()).toBeDisabled();
 });

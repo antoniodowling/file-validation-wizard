@@ -571,7 +571,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     } else if (!version) {
       helper.hidden = true;
     } else if (!version.validationProfileId) {
-      helper.textContent = `Accepted extensions: ${extensionList(version.extensions)} · Reference only — validation is unavailable in this demo.`;
+      helper.textContent = `File extensions: ${extensionList(version.extensions)} · Validation is not yet available for this selection.`;
     } else {
       const guideUrl = findEnabledFormatPack(version.validationProfileId)?.guideUrl;
       if (guideUrl) {

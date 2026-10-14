@@ -29,7 +29,7 @@ Use Node.js 22.12 or newer and `npm ci` from the repository root. Run `npm run d
 
 ## Current acceptance checklist
 
-This is a demo implementation with nine executable profiles; other catalog entries are reference-only. Passing local checks does not establish bank acceptance, standards conformance, production approval, or WCAG conformance.
+The catalog contains PAIN.001, PAIN.008, EDI 820, and one pending NACHA selection. The nine existing ISO/X12 profiles retain their limited validation and demo approval status; NACHA validation is unavailable. Other reference-only catalog placeholders have been removed. See [the NACHA source review](NACHA_SOURCE_REVIEW.md) before implementing its rules. Passing local checks does not establish bank acceptance, standards conformance, production approval, or WCAG conformance.
 
 | Check | Current evidence | Responsible role / next action |
 | --- | --- | --- |
