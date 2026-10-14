@@ -999,10 +999,18 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     resultsPage = 1;
     const label = overallStatusLabel(runController.acceptedRun.overallStatus);
     requiredElement<HTMLElement>("#results-title").textContent = label;
-    requiredElement<HTMLElement>("#result-basis").textContent = `DEMO — ${runController.acceptedRun.executionStatus ?? "COMPLETED"}. ${runController.acceptedRun.executionReason ?? ""} Ruleset ${runController.acceptedRun.provenance?.rulesetRevision ?? "legacy"}. Checks passed refers only to the coverage below. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.`;
+    const executionStatus = runController.acceptedRun.executionStatus ?? "COMPLETED";
+    requiredElement<HTMLElement>("#result-basis").textContent = executionStatus === "COMPLETED"
+      ? "Validation complete. Passing these checks does not guarantee payment acceptance or processing."
+      : `${executionStatus === "UNSUPPORTED" ? "This file is not supported." : "Validation could not be completed."} ${runController.acceptedRun.executionReason ?? ""}`.trim();
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
-    requiredElement<HTMLElement>("#check-summary").textContent = `${runController.acceptedRun.checks?.length ?? runController.acceptedRun.results.length} distinct checks; ${runController.acceptedRun.results.length} evaluated occurrence rows; ${runController.acceptedRun.checks?.filter(check => check.state === "not-evaluated").length ?? 0} checks not evaluated. Metrics below count occurrences.`;
+    const totalChecks = runController.acceptedRun.checks?.length ?? runController.acceptedRun.results.length;
+    const unevaluatedChecks = runController.acceptedRun.checks?.filter(check => check.state === "not-evaluated").length ?? 0;
+    const completedChecks = totalChecks - unevaluatedChecks;
+    const resultCount = runController.acceptedRun.results.length;
+    const completedSummary = unevaluatedChecks > 0 ? `${completedChecks} of ${totalChecks} checks completed` : `${totalChecks} ${totalChecks === 1 ? "check" : "checks"} completed`;
+    requiredElement<HTMLElement>("#check-summary").textContent = `${completedSummary}. ${resultCount} ${resultCount === 1 ? "result" : "results"}.${unevaluatedChecks > 0 ? ` ${unevaluatedChecks} ${unevaluatedChecks === 1 ? "check" : "checks"} not evaluated.` : ""}`;
     const passCount = runController.acceptedRun.results.filter((result) => result.outcome === "PASS").length;
     requiredElement<HTMLElement>("#error-count").textContent = String(runController.acceptedRun.errorCount);
     requiredElement<HTMLElement>("#warning-count").textContent = String(runController.acceptedRun.warningCount);

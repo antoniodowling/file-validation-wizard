@@ -34,7 +34,7 @@ test("generated pane reflow, sample upload, full source, focus and portable prov
   });
   await page.getByRole("button",{name:"Validate file"}).click();
   await expect(page.locator('[id$="results-title"]')).toHaveText("FAIL");
-  await expect(page.locator('[id$="result-basis"]')).toContainText("DEMO");
+  await expect(page.locator('[id$="result-basis"]')).toContainText("Validation complete.");
   expect(await page.evaluate(()=>document.activeElement?.id.endsWith("step-3-panel"))).toBe(true);
   await page.getByRole("button",{name:"View in file"}).click();
   await expect(page.locator("[data-detail-confidence]")).toContainText("exact");
