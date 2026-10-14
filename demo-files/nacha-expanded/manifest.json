@@ -1,0 +1,1405 @@
+{
+  "synthetic": true,
+  "description": "Synthetic test data only. Format-valid routing values prove checksum arithmetic, not bank membership or deliverability.",
+  "fixtures": [
+    {
+      "file": "ccd-pass.ach",
+      "description": "CCD synthetic monetary origination",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "632204351138e9b685eea6a02640d26139d8af81b18e90db76530ca1f9e640ad",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-pass.ach",
+      "description": "PPD synthetic monetary origination",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "c78c4a9fe634f24f669a133aa839c37575b8a7ab6a149dc709da6e849af62d84",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-pass.ach",
+      "description": "CTX synthetic monetary origination",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "fdb8506c66b6f8be69050761ac019e22f737869c1a690d99321e6871adfa94e4",
+      "bytes": 950
+    },
+    {
+      "file": "web-pass.ach",
+      "description": "WEB synthetic monetary origination",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "022803c0f8086cd33c73133f11ee182b44a2a7f8684d5be43a2dcf2e56c7c5fe",
+      "bytes": 950
+    },
+    {
+      "file": "tel-pass.ach",
+      "description": "TEL synthetic monetary origination",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "e7d461d6b473d4032e418fc2e38fe9a8788102d92d197761141ce1be076246bb",
+      "bytes": 950
+    },
+    {
+      "file": "mixed-five-sec-pass.ach",
+      "description": "All five supported SEC codes in one file",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "af84f79579e6783c324a39fc3c56c0ee74a3371d305298127e8696654caec967",
+      "bytes": 1900
+    },
+    {
+      "file": "balanced-mixed-pass.ach",
+      "description": "Equal credit/debit totals and regular monetary codes",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "ec1c683dbc2beca389b74199d4b922d55aa44580abd0cc7258aea4d2c1eba2b3",
+      "bytes": 950
+    },
+    {
+      "file": "unbalanced-mixed-pass.ach",
+      "description": "Mixed regular credits/debits with unequal totals",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "49b2f1dfa6ebfd8c9e109c9af1b86e8baca6d0ab3af39fbd486bf034f26db3e3",
+      "bytes": 950
+    },
+    {
+      "file": "crlf-pass.ach",
+      "description": "crlf record framing",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "7a8fdffeaa93a7c7103e3f372da7fc083e0adb0705c76b3ff3f98e44a8957c15",
+      "bytes": 960
+    },
+    {
+      "file": "cr-pass.ach",
+      "description": "cr record framing",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "2dba3a6f8d7895892d1f563defdd034aa5e4bd0b85ef3eb7e5576e9076aeab38",
+      "bytes": 950
+    },
+    {
+      "file": "concatenated-pass.ach",
+      "description": "concatenated record framing",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "a49d9a1f5ccfb1c4db5109510f293612364f704796e70d70cd587bf90c7ae038",
+      "bytes": 940
+    },
+    {
+      "file": "ctx-multi-addenda-pass.ach",
+      "description": "CTX X12 payment payload",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "ce1a297a738bc96a28c900cff0371ce7e6b24efc6acd02a93e7cd13cbd93da44",
+      "bytes": 950
+    },
+    {
+      "file": "sparse-no-addenda-pass.ach",
+      "description": "Optional descriptive fields blank and no addenda",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "6ceb74495e06be3fcf8fa211ffb2460d2b413a9734f318840dd0ba24e17886ce",
+      "bytes": 950
+    },
+    {
+      "file": "hash-wrap-pass.ach",
+      "description": "Entry hash wraps modulo ten billion using 130 synthetic entries",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "b763426761f62b9a987b8340009ed72d1bbab8f3acab9dc588d57c3dcbe104fc",
+      "bytes": 13300
+    },
+    {
+      "file": "ascii-fail.ach",
+      "description": "Non-ASCII character",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.ascii"
+      ],
+      "sha256": "b6513600ed953c93df2510c7a787a2b5df0e7ed969dac18a1ee9c4fd51ead1e2",
+      "bytes": 951
+    },
+    {
+      "file": "record-length-fail.ach",
+      "description": "One record is short",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.framing"
+      ],
+      "sha256": "c11762c08b37886c36e7c3764824ade6d18284cda38951993f399f9c64120f3b",
+      "bytes": 949
+    },
+    {
+      "file": "order-fail.ach",
+      "description": "Entry appears before batch header",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.record-order"
+      ],
+      "sha256": "0880472d7909f01942d25aef26b535584dce540de91ad4e25533833262cb3196",
+      "bytes": 950
+    },
+    {
+      "file": "file-constants-fail.ach",
+      "description": "Invalid file-header record size",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-header"
+      ],
+      "sha256": "e8a5f4b2a9979b861abe8d3674f2b32f368df51a160913f00f5103a003453733",
+      "bytes": 950
+    },
+    {
+      "file": "file-date-fail.ach",
+      "description": "Impossible creation date",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.creation-date"
+      ],
+      "sha256": "b7de34905f456aeb5f68397c4cd0aa7a6899c51802f57739c50753075bbf8eb4",
+      "bytes": 950
+    },
+    {
+      "file": "batch-date-fail.ach",
+      "description": "Impossible effective entry date",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.effective-date"
+      ],
+      "sha256": "1d0eae1032614ad66d888fa480ccfee4c610538a57fba4e458811a769bc39b82",
+      "bytes": 950
+    },
+    {
+      "file": "sec-fail.ach",
+      "description": "Unsupported SEC code",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.sec-code"
+      ],
+      "sha256": "125f9cf3884262004cdadf267a3ac2288e90a4747c5ca341c1d6e9b329fcba59",
+      "bytes": 950
+    },
+    {
+      "file": "service-class-fail.ach",
+      "description": "Credit-only service class contains debit",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.sec-transaction"
+      ],
+      "sha256": "57e6ed3516ea5e809c3dc41d20fd6b20e40dba436806e4b73170a28c02fad9ed",
+      "bytes": 950
+    },
+    {
+      "file": "batch-required-fail.ach",
+      "description": "Blank company identification",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-required"
+      ],
+      "sha256": "582b5d26aba46d9b56b79cb885f0ee71d387efed9d2ddaa723533a27da67b8b7",
+      "bytes": 950
+    },
+    {
+      "file": "entry-required-fail.ach",
+      "description": "Blank receiving account",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.entry-required"
+      ],
+      "sha256": "b21793bc0dc8e431d47172fc3f283e4eb4cb565ded2ff2e155086acbbae2ef66",
+      "bytes": 950
+    },
+    {
+      "file": "routing-prefix-fail.ach",
+      "description": "Unsupported receiving routing prefix with valid check digit",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.routing"
+      ],
+      "sha256": "5b81168a590c97eb4e6214fcfcf8995930813ef63bc3d324dc00b65c060d685e",
+      "bytes": 950
+    },
+    {
+      "file": "routing-check-digit-fail.ach",
+      "description": "Invalid receiving routing check digit",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.routing"
+      ],
+      "sha256": "23df78048e06497e92e994428237a20885c9ccff8a43f8c734a811cd444fcb94",
+      "bytes": 950
+    },
+    {
+      "file": "routing-numeric-fail.ach",
+      "description": "Non-numeric receiving routing field",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.routing"
+      ],
+      "sha256": "0063aadcf09f89a955a76acf812f9eeb5dbf21535c461454c410c16afeb01cbc",
+      "bytes": 950
+    },
+    {
+      "file": "trace-prefix-fail.ach",
+      "description": "Trace prefix differs from ODFI",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.trace"
+      ],
+      "sha256": "218cae9af44ad9765e129f05b07bcef6c963fb33d93d9556d46a282502e4dd37",
+      "bytes": 950
+    },
+    {
+      "file": "trace-sequence-fail.ach",
+      "description": "Zero trace sequence",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.trace"
+      ],
+      "sha256": "67e7164663f20547bb1d9927f11fe3477fbe404a20a6a9ff5fcaf942b00da28a",
+      "bytes": 950
+    },
+    {
+      "file": "transaction-code-fail.ach",
+      "description": "Unsupported transaction code",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.transaction-code"
+      ],
+      "sha256": "f5d47231d5acfd2ae5ac18c68f2602317fa888ebd234112d1b1c466e2a1fe664",
+      "bytes": 950
+    },
+    {
+      "file": "amount-fail.ach",
+      "description": "Zero-dollar entry outside monetary scope",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.entry-amount"
+      ],
+      "sha256": "5a17589eb9c7d95964c62b0a60b581a69af4a2d1bcfbac7aef3dc2e703e126ea",
+      "bytes": 950
+    },
+    {
+      "file": "amount-numeric-fail.ach",
+      "description": "Non-numeric amount",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.entry-amount"
+      ],
+      "sha256": "b1914494fabd27d3718891a9134fce6cb0a2edb5adf4af3c20d00a0841344992",
+      "bytes": 950
+    },
+    {
+      "file": "tel-credit-fail.ach",
+      "description": "TEL credits outside TEL origination scope",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.sec-transaction"
+      ],
+      "sha256": "4aecd179500ee5d1e1186c0d993a7abeb99e64abbad742895d47776078ef36db",
+      "bytes": 950
+    },
+    {
+      "file": "tel-addenda-fail.ach",
+      "description": "TEL cannot carry addenda",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-count"
+      ],
+      "sha256": "a964925d6049648c4775aad7c3aff1f51564bb70ec20e2450b5e36c395873267",
+      "bytes": 950
+    },
+    {
+      "file": "web-credit-id-fail.ach",
+      "description": "WEB credit identification is blank",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.web-credit-originator"
+      ],
+      "sha256": "9926243592b749a3740abac23f4e9aece0d52e008305e6e57d11173bb7309921",
+      "bytes": 950
+    },
+    {
+      "file": "addenda-indicator-fail.ach",
+      "description": "Addenda present with indicator zero",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-indicator"
+      ],
+      "sha256": "ea9733ede172afed33e2dcbe8731c2e0935c0a16c7fd3bae0cd8b723fa045f0c",
+      "bytes": 950
+    },
+    {
+      "file": "addenda-type-fail.ach",
+      "description": "Unsupported addenda type",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-type"
+      ],
+      "sha256": "d956f7361955d08e6c2283e124d72c403935bf35c3a7ad4bafd8bcdf0e44a741",
+      "bytes": 950
+    },
+    {
+      "file": "addenda-sequence-fail.ach",
+      "description": "First addenda sequence is not one",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-sequence"
+      ],
+      "sha256": "9145bda4d8742ca9734d2181de0d7fb5f4671bcd4dec3b1f0e265b0d57685bad",
+      "bytes": 950
+    },
+    {
+      "file": "addenda-trace-link-fail.ach",
+      "description": "Addenda links to wrong entry sequence",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-link"
+      ],
+      "sha256": "28ec2d406515f2b6f751c06b561316d3f345d0141641662cd6d07412de5c8b11",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-addenda-count-fail.ach",
+      "description": "CTX declared addenda count differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-count"
+      ],
+      "sha256": "c6061d9a5dce9bf6690769b2bb5571cddfc214f8fbbccdbd2cdf18e0879bc5b7",
+      "bytes": 950
+    },
+    {
+      "file": "single-addenda-count-fail.ach",
+      "description": "CCD has more than one addenda",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.addenda-count"
+      ],
+      "sha256": "abb8a80cb4088f6ac92e26035b5862247d9e4ea90be480f9a1a306b4cb6c679a",
+      "bytes": 950
+    },
+    {
+      "file": "batch-control-mirror-fail.ach",
+      "description": "Batch control company differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-mirror"
+      ],
+      "sha256": "73cb24fa0e2fe5abb943c3e484779d893cf470b8569531d246cca092817fd72e",
+      "bytes": 950
+    },
+    {
+      "file": "batch-control-count-fail.ach",
+      "description": "Batch control entry/addenda count differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-count"
+      ],
+      "sha256": "80bfe8882070a4112fe745a4c4c8b6a3821b90b5f8be6ce794e24fdb53c21060",
+      "bytes": 950
+    },
+    {
+      "file": "batch-control-hash-fail.ach",
+      "description": "Batch hash differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-hash"
+      ],
+      "sha256": "d3e41c203c709ce270b96ce87e74dcd103735f0a328025f217e8d171f1a0b4b8",
+      "bytes": 950
+    },
+    {
+      "file": "batch-control-totals-fail.ach",
+      "description": "Batch credit total differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-credit"
+      ],
+      "sha256": "97f57a37e8552199a313f526206ec26e7ea73cd8fc0b6f6f6270da197d62f4fd",
+      "bytes": 950
+    },
+    {
+      "file": "file-control-batches-fail.ach",
+      "description": "File batch count differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-batches"
+      ],
+      "sha256": "b9c6f6808b2dc1492ba64220875423e9f87a37861d0d744652d460d8b7bb5285",
+      "bytes": 950
+    },
+    {
+      "file": "file-control-blocks-fail.ach",
+      "description": "File block count differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-blocks"
+      ],
+      "sha256": "115f7ca3878b98f8ffce7bc694c8858beb1e5559a076f527eb75e67af9370ddb",
+      "bytes": 950
+    },
+    {
+      "file": "file-control-count-fail.ach",
+      "description": "File entry/addenda count differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-count"
+      ],
+      "sha256": "4a3057da39ec1ebd9cfc7c2a8bd37fcec271d1ae267d4be17e2362e04300c5b3",
+      "bytes": 950
+    },
+    {
+      "file": "file-control-hash-fail.ach",
+      "description": "File hash differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-hash"
+      ],
+      "sha256": "712d0129ebf3191fe9acda76685aa704b2992735e4097cd40eb49558c2f9552e",
+      "bytes": 950
+    },
+    {
+      "file": "file-control-totals-fail.ach",
+      "description": "File credit total differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-credit"
+      ],
+      "sha256": "49a4bcc760ff219836d1a08b3f2fb130b6fd8d271c0c693d3063725d4b655074",
+      "bytes": 950
+    },
+    {
+      "file": "padding-fail.ach",
+      "description": "Padding record contains a non-nine character",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.record-order"
+      ],
+      "sha256": "cbe17e4598caa74ee769822b0c8fec43804e480bbe8c6d0ad5e8c879c13cbaf9",
+      "bytes": 950
+    },
+    {
+      "file": "block-padding-fail.ach",
+      "description": "File does not end on ten-record boundary",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.blocking"
+      ],
+      "sha256": "4a6b5b4f197ee3dfdbc3fc569f1ccaba7cdedd5e14999371b98e23c51cf9cfda",
+      "bytes": 855
+    },
+    {
+      "file": "creation-time-isolated-fail.ach",
+      "description": "Invalid optional creation time",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.creation-time"
+      ],
+      "sha256": "957acd193fe0362eb4da62281caa9010bad673a82c6768ec4cd5229e77308a48",
+      "bytes": 950
+    },
+    {
+      "file": "service-class-isolated-fail.ach",
+      "description": "Unsupported service class",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.service-class"
+      ],
+      "sha256": "f3bcf18a386874387951d00c74c112f873d53529a0763db0bfb17502afb89b41",
+      "bytes": 950
+    },
+    {
+      "file": "originator-status-isolated-fail.ach",
+      "description": "Invalid originator status",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.originator-status"
+      ],
+      "sha256": "dc60324169886d4f60cb744c4939826a7dde32e99093a4a198442cb894cd5691",
+      "bytes": 950
+    },
+    {
+      "file": "odfi-isolated-fail.ach",
+      "description": "Invalid originating DFI prefix",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.odfi"
+      ],
+      "sha256": "9b2071cd5de82e2b8789d5c0b7885b29cbdf484e994118d91a83393c39a5b4d1",
+      "bytes": 950
+    },
+    {
+      "file": "batch-number-isolated-fail.ach",
+      "description": "Nonpositive batch number",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-number"
+      ],
+      "sha256": "14679891df5391a7db02e3d0c48d6e21b2a574e92a2deadc00780c17be5483c7",
+      "bytes": 950
+    },
+    {
+      "file": "trace-order-isolated-fail.ach",
+      "description": "Entry trace sequence decreases",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.trace-order"
+      ],
+      "sha256": "9f801228f784e8a53ac9c5a1809fae1053685e071b301f35c443d6c7394ffd0f",
+      "bytes": 950
+    },
+    {
+      "file": "trace-unique-isolated-fail.ach",
+      "description": "Duplicate entry trace",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.trace-unique"
+      ],
+      "sha256": "0c84cb08fa3ad6aec5950432cb5c5d1bb759b13cf00ccea8ea3fdff741dd1750",
+      "bytes": 950
+    },
+    {
+      "file": "batch-debit-isolated-fail.ach",
+      "description": "Batch debit total differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.batch-debit"
+      ],
+      "sha256": "105bf72b93aaa6d2bbd22860ff8774c43e119f791aaa804a9474b46e6b9d57a8",
+      "bytes": 950
+    },
+    {
+      "file": "file-debit-isolated-fail.ach",
+      "description": "File debit total differs",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.file-debit"
+      ],
+      "sha256": "23a1d657e4978f5bcba56a03103fb47c5b1c0b2cbd4a55e0b4e47bb0063874fe",
+      "bytes": 950
+    },
+    {
+      "file": "reserved-isolated-fail.ach",
+      "description": "File-control reserved field populated",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.reserved"
+      ],
+      "sha256": "b0ebbf690701dc3725d8cdfa06afa0668862fbad89593431ce8edca0670bf6f8",
+      "bytes": 950
+    },
+    {
+      "file": "effective-weekend-warning.ach",
+      "description": "Weekend effective entry date requires ODFI confirmation",
+      "expectedStatus": "PASS_WITH_WARNINGS",
+      "expectedRuleIds": [
+        "nacha.effective-weekend"
+      ],
+      "sha256": "f2236cdb2899f1bfebec7551dab34ab3527efb9a8384c4aae5e2f69a59edcb07",
+      "bytes": 950
+    },
+    {
+      "file": "settlement-date-warning.ach",
+      "description": "Operator settlement date populated in an origination",
+      "expectedStatus": "PASS_WITH_WARNINGS",
+      "expectedRuleIds": [
+        "nacha.settlement-date"
+      ],
+      "sha256": "ebd0f24d163ddff0cd8c76c98c124ead519e4bcbafc4d357482d6841436b0cc0",
+      "bytes": 950
+    },
+    {
+      "file": "settlement-date-invalid-fail.ach",
+      "description": "Invalid Julian settlement date is an error",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.settlement-date"
+      ],
+      "sha256": "cc54461fcf39e4b27c5041fad94379886e8346c5ca42aa5dd750539ebbc137ba",
+      "bytes": 950
+    },
+    {
+      "file": "empty-fail.ach",
+      "description": "Empty file has no records",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.framing"
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "bom-fail.ach",
+      "description": "UTF-8 BOM is outside the ASCII fixed-width profile",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.framing"
+      ],
+      "sha256": "230ed17dfd41e0f4da7a46dac8f30875513e77d73cb287a66798ea4b89c658fd",
+      "bytes": 953
+    },
+    {
+      "file": "multiple-errors-fail.ach",
+      "description": "Independent date, service class, account, and routing errors",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.creation-date",
+        "nacha.service-class",
+        "nacha.entry-required",
+        "nacha.routing"
+      ],
+      "sha256": "17d0bc7acb12a488bc4d22f65af044beea511806fb917201ee4f1f87b1639b5c",
+      "bytes": 950
+    },
+    {
+      "file": "multiple-errors-resolved-pass.ach",
+      "description": "Corrected companion for the multi-error example",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "632204351138e9b685eea6a02640d26139d8af81b18e90db76530ca1f9e640ad",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-22-pass.ach",
+      "description": "CCD entry type 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "0a7bb0af5db6058ed4a4b53aa976be77d4e2a851d35be64554d904e433af96ee",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-27-pass.ach",
+      "description": "CCD entry type 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "3326adfc43bc76c2b092f1a6cf84ea56e17912953da8a42f490a519d63063d35",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-23-pass.ach",
+      "description": "CCD entry type 23",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "b4667fcb8cad59d972880adb9609e280b5c5212bfa92d017a7bfb6fb9ebb4254",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-28-pass.ach",
+      "description": "CCD entry type 28",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "f7ab449f7d19a1c10483fc443102f1ff98abfce7a8e6b5ced275f4e34fff7556",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-24-pass.ach",
+      "description": "CCD entry type 24",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "a14432475e67e96d5369e1ef091877a40ef2c6c4e1d54b86c279d24f61c45bb3",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-29-pass.ach",
+      "description": "CCD entry type 29",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "8369a90cf72ba6fbd6a6f4653fdc935f854137a3cc94589271248d41db0f1568",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-32-pass.ach",
+      "description": "CCD entry type 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "14e8eaacdd1cf0fba596a19d5a61be96db81f7d2650a074204e003917ecbe811",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-37-pass.ach",
+      "description": "CCD entry type 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "40a59705a8d997c1839b27a961f02f5749ac6397f8ea7b869d8da1ed9f8032a6",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-33-pass.ach",
+      "description": "CCD entry type 33",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "32bf9e9ee26ca95b4313e0cc32c9afff41bbf666b66c38828cc38769bf8eef7f",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-38-pass.ach",
+      "description": "CCD entry type 38",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "e08c1295bde2ab5dc5a198466c26751d59d992d21a0d198a62968766ab5a4dde",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-34-pass.ach",
+      "description": "CCD entry type 34",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "77cbcdce094df8b695bfc8d0290f843174e4c85efa5921a1c41871ef28c2c4c3",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-39-pass.ach",
+      "description": "CCD entry type 39",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "663a559f3441090b31af72811a603da35fb1896ec3facabdeac5d7d3939a7ddb",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-52-pass.ach",
+      "description": "CCD entry type 52",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "efcf05b1339a270e9be90846ef7d8d246f81bcccc6ac81ea5c1ba0f34f63dc20",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-53-pass.ach",
+      "description": "CCD entry type 53",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "2bc23b97127fcb4fb31a608d2e99d6fb16f6a5b77a1246e96d6471efa35fc467",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-54-pass.ach",
+      "description": "CCD entry type 54",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "8c1bc6ddc3d4d21580cb7166552ee47d93ba1aa9e95fa132877fc5590706c4f8",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-22-pass.ach",
+      "description": "PPD entry type 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "8036cd521705c7e1ddb2e1e43d603d646850ca48a0eb751f1b877dcba59e65f2",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-27-pass.ach",
+      "description": "PPD entry type 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "86e6bec549601a1dba41e7044ff3f1c059730b78ae8e69cbe81b8809688b21fa",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-23-pass.ach",
+      "description": "PPD entry type 23",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "b55d0a65f24332625af13e8622faf224f6ce085a74c797c7eb7bb070dc4026d6",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-28-pass.ach",
+      "description": "PPD entry type 28",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "7c4d6977691ba1dfe0abe0b1e602e65ffbf0067116438cc63c0d2f16f8ed4943",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-32-pass.ach",
+      "description": "PPD entry type 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "8728628c1dc15801db554b51316b3450d6123966e84326d873f71a01cfce863b",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-37-pass.ach",
+      "description": "PPD entry type 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "5abcc368d17da41cb543b838297982ed89a79a4d8f5e8fc26e05df179425f33e",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-33-pass.ach",
+      "description": "PPD entry type 33",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "2bccea43b916d499be94eb77301647fdb36d5b91a228d354c97a2a583af3d0e0",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-38-pass.ach",
+      "description": "PPD entry type 38",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "49f3ae78fa9b2de3aca83f6113ddb949e19f26ff9d5ebf68b0c6c10daa00b349",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-52-pass.ach",
+      "description": "PPD entry type 52",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "69a8eb1fb2c0a478bc7206d4719fd8600915450466ea0f48bad7d60df8420c20",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-53-pass.ach",
+      "description": "PPD entry type 53",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "068d2b729d9abefd61d81ed69016fe2027184f3fdc07a4fce03479688e0444fc",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-22-pass.ach",
+      "description": "CTX entry type 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "41f1f73e37263954523ff49aa568dad87f0020a235f0a89ca73968fa253f8245",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-27-pass.ach",
+      "description": "CTX entry type 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "611cd6c129ed99d3d4a65c70532753aff3d8c7659b3a296597121b6859cb5a04",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-23-pass.ach",
+      "description": "CTX entry type 23",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "099dbf2bacb8bac7fc2de7b6e5fb92e6131960057009af05680c4f5b7007779c",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-28-pass.ach",
+      "description": "CTX entry type 28",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "747f0e83799bff554e7a3464c89112060ab0a147d360466f7aa92015f6171257",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-24-pass.ach",
+      "description": "CTX entry type 24",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "d7abbf97967e3d456565817387402976792a69beb5a4308104e9914b0515bb90",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-29-pass.ach",
+      "description": "CTX entry type 29",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "b48c62ea21fba4493b43f045b47891f367afb62bd98d0ebc9c4ab4c4a9d72a09",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-32-pass.ach",
+      "description": "CTX entry type 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "f4ee4f8dd4e193d922baf74525ebfb7194c3931a66eab10dfb18c2d26d964ea2",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-37-pass.ach",
+      "description": "CTX entry type 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "1a350325a9b443643fe2d3c56ee129ff23f41435b9a1b2a3f06a665aeaf84401",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-33-pass.ach",
+      "description": "CTX entry type 33",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "dba408bd767d9f82597efd65390ca9f201ce73baf0b25b23a83137a81e46b578",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-38-pass.ach",
+      "description": "CTX entry type 38",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "481d6977b2a841715e20a5c9e7839f3e66e226b91c49df69083b7c89dc5e9c05",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-34-pass.ach",
+      "description": "CTX entry type 34",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "dbfa30b93b4edf6bcdee9b2d1cf8c351ade9042c31957d7970127ddb1f1b9315",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-39-pass.ach",
+      "description": "CTX entry type 39",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "edc2c3ed2e4b208dea4631d83a22fadf8176c1d6025bca2c2028481adbf74735",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-52-pass.ach",
+      "description": "CTX entry type 52",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "8520dc80d451af40e06be14cc80fe3d7fd39235e1b84a559eb885fd0c92bd2d6",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-53-pass.ach",
+      "description": "CTX entry type 53",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "dfbaa5771fcd9d8aa10a4b60ef9434b00c39b5cdc9226f664d13219258417cac",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-54-pass.ach",
+      "description": "CTX entry type 54",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "83b1349774e6a95fe5910ff679448256614b871421140f26be3ad234bebd56cf",
+      "bytes": 950
+    },
+    {
+      "file": "web-22-pass.ach",
+      "description": "WEB entry type 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "4d109a100f4e508f8ac73fc47f537c0ae96b85074403ec52c83fbf1261b7bca4",
+      "bytes": 950
+    },
+    {
+      "file": "web-27-pass.ach",
+      "description": "WEB entry type 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "e10d5b54af5e5b3d35b5233aa6124c732fbdf6857c4bfa586eb3f39f502bb39e",
+      "bytes": 950
+    },
+    {
+      "file": "web-23-pass.ach",
+      "description": "WEB entry type 23",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "3ae42669c337545e246cff3598a41a3a0028b4ab118aa5cc0cfcba8d0840d152",
+      "bytes": 950
+    },
+    {
+      "file": "web-28-pass.ach",
+      "description": "WEB entry type 28",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "1ec11852f1bb5357e6e2d74d6284c98a8e71a8d74705afff7cce7631252a5364",
+      "bytes": 950
+    },
+    {
+      "file": "web-32-pass.ach",
+      "description": "WEB entry type 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "7015c0c73f8d408f302dbfce9dc961c4231fd207ddb86dbfa62b4c66866f239d",
+      "bytes": 950
+    },
+    {
+      "file": "web-37-pass.ach",
+      "description": "WEB entry type 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "f7dcda6985dd0cfe2b1f533d88abd306cde00f52fa9a34c332a1b35031c03750",
+      "bytes": 950
+    },
+    {
+      "file": "web-33-pass.ach",
+      "description": "WEB entry type 33",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "cdbbc2607fa9fa75cc22ec517e3acfa80de2d93d1b3606b956c371fac6346ac7",
+      "bytes": 950
+    },
+    {
+      "file": "web-38-pass.ach",
+      "description": "WEB entry type 38",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "174187da75b872771ec620847c35829e684d3d885fa72e0d22a0be4c79d096e8",
+      "bytes": 950
+    },
+    {
+      "file": "tel-27-pass.ach",
+      "description": "TEL entry type 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "dd87967ad33b26141ac353c14aee4e8f4c516ec7ccaa66d39570997929dc6e90",
+      "bytes": 950
+    },
+    {
+      "file": "tel-28-pass.ach",
+      "description": "TEL entry type 28",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "05ec3a435fd5a9710b1631e2dfac0bd33d92291a5f4fb8a2f81d660b1496533b",
+      "bytes": 950
+    },
+    {
+      "file": "tel-37-pass.ach",
+      "description": "TEL entry type 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "0bc95f97c879eac81d2721bf2f6e1ee094d6b9516b2b54a10dbcc09505a12b99",
+      "bytes": 950
+    },
+    {
+      "file": "tel-38-pass.ach",
+      "description": "TEL entry type 38",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "c3cdcc2cf67bf44fbfcd4884cee4e6ff24839b5f63b0d247b51d18a55ff894a3",
+      "bytes": 950
+    },
+    {
+      "file": "mixed-entry-types-pass.ach",
+      "description": "Mixed five SECs, monetary/prenote/zero-dollar entries, unbalanced controls",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "f4e926b4c197e7070dcd3cd79c011d4d9609245a1d262853c55100836c3d6d91",
+      "bytes": 2850
+    },
+    {
+      "file": "ccd-22-reversal-pass.ach",
+      "description": "CCD monetary reversal 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "abcde98a5c442c5da223f9ab9e3e933d4ca5b4c0884afcb38333283df4577d07",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-27-reversal-pass.ach",
+      "description": "CCD monetary reversal 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "1158350b6f63fe498b9215c2aa6d23bf3da7090cb062ce930b6daf62186ba7c1",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-32-reversal-pass.ach",
+      "description": "CCD monetary reversal 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "3f455a05918e8632fc04e473340b4dfacf3abdf13b346ff903818da04fc05e59",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-37-reversal-pass.ach",
+      "description": "CCD monetary reversal 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "ab4be82a67fb89eef8c291579d60f10b726b691044b5e89ef3462d169de8e416",
+      "bytes": 950
+    },
+    {
+      "file": "ccd-55-reversal-pass.ach",
+      "description": "CCD monetary reversal 55",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "492a0a8a0d7a0c65707705d8dbda7a83b36d47257e5a80bff6d6ca03269ff87d",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-22-reversal-pass.ach",
+      "description": "PPD monetary reversal 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "c0eeecad285666e661a3057b3253b693d8aa18dc779fdcfed817fef4a3d657fb",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-27-reversal-pass.ach",
+      "description": "PPD monetary reversal 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "af2a0cdb0aea0f769ab2844b0d2468942922304ff909807de899e99ba7d72799",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-32-reversal-pass.ach",
+      "description": "PPD monetary reversal 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "e5156ab95a6df97d563edf38a5f5f5762b212b307e230e7223e1353594d18c56",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-37-reversal-pass.ach",
+      "description": "PPD monetary reversal 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "e3d117fe8ab0275bfd89b08e253a896c879fec887e3b08a71129cecd2db276ab",
+      "bytes": 950
+    },
+    {
+      "file": "ppd-55-reversal-pass.ach",
+      "description": "PPD monetary reversal 55",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "c78d883abc68506a19ebccf85304d62d75f1c4e770c219d855e96f0a839eed03",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-22-reversal-pass.ach",
+      "description": "CTX monetary reversal 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "82cee62e53fcb0a5705c585d1b0f292b200bccb2a216a4d8f59029ec9f3af9d0",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-27-reversal-pass.ach",
+      "description": "CTX monetary reversal 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "b1605999429290377989037b047bdef3b1dc9f157108cdc361b36ddf0c4d29ea",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-32-reversal-pass.ach",
+      "description": "CTX monetary reversal 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "3f1782b1dfe6edf81a8eec9706e501805bc6e2a1317984ba04f9ef1d3e9af583",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-37-reversal-pass.ach",
+      "description": "CTX monetary reversal 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "9a155770bd646080897831767c1972c8d5369cef240a3a1dce2b39f66e179fe5",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-55-reversal-pass.ach",
+      "description": "CTX monetary reversal 55",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "47c42e2729ecea14c4ad350b2cac1c83a28a22170b89d318352b161d2a844153",
+      "bytes": 950
+    },
+    {
+      "file": "web-22-reversal-pass.ach",
+      "description": "WEB monetary reversal 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "7e01ebb098d38d53c337e7028ac812e35f728336a908510e4f16c89e0ad581e7",
+      "bytes": 950
+    },
+    {
+      "file": "web-27-reversal-pass.ach",
+      "description": "WEB monetary reversal 27",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "bc9db353ed33a7febd0a1dffeb9674117b6068d2082d2bea9c80f7f6d169853b",
+      "bytes": 950
+    },
+    {
+      "file": "web-32-reversal-pass.ach",
+      "description": "WEB monetary reversal 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "2fb70e47687fe08bee64d15fcbb20d63bf91ee394133f358064519b0875f06ac",
+      "bytes": 950
+    },
+    {
+      "file": "web-37-reversal-pass.ach",
+      "description": "WEB monetary reversal 37",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "6c28ac3b0625b2d86acc6e2384c5ba06ecd387dda21c730c3feb2c97bfc5c9b7",
+      "bytes": 950
+    },
+    {
+      "file": "tel-22-reversal-pass.ach",
+      "description": "TEL monetary reversal 22",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "e10b7abcc48eb8885caf5b1527db3d19c2cc57c2d3a358ad210943fb02ac6d0d",
+      "bytes": 950
+    },
+    {
+      "file": "tel-32-reversal-pass.ach",
+      "description": "TEL monetary reversal 32",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "a72576189ffc09d222a50330864125ea346a47706b664eea1c14f4a795abb34d",
+      "bytes": 950
+    },
+    {
+      "file": "prenote-amount-fail.ach",
+      "description": "Prenote amount must be zero",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.entry-amount"
+      ],
+      "sha256": "83f62d00d9c286f5e88c1f34e781c5aa62482e7b968d3625cc9d79f3c2b16d6a",
+      "bytes": 950
+    },
+    {
+      "file": "remittance-amount-fail.ach",
+      "description": "Remittance-only amount must be zero",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.entry-amount"
+      ],
+      "sha256": "11b95cb6735f53bf031fa14b76dde3a3f41ef5c44b8c063fc31a1804275ae1fa",
+      "bytes": 950
+    },
+    {
+      "file": "remittance-required-fail.ach",
+      "description": "Zero-dollar CCD needs addenda",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.remittance-required"
+      ],
+      "sha256": "2b9b934a1176e68c7f414b06a7591005f6ac230fd7b6b42b3e2992da3c75a03e",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-remittance-required-fail.ach",
+      "description": "Live CTX needs addenda",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.remittance-required"
+      ],
+      "sha256": "756180924bde601b1cd4651fcc5a4bf159b9471e2bc4daec7a52a157db3fbdf5",
+      "bytes": 950
+    },
+    {
+      "file": "remittance-sec-fail.ach",
+      "description": "PPD cannot use remittance-only code",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.sec-transaction"
+      ],
+      "sha256": "60ea0bef2b44c6311c888d3812a083bccaecaa68e4d284e8c0a020c9012ae5fe",
+      "bytes": 950
+    },
+    {
+      "file": "loan-reversal-marker-fail.ach",
+      "description": "Loan debit requires REVERSAL",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.reversal-transaction"
+      ],
+      "sha256": "12479ba8c3f4403d718f212c2f910d616fc3476f2cd47361a8d8f33b3d477979",
+      "bytes": 950
+    },
+    {
+      "file": "reversal-marker-fail.ach",
+      "description": "Declared reversal is not uppercase",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.reversal-marker"
+      ],
+      "sha256": "25c535899d5e768fba52ab0fbdcf883afe9172c8835f4f3959dcc35dc3d050dc",
+      "bytes": 950
+    },
+    {
+      "file": "reversal-prenote-fail.ach",
+      "description": "Reversal is monetary",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.reversal-transaction"
+      ],
+      "sha256": "7d7cb60ebbca2c96b9cde10c5a429e4fbbd6925984fdb23b14df5eafaa94e668",
+      "bytes": 950
+    },
+    {
+      "file": "field-padding-fail.ach",
+      "description": "Account leading blank violates left justification",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.field-padding"
+      ],
+      "sha256": "239e3d46ad20b1eca9012229a3c7a7a349200da8b46ce47013284d45e3bf094e",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-remittance-fail.ach",
+      "description": "CTX freeform is not X12 syntax",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.ctx-remittance"
+      ],
+      "sha256": "1184837e4a99cb7e5c5da18d7b067cab01bfc2cfe1fd6497dc953efa65da3c26",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-payment-segment-fail.ach",
+      "description": "CTX X12 lacks BPR/BPS",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.ctx-remittance"
+      ],
+      "sha256": "8b7d11d637e45c43ef5333dce616637cf13fd3afb9600145337afb94a81a2303",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-reference-fail.ach",
+      "description": "CTX SE reference mismatch",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.ctx-remittance"
+      ],
+      "sha256": "72986453dffd78b06a144ddd82469a4eafcdf11474b7c0c1ae1b3774d58b570a",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-non-820-pass.ach",
+      "description": "CTX is not restricted to EDI 820",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "db6cc75440fc22a40d2b48e23414d522c3e1e5465c65c95a3bfdcd37e51fe174",
+      "bytes": 950
+    },
+    {
+      "file": "ctx-edifact-unsupported.ach",
+      "description": "UN/EDIFACT qualification gate produces no verdict",
+      "expectedStatus": "UNSUPPORTED",
+      "expectedRuleIds": [],
+      "sha256": "f952b716494691c3668364ad8ab068e229d424fc95b2560f9e6bf453e583c481",
+      "bytes": 950
+    },
+    {
+      "file": "web-loan-unsupported.ach",
+      "description": "WEB loan combinations not source-qualified; no verdict",
+      "expectedStatus": "UNSUPPORTED",
+      "expectedRuleIds": [],
+      "sha256": "1f61a18c4d9c54676341b45c8212e38137eb4189dc8fd9c9d54540bf64216d67",
+      "bytes": 950
+    }
+  ]
+}

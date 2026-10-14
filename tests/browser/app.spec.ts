@@ -193,11 +193,11 @@ test("offers only formats and versions with enabled validators", async ({ page }
     ["pain.001", ["pain.001.001.03", "pain.001.001.09", "pain.001.001.13"]],
     ["pain.008", ["pain.008.001.02", "pain.008.001.08", "pain.008.001.12"]],
     ["820", ["004010", "005010", "008030"]],
-    ["NACHA", ["origination-public-2026"]],
+    ["NACHA", ["origination-public-2026", "origination-expanded-public-2026-r1"]],
   ] as const) {
     await search.fill(query);
     await options.click();
-    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version)]);
+    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version === "origination-expanded-public-2026-r1" ? "Expanded entry types — public-source candidate (2026 r1)" : version)]);
     for (const version of versions) {
       await page.locator("#version-select").selectOption(version);
       await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
@@ -557,4 +557,38 @@ test("uses the embedded portal presentation and has no detectable accessibility 
   // The validator is an embedded module; its ReadMe host page owns the single page-level h1.
   const scan = await new AxeBuilder({ page }).disableRules(["page-has-heading-one"]).analyze();
   expect(scan.violations).toEqual([]);
+});
+
+
+test("expanded NACHA candidate runs locally, exports its coverage, navigates a failure and clears stale verdicts", async ({ page }) => {
+  const sourcePosts: string[] = [];
+  page.on("request", request => { if (request.postData()?.includes("SYNTHETIC")) sourcePosts.push(request.url()); });
+  await page.goto("/");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r1");
+  await expect(page.locator("#format-selection-help")).toContainText("monetary, prenote, zero-dollar remittance and reversal");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  await expect(page.locator("#result-basis")).toContainText("Expanded public-source candidate");
+  const csvDownload = page.waitForEvent("download"); await page.locator("#export-csv").click();
+  const csv = await csvDownload; expect(csv.suggestedFilename()).toContain("origination-expanded-public-2026-r1");
+  const jsonDownload = page.waitForEvent("download"); await page.locator("#export-json").click();
+  const json = await jsonDownload; expect(json.suggestedFilename()).toContain("origination-expanded-public-2026-r1");
+  await page.getByRole("button", { name: "Back to file" }).click();
+  await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/prenote-amount-fail.ach"));
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("#results-title")).toHaveText("FAIL");
+  const errorRow = page.locator("#finding-rows tr").filter({ hasText: "Entry amount" });
+  await expect(errorRow.locator(".finding-line")).toHaveText("3");
+  await errorRow.getByRole("button", { name: /View/ }).click();
+  await expect(page.locator("[data-file-explorer] [data-detail-message]")).toContainText("exactly zero");
+  await page.getByRole("button", { name: "Back to file" }).click();
+  await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/ctx-edifact-unsupported.ach"));
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("#results-title")).toHaveText("UNSUPPORTED");
+  await expect(page.locator("#finding-rows .severity")).toHaveCount(0);
+  await expect(page.locator("#finding-rows")).not.toContainText("Entry amount");
+  expect(sourcePosts).toEqual([]);
+  const scan = await new AxeBuilder({ page }).analyze(); expect(scan.violations.filter(v => ["critical", "serious"].includes(v.impact ?? ""))).toEqual([]);
 });

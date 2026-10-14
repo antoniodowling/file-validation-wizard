@@ -84,3 +84,5 @@ See [the file explorer implementation](docs/FILE_EXPLORER.md) for coordinate sem
 - Document the smallest hosted-asset fallback only if ReadMe's content security policy blocks the embedded worker.
 
 Ruleset 2: [coverage and export semantics](docs/coverage/README.md), [implementation evidence and remaining gates](docs/IMPLEMENTATION_EVIDENCE.md), and [exact local bundle receipt](docs/evidence/ruleset-2/receipt.json). The nine ISO/X12 profiles remain DEMO; NACHA is a public-specification CANDIDATE with its own coverage revision.
+
+Expanded origination is available as **Expanded entry types — public-source candidate (2026 r1)**. See [expanded source matrix and gates](docs/ACH_ORIGINATION_EXPANDED.md) and [new synthetic kit](demo-files/nacha-expanded/README.md). The earlier public profile remains executable; neither candidate is a fully qualified bank validator.
