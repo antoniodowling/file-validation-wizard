@@ -1,4 +1,3 @@
-import { syntheticSample } from "./samples";
 import { RunController } from "./run-controller";
 import { validationRunToJson } from "./csv";
 import warningTriangleIcon from "bootstrap-icons/icons/exclamation-triangle.svg?raw";
@@ -101,8 +100,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           <span><span class="big-number" aria-hidden="true">02</span><strong>Upload file</strong></span>
         </button>
         <div id="step-2-panel" class="step-panel" hidden>
-          <p class="helper">Try synthetic DEMO structural samples (not conformant payment instructions):</p>
-          <div class="step-actions"><button id="sample-pass" class="button secondary" type="button">Load PASS sample</button><button id="sample-fail" class="button secondary" type="button">Load FAIL sample</button></div>
           <div class="section-heading">
             <h2 id="upload-title">Upload your payment file</h2>
           </div>
@@ -769,12 +766,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     announce(`${candidate.name} selected. Ready to validate.`);
   }
 
-  for (const [id, fail] of [["#sample-pass", false], ["#sample-fail", true]] as const) {
-    requiredElement<HTMLButtonElement>(id).addEventListener("click", () => {
-      const pack = findEnabledFormatPack(selectedProfileId() ?? "");
-      if (pack) chooseFiles([new File([syntheticSample(pack, fail)], `synthetic-${pack.id}-${fail ? "fail" : "pass"}${pack.extensions[0]}`)]);
-    });
-  }
   replaceButton.addEventListener("click", () => {
     fileInput.value = "";
     fileInput.click();

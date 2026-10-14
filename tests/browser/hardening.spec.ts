@@ -1,8 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import { resolve } from "node:path";
+import { syntheticSample } from "../../src/samples";
+import { findEnabledFormatPack } from "../../src/format-packs";
 
-test("generated pane reflow, synthetic samples, bounded source, focus and portable provenance", async ({ page }, info) => {
+test("generated pane reflow, sample upload, bounded source, focus and portable provenance", async ({ page }, info) => {
   await page.goto("/");
   await page.setContent('<main><h1>Synthetic acceptance</h1><div data-payment-file-validator data-file-explorer="true"></div></main>');
   await page.addStyleTag({path:resolve("readme-package/custom-css.css")});
@@ -23,7 +25,13 @@ test("generated pane reflow, synthetic samples, bounded source, focus and portab
   await expect(search).toHaveValue(/pain\.001/);
   await page.getByRole("button",{name:"Continue"}).focus(); await page.keyboard.press("Enter");
   expect(await page.evaluate(()=>document.activeElement?.id.endsWith("step-2-panel"))).toBe(true);
-  await page.getByRole("button",{name:"Load FAIL sample"}).click();
+  await expect(page.getByRole("button", { name: /Load (PASS|FAIL) sample/i })).toHaveCount(0);
+  const pack = findEnabledFormatPack("pain-001-09")!;
+  await page.locator('[id$="file-input"]').setInputFiles({
+    name: "synthetic-fail.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(syntheticSample(pack, true)),
+  });
   await page.getByRole("button",{name:"Validate file"}).click();
   await expect(page.locator('[id$="results-title"]')).toHaveText("FAIL");
   await expect(page.locator('[id$="result-basis"]')).toContainText("DEMO");
