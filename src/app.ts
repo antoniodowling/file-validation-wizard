@@ -403,7 +403,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       onExpand: toggleExpandedExplorer,
       announce,
     });
-    explorerController.setPlaceholder("Validate a selected file to inspect its decoded source here.");
+    explorerController.setPlaceholder("Validate a selected file to inspect it here.");
     showExplorerButton?.addEventListener("click", revealExplorer);
     mobileResultsButton?.addEventListener("click", () => setMobileWorkspaceView("results"));
     mobileFileButton?.addEventListener("click", revealExplorer);
@@ -486,7 +486,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     for (const selector of ["file-name", "file-size", "finding-rows", "path-filter"]) {
       app.querySelector(`[id="${prefix}${selector}"]`)?.replaceChildren();
     }
-    explorerController?.setPlaceholder("Validate a selected file to inspect its decoded source here.");
+    explorerController?.setPlaceholder("Validate a selected file to inspect it here.");
   }
 
   function formatDisplay(item: FormatCatalogEntry): string {

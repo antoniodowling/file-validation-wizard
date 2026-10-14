@@ -56,7 +56,7 @@ export function explorerMarkup(): string {
         </dl>
       </div>
       <div class="explorer-notice" data-explorer-notice role="status">
-        Validate a selected file to inspect its decoded source here.
+        Validate a selected file to inspect it here.
       </div>
       <div class="source-viewer-host" data-source-viewer hidden></div>
       <pre class="source-fallback" data-source-fallback hidden tabindex="0" aria-label="Read-only source"></pre>
