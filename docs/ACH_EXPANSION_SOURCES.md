@@ -17,3 +17,5 @@ Reviewed 2026-10-14. Standalone, browser-local files only. New profiles receive 
 ## Shared foundation acceptance
 
 The fixed-record helper stops at the first malformed boundary, preserves spaces and original offsets, supports consistent LF/CRLF/CR or complete concatenation, and accepts at most one terminal delimiter. Resource admission remains 25 MB and 8,000,000 decoded units with bounded findings/viewer and worker deadline. Parse prerequisite failures remain not evaluated. Missing conditional checks are not applicable only when the parser establishes their absence. Legacy snapshots are frozen and are not regenerated into new conformance evidence.
+
+Phase 2’s confirmed source gate and unsent specification-owner questions are recorded in [ACH_RETURNS_SOURCE_GATE.md](ACH_RETURNS_SOURCE_GATE.md). No Returns executable profile is available.
