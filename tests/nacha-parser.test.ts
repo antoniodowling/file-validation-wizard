@@ -132,9 +132,9 @@ describe("NACHA ordinary origination parser", () => {
   });
   it("emits source offsets preserving CRLF and unique known rule IDs", () => {
     const source = bad(buildNacha(), 2, 4, 12, "000000000").join("\r\n");
-    const result = parse(source).results.find((r) => r.ruleId === "nacha.routing") as { sourceLocation: FindingLocation } | undefined;
-    expect(result?.sourceLocation.kind).toBe("located");
-    if (result?.sourceLocation.kind === "located") expect(result.sourceLocation.primary.span).toEqual({ start: 195, end: 204 });
+    const result = parse(source).results.find((r) => r.ruleId === "nacha.routing") as { location: FindingLocation } | undefined;
+    expect(result?.location.kind).toBe("located");
+    if (result?.location.kind === "located") expect(result.location.primary.span).toEqual({ start: 195, end: 204 });
     expect(new Set(NACHA_RULE_IDS).size).toBe(NACHA_RULE_IDS.length);
     expect(parse(source).results.every((r) => NACHA_RULE_IDS.includes(r.ruleId))).toBe(true);
   });

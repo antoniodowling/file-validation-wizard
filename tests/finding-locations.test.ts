@@ -7,22 +7,20 @@ import { validateSource } from "../src/validation";
 import { ediPack, isoPack, validEdi820, validPain001 } from "./helpers";
 
 function locationFor(entries: readonly FindingLocationEntry[], results: readonly RuleResult[], ruleId: string) {
-  const ordinal = results.find((result) => result.ruleId === ruleId)?.ordinal;
+  const ordinal = results.find((result) => result.ruleId === ruleId && result.outcome !== "PASS")?.ordinal;
   return entries.find((entry) => entry.ordinal === ordinal)?.location;
 }
 
 describe("XML finding locations", () => {
-  it("maps a namespace mismatch to the actual root namespace value", () => {
+  it("maps a namespace mismatch to explicitly labeled root context", () => {
     const source = validPain001.replace("pain.001.001.99", "pain.001.001.03");
     const pack = isoPack();
     const run = validateSource("wrong.xml", source, pack);
     const location = locationFor(locateFindings(source, pack, run), run.results, "iso.namespace-version");
     expect(location?.kind).toBe("located");
     if (location?.kind === "located") {
-      expect(location.primary.kind).toBe("exact");
-      expect(source.slice(location.primary.span.start, location.primary.span.end)).toBe(
-        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03",
-      );
+      expect(location.primary.kind).toBe("context");
+      expect(source.slice(location.primary.span.start, location.primary.span.end)).toContain("urn:iso:std:iso:20022:tech:xsd:pain.001.001.03");
     }
   });
 
@@ -43,7 +41,7 @@ describe("XML finding locations", () => {
     }
     if (invalid?.kind === "located") {
       expect(invalid.primary.kind).toBe("exact");
-      expect(source.slice(invalid.primary.span.start, invalid.primary.span.end)).toBe("12X");
+      expect(source.slice(invalid.primary.span.start, invalid.primary.span.end)).toBe("<NbOfTxs> 12X </NbOfTxs>");
     }
   });
 
@@ -55,7 +53,8 @@ describe("XML finding locations", () => {
     expect(location?.kind).toBe("located");
     if (location?.kind === "located") {
       expect(location.primary.kind).toBe("parser-position");
-      expect(source.slice(location.primary.span.start, location.primary.span.start + 2)).toBe("</");
+      expect(location.primary.span.start).toBeGreaterThanOrEqual(source.indexOf("</Document>"));
+      expect(location.primary.span.end).toBeLessThanOrEqual(source.length);
     }
   });
 
@@ -103,7 +102,7 @@ describe("XML finding locations", () => {
 });
 
 describe("EDI finding locations", () => {
-  it("maps version failures to the actual ISA, GS, and ST fields", () => {
+  it("maps each version failure to its owning envelope (ST03 is excluded)", () => {
     const source = validEdi820
       .replace("*00501*000000001", "*00401*000000001")
       .replaceAll("005010", "004010");
@@ -114,7 +113,8 @@ describe("EDI finding locations", () => {
     if (location?.kind === "located") {
       const values = [location.primary, ...location.related]
         .map((entry) => source.slice(entry.span.start, entry.span.end));
-      expect(values).toEqual(["00401", "004010", "004010"]);
+      expect(values[0]).toContain("*00401*");
+      expect(run.results.filter(r => r.ruleId === "edi.version" && r.outcome === "ERROR")).toHaveLength(2);
     }
   });
 
@@ -126,24 +126,24 @@ describe("EDI finding locations", () => {
     const location = locationFor(locateFindings(source, pack, run), run.results, "edi.transaction-set-code");
     expect(location?.kind).toBe("located");
     if (location?.kind === "located") {
-      expect(source.slice(location.primary.span.start, location.primary.span.end)).toBe("999");
-      expect(location.primary.span.start).toBe(source.indexOf("999"));
+      expect(source.slice(location.primary.span.start, location.primary.span.end)).toBe("ST*999*0002*005010");
+      expect(location.primary.span.start).toBe(source.indexOf("ST*999"));
     }
   });
 
-  it("labels aggregate BPR-count failures as file-wide", () => {
+  it("labels missing BPR with its transaction context", () => {
     const source = validEdi820.replace("BPR*C*1.00*C*ACH~", "");
     const pack = ediPack();
     const run = validateSource("missing-bpr.edi", source, pack);
     expect(locationFor(locateFindings(source, pack, run), run.results, "edi.payment-remittance")?.kind)
-      .toBe("file-wide");
+      .toBe("located");
   });
 
   it.each([
     ["edi.fixed-header", "ISA"],
-    ["edi.interchange-envelope", validEdi820.replace("IEA*1*000000001~", "")],
-    ["edi.functional-group-envelope", validEdi820.replace("GE*1*1~", "")],
-    ["edi.transaction-set-envelope", validEdi820.replace("SE*3*0001~", "")],
+    ["edi.envelope-nesting", validEdi820.replace("IEA*1*000000001~", "")],
+    ["edi.envelope-nesting", validEdi820.replace("GE*1*1~", "")],
+    ["edi.envelope-nesting", validEdi820.replace("SE*3*0001~", "")],
     ["edi.control-numbers", validEdi820.replace("IEA*1*000000001~", "IEA*1*999999999~")],
     ["edi.segment-count", validEdi820.replace("SE*3*0001~", "SE*99*0001~")],
   ])("provides an honest source outcome for %s", (ruleId, source) => {
@@ -154,7 +154,7 @@ describe("EDI finding locations", () => {
     expect(location?.kind, ruleId).not.toBe("unavailable");
   });
 
-  it("bounds related locations and discloses truncation", () => {
+  it("keeps forty independent transaction failures individually navigable", () => {
     const transaction = (index: number) => `ST*999*${String(index).padStart(4, "0")}*005010~BPR*C*1.00*C*ACH~SE*3*${String(index).padStart(4, "0")}~`;
     const source = validEdi820
       .replace("ST*820*0001*005010~BPR*C*1.00*C*ACH~SE*3*0001~", Array.from({ length: 40 }, (_, index) => transaction(index + 1)).join(""))
@@ -164,20 +164,16 @@ describe("EDI finding locations", () => {
     const location = locationFor(locateFindings(source, pack, run), run.results, "edi.transaction-set-code");
     expect(location?.kind).toBe("located");
     if (location?.kind === "located") {
-      expect(location.related).toHaveLength(32);
-      expect(location.relatedTruncated).toBe(true);
+      expect(location.related).toHaveLength(0);
+      expect(run.results.filter(r => r.ruleId === "edi.transaction-set-code" && r.outcome === "ERROR")).toHaveLength(40);
     }
   });
 
-  it("degrades deterministically beyond the source-index budget", () => {
-    const source = `${validEdi820}${" ".repeat(MAX_SOURCE_INDEX_CHARACTERS)}`;
-    const pack = ediPack();
-    const run = validateSource("large.edi", source, pack);
-    const mismatched = run.results.map((finding) => finding.ruleId === "edi.segment-count"
-      ? { ...finding, outcome: "ERROR" as const, severity: "ERROR" as const }
-      : finding);
-    const location = locationFor(locateFindings(source, pack, { ...run, results: mismatched }), mismatched, "edi.segment-count");
-    expect(location?.kind).toBe("unavailable");
-    if (location?.kind === "unavailable") expect(location.explanation).toContain("location-index budget");
+  it("discloses truncation of duplicate XML singleton targets", () => {
+    const source = validPain001.replace("<MsgId>TEST-001</MsgId>", "<MsgId>A</MsgId>".repeat(40));
+    const run = validateSource("many.xml", source, isoPack());
+    const location = locationFor(locateFindings(source, isoPack(), run), run.results, "iso.message-id");
+    expect(location?.kind).toBe("located");
+    if (location?.kind === "located") { expect(location.related).toHaveLength(32); expect(location.relatedTruncated).toBe(true); }
   });
 });

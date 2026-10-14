@@ -1,0 +1,162 @@
+{
+  "source": "https://www.w3.org/XML/Test/xmlts20130923.zip",
+  "revision": "20130923",
+  "archiveSha256": "f9510b3532926e1b4c2e54855b021e4b8a66ec98a5337dcf4ff07e8a41968deb",
+  "reviewState": "Upstream expectations retained; local supported-subset selection inspected by implementation agent; not bank/domain sign-off",
+  "exclusions": [
+    "DTD/custom entities",
+    "XML 1.1",
+    "non-UTF-8 encodings",
+    "deprecated namespace URI error cases",
+    "tests for older namespace editions where third edition changes reserved namespace rules"
+  ],
+  "cases": [
+    {
+      "file": "p01pass1.xml",
+      "archivePath": "xmlconf/oasis/p01pass1.xml",
+      "expect": "pass",
+      "claim": "XML document grammar / prolog placement / single root",
+      "sha256": "e0bfacb4b8b716ada376d5802561c258da58c56795d3ba1255430f7c8052491d"
+    },
+    {
+      "file": "p01pass3.xml",
+      "archivePath": "xmlconf/oasis/p01pass3.xml",
+      "expect": "pass",
+      "claim": "XML document grammar / prolog placement / single root",
+      "sha256": "56cdebf54906b5f1ed19028c118e730f32d927069715174b9e9a91478b7021f6"
+    },
+    {
+      "file": "p01fail1.xml",
+      "archivePath": "xmlconf/oasis/p01fail1.xml",
+      "expect": "fail",
+      "claim": "XML document grammar / prolog placement / single root",
+      "sha256": "0c731166ba9e7e879845b53c4ffcbe1f52134320c9e1676fa29bdac7dc9ea9c0"
+    },
+    {
+      "file": "p01fail2.xml",
+      "archivePath": "xmlconf/oasis/p01fail2.xml",
+      "expect": "fail",
+      "claim": "XML document grammar / prolog placement / single root",
+      "sha256": "beda56d0cc56712dc52512ddd4c511ba4fa086ebf7058e51aca5aa17daf857bc"
+    },
+    {
+      "file": "p01fail3.xml",
+      "archivePath": "xmlconf/oasis/p01fail3.xml",
+      "expect": "fail",
+      "claim": "XML document grammar / prolog placement / single root",
+      "sha256": "ed3c6b6da9d807acad4fa934d2cf26931a22a2faa4d7ebc4f4ed016b2081d353"
+    },
+    {
+      "file": "p01fail4.xml",
+      "archivePath": "xmlconf/oasis/p01fail4.xml",
+      "expect": "fail",
+      "claim": "XML document grammar / prolog placement / single root",
+      "sha256": "c44264ea3512798fadb6f2ab60eacdff26181b0842b88ade560fa62ad271ec45"
+    },
+    {
+      "file": "ns-013.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/013.xml",
+      "expect": "fail",
+      "claim": "Bad QName syntax: multiple colons",
+      "sha256": "13a6b7c98a6234a32cc662a5ed8040c2a9029cbb78bb714c121f1f3776975dda"
+    },
+    {
+      "file": "ns-014.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/014.xml",
+      "expect": "fail",
+      "claim": "Bad QName syntax: colon at end",
+      "sha256": "7e6fc99e94f977a932a1e4914306831cc1d47688f3a77c8dab56d7eea77b9137"
+    },
+    {
+      "file": "ns-015.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/015.xml",
+      "expect": "fail",
+      "claim": "Bad QName syntax: colon at start",
+      "sha256": "9b7a43c8c2e28a0c596578611d7660535b2da69c8c58a20ae11a6e6248d910ac"
+    },
+    {
+      "file": "ns-016.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/016.xml",
+      "expect": "fail",
+      "claim": "Bad QName syntax: xmlns:",
+      "sha256": "8b79faca6c5bcff48fc9b27ccbadeb79e966d9192a3f2ee5e8815f6666afe124"
+    },
+    {
+      "file": "ns-023.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/023.xml",
+      "expect": "fail",
+      "claim": "Illegal use of 1.1-style prefix unbinding in 1.0 document",
+      "sha256": "58e0b5ac0bfc7b30302159a3fe634365168bc43db1f9769366ec50ae393013a3"
+    },
+    {
+      "file": "ns-025.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/025.xml",
+      "expect": "fail",
+      "claim": "Unbound element prefix",
+      "sha256": "9253b2b7ad5d82698fbaf3aef5f0f31510ce35cab3e596e916ba6f7b8e3d0ec9"
+    },
+    {
+      "file": "ns-026.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/026.xml",
+      "expect": "fail",
+      "claim": "Unbound attribute prefix",
+      "sha256": "d3eef8afc317f5e0d90160df2f345c006df9783263a226cfa68c8262fef8692b"
+    },
+    {
+      "file": "ns-029.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/029.xml",
+      "expect": "fail",
+      "claim": "Reserved prefixes and namespaces: declaring the xml prefix incorrectly",
+      "sha256": "4290b4117adcee0ae6c0d68bd0f0d0e023a33c4146e9efade4b2de80c5b1c5c9"
+    },
+    {
+      "file": "ns-030.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/030.xml",
+      "expect": "fail",
+      "claim": "Reserved prefixes and namespaces: binding another prefix to the xml namespace",
+      "sha256": "91da4d93ff82a6474d76d6fbf018241073676c76caf1d6130bef70f3ef6a4e92"
+    },
+    {
+      "file": "ns-031.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/031.xml",
+      "expect": "fail",
+      "claim": "Reserved prefixes and namespaces: declaring the xmlns prefix with its correct URI (illegal)",
+      "sha256": "61cd2e3484747174488b93231bc7ec23f083e9ea4ef02d1e64b52ca807b2bb81"
+    },
+    {
+      "file": "ns-032.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/032.xml",
+      "expect": "fail",
+      "claim": "Reserved prefixes and namespaces: declaring the xmlns prefix with an incorrect URI",
+      "sha256": "6512b88f9728d000d2c33daacfd25dab4a043bab4509dd2859a831366b9785ee"
+    },
+    {
+      "file": "ns-033.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/033.xml",
+      "expect": "fail",
+      "claim": "Reserved prefixes and namespaces: binding another prefix to the xmlns namespace",
+      "sha256": "c2eb1ce79f56e54d2f22bcc4d31117936190554ff3a899843bf541772713a92a"
+    },
+    {
+      "file": "ns-035.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/035.xml",
+      "expect": "fail",
+      "claim": "Attribute uniqueness: repeated identical attribute",
+      "sha256": "2cadfe2a5630e4ba7fe6a01ac33c1315bbabe801c79f87f81d93313f21941175"
+    },
+    {
+      "file": "ns-036.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/036.xml",
+      "expect": "fail",
+      "claim": "Attribute uniqueness: repeated attribute with different prefixes",
+      "sha256": "5709143331c580c18181173d9581976545a85fd861dbef5eeeebd23309ac2b2a"
+    },
+    {
+      "file": "ns-042.xml",
+      "archivePath": "xmlconf/eduni/namespaces/1.0/042.xml",
+      "expect": "fail",
+      "claim": "Colon in PI name",
+      "sha256": "2ff7553efa457354141c5f61a7560112f22b528203ecd052d298da9eebfaa8e2"
+    }
+  ]
+}

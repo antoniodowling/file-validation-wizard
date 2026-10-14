@@ -1,5 +1,8 @@
 # File explorer implementation
 
+> Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
+
+
 The dedicated File Explorer demo and standalone preview include a read-only source explorer beside the existing workflow. A separate dedicated wizard-only demo, inline Guide instances, and link-triggered modals retain the original compact validator without the explorer. Both ReadMe demos use the same shared generated JavaScript and CSS; the explorer mount opts in explicitly with `data-file-explorer="true"`.
 
 ## Source and location contract

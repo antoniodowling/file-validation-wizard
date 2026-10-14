@@ -1,0 +1,2 @@
+# Preserve byte-for-byte upstream conformance fixtures, including intentional whitespace.
+tests/fixtures/w3c/*.xml -text -whitespace

@@ -1,3 +1,4 @@
+import { MAX_MODEL_NODES, MAX_SCALAR_UNITS, ResourceLimitError } from "../resource-policy";
 import type { EdiSegment, SourceSpan } from "../types";
 
 export interface LocatedEdiElement {
@@ -33,6 +34,7 @@ export function scanEdiSegments(
   const segments: LocatedEdiSegment[] = [];
 
   const addSegment = (rawStart: number, rawEnd: number): void => {
+    if (segments.length >= MAX_MODEL_NODES || rawEnd - rawStart > MAX_SCALAR_UNITS) throw new ResourceLimitError();
     let start = rawStart;
     let end = rawEnd;
     while (start < end && isOuterSegmentWhitespace(source[start])) start += 1;

@@ -33,6 +33,7 @@ export function isoPack(overrides: Partial<FormatPack> = {}): FormatPack {
       messageContainer: "CstmrCdtTrfInitn",
     },
     approval: approvals,
+    releaseEvidence: { specificationRevision: "synthetic-test-only", rulesetRevision: "test", fixtureRevision: "test", acceptanceRevision: "test" },
     rules: [passRule],
     ...overrides,
   };
@@ -56,6 +57,7 @@ export function ediPack(overrides: Partial<FormatPack> = {}): FormatPack {
       st03: "005010",
     },
     approval: approvals,
+    releaseEvidence: { specificationRevision: "synthetic-test-only", rulesetRevision: "test", fixtureRevision: "test", acceptanceRevision: "test" },
     rules: [passRule],
     ...overrides,
   };

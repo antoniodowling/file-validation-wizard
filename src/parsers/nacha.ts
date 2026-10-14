@@ -73,7 +73,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       severity: c.outcome === "PASS" ? null : c.outcome, field: c.field,
       locator: c.row ? `Record ${c.row.number} / Columns ${c.from}-${c.to}` : "file",
       message: c.message + (c.count > 1 ? ` (${c.count} violations; first location shown.)` : ""),
-      ordinal, sourceLocation: location(c) }) as RuleResult),
+      ordinal, location: location(c) }) as RuleResult),
   });
   const rows: RecordRow[] = [];
   const firstDelimiter = /\r\n|\r|\n/.exec(source);

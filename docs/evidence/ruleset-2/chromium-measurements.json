@@ -1,0 +1,27 @@
+{
+  "environment": "local browser; not ReadMe hosted acceptance",
+  "measurements": [
+    {
+      "decodedUnits": 295,
+      "elapsedMs": 173,
+      "renderedUnits": 295,
+      "maxMainThreadHeartbeatGapMs": 26,
+      "jsHeapBytes": 10000000
+    },
+    {
+      "decodedUnits": 300195,
+      "elapsedMs": 157,
+      "renderedUnits": 2182,
+      "maxMainThreadHeartbeatGapMs": 26,
+      "jsHeapBytes": 10000000
+    },
+    {
+      "decodedUnits": 295,
+      "elapsedMs": 161,
+      "renderedUnits": 295,
+      "maxMainThreadHeartbeatGapMs": 19,
+      "jsHeapBytes": 10000000
+    }
+  ],
+  "memory": "Peak process memory and GC recovery not measured; no memory envelope claim"
+}

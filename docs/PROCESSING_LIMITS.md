@@ -1,6 +1,9 @@
 # Processing safeguards and upload stress kit
 
-The current registry has nine legacy ISO/X12 profiles and one NACHA public-specification candidate. These safeguards apply to every profile and do not themselves establish production approval or introduce a Cancel button. See [NACHA scope](NACHA_SOURCE_REVIEW.md).
+> Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
+
+
+The registry has nine ISO/X12 DEMO profiles and one public-source NACHA candidate. The upload ceiling remains 25 MB; the current engine separately admits at most 8,000,000 decoded UTF-16 units and reports excess as an incomplete resource-limited run. These guards do not establish production approval. See [NACHA scope](NACHA_SOURCE_REVIEW.md).
 
 ## Run policy
 
@@ -58,3 +61,11 @@ All 50 Vitest tests and the generated-kit integrity test passed. TypeScript chec
 ## File explorer safeguard validation (2026-09-18)
 
 The non-browser `npm run validate:core` path passed 102 Vitest tests across 18 files, the generated-kit integrity test, TypeScript/standalone build, ReadMe package generation, and a static package-contract test. Coverage includes canonical line-ending/Unicode/EOF mappings, UTF-8 BOM handling, ReadMe-safe XML declaration detection, legacy-equivalent EDI tokenization, XML/EDI rule locations, duplicate EDI occurrences, related-target truncation, index-budget degradation, filtered finding navigation, severity-specific source highlights, the simplified finding-details interface, pagination, accepted-run lifecycle, enrichment failure, stale messages, focus preservation, the six-location multi-finding PAIN demo, and its clean resolved companion. Browser performance and hosted ReadMe acceptance were not run and remain unverified.
+
+## Ruleset 2 admission and cleanup
+
+The 25,000,000-byte cap remains an admission ceiling, not a promise that every smaller file can be assessed. Additional provisional limits are 8,000,000 decoded UTF-16 units, 100,000 XML nodes/EDI segments, XML depth 128, 1,000,000 units per XML scalar/EDI segment and 5,000 occurrence evaluations. Resource exhaustion is INCOMPLETE, never PASS or a structural FAIL. The external watchdog remains 10 seconds.
+
+Every rendered source window is at most 12,000 units, even when an offending element is larger. Source paging preserves contiguous original spans; clips are disclosed with original offsets. Full mode is now limited to 12,000 units, not 5 million. Fallback uses the same bound. Clear/remove/unmount empties source DOM, details, accepted results and input state; generation invalidation disposes workers, deadlines, announcements and delayed focus. JavaScript GC prevents any secure memory-zeroization guarantee.
+
+Local diagnostics are opt-in through a details disclosure and contain only profile/build plus elapsed read/core/enrichment phase markers. They are neither transmitted nor persisted and omit filenames/source/payment values. Browser acceptance attachments distinguish wall time and source-DOM recovery from unmeasured process memory/GC behavior.

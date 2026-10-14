@@ -1,180 +1,78 @@
-import type {
-  EdiDocument,
-  EdiSegment,
-  EdiVersionIdentifiers,
-  FormatPack,
-  RuleResult,
-  ValidationContext,
-} from "../types";
+import type { EdiDocument, EdiVersionIdentifiers, FindingLocation, FormatPack, RuleResult } from "../types";
+import { ResourceLimitError, UnsupportedInputError, MAX_MODEL_NODES } from "../resource-policy";
 import type { ParserOutput } from "./iso";
-import { scanEdiSegments } from "./edi-source";
+import { scanEdiSegments, type LocatedEdiSegment } from "./edi-source";
 import { result } from "./shared";
 
-const find = (segments: readonly EdiSegment[], id: string): readonly EdiSegment[] =>
-  segments.filter((segment) => segment.id === id);
-
-const element = (segment: EdiSegment | undefined, position: number): string =>
-  segment?.elements[position - 1]?.trim() ?? "";
-
+export interface EdiTransaction { readonly start: LocatedEdiSegment; readonly end: LocatedEdiSegment; readonly segments: readonly LocatedEdiSegment[] }
+export interface EdiGroup { readonly start: LocatedEdiSegment; readonly end: LocatedEdiSegment; readonly transactions: readonly EdiTransaction[] }
+const value = (segment: LocatedEdiSegment, n: number): string => segment.elements[n - 1]?.trim() ?? "";
 export function parseEdi(source: string, pack: FormatPack): ParserOutput {
   const results: RuleResult[] = [];
-  const fixedHeader = source.startsWith("ISA") && source.length >= 106;
-  results.push(
-    result(
-      results.length,
-      "edi.fixed-header",
-      fixedHeader ? "PASS" : "ERROR",
-      "Interchange header",
-      "ISA[1]",
-      fixedHeader
-        ? "The fixed-width ISA interchange header is present."
-        : "The file must begin with a complete fixed-width ISA segment.",
-    ),
-  );
-  if (!fixedHeader) return { context: null, results };
-
-  const elementSeparator = source[3] ?? "";
-  const componentSeparator = source[104] ?? "";
-  const segmentTerminator = source[105] ?? "";
-  const segments: readonly EdiSegment[] = scanEdiSegments(source, elementSeparator, segmentTerminator);
-
-  const isa = find(segments, "ISA")[0];
-  const iea = find(segments, "IEA").at(-1);
-  const interchangeOk = Boolean(isa && iea && isa.elements.length === 16 && iea.elements.length >= 2);
-  results.push(
-    result(
-      results.length,
-      "edi.interchange-envelope",
-      interchangeOk ? "PASS" : "ERROR",
-      "Interchange envelope",
-      "ISA[1] / IEA[1]",
-      interchangeOk
-        ? "The ISA and IEA interchange envelope is complete."
-        : "A complete 16-element ISA and matching IEA envelope are required.",
-    ),
-  );
-
-  const gs = find(segments, "GS")[0];
-  const ge = find(segments, "GE").at(-1);
-  const groupOk = Boolean(gs && ge && gs.elements.length >= 8 && ge.elements.length >= 2);
-  results.push(
-    result(
-      results.length,
-      "edi.functional-group-envelope",
-      groupOk ? "PASS" : "ERROR",
-      "Functional group envelope",
-      "GS[1] / GE[1]",
-      groupOk
-        ? "The GS and GE functional group envelope is complete."
-        : "A complete GS and GE functional group envelope is required.",
-    ),
-  );
-
-  const stSegments = find(segments, "ST");
-  const seSegments = find(segments, "SE");
-  const transactionEnvelopeOk = stSegments.length > 0 && stSegments.length === seSegments.length;
-  results.push(
-    result(
-      results.length,
-      "edi.transaction-set-envelope",
-      transactionEnvelopeOk ? "PASS" : "ERROR",
-      "Transaction set envelope",
-      "ST / SE",
-      transactionEnvelopeOk
-        ? `${stSegments.length} paired transaction set envelope(s) found.`
-        : "Each EDI 820 transaction set requires one paired ST and SE segment.",
-    ),
-  );
-
-  const transactionTypeOk = stSegments.length > 0 && stSegments.every((segment) => element(segment, 1) === "820");
-  results.push(
-    result(
-      results.length,
-      "edi.transaction-set-code",
-      transactionTypeOk ? "PASS" : "ERROR",
-      "Transaction set code",
-      "ST/ST01",
-      transactionTypeOk
-        ? "Every transaction set declares code 820."
-        : "Every selected transaction set must declare 820 in ST01.",
-    ),
-  );
-
-  const identifiers = pack.identifiers as EdiVersionIdentifiers;
-  const versionOk =
-    element(isa, 12) === identifiers.isa12 &&
-    element(gs, 8) === identifiers.gs08 &&
-    (identifiers.st03 ? stSegments.every((segment) => element(segment, 3) === identifiers.st03) : true);
-  results.push(
-    result(
-      results.length,
-      "edi.version",
-      versionOk ? "PASS" : "ERROR",
-      "EDI version",
-      "ISA/ISA12, GS/GS08, ST/ST03",
-      versionOk
-        ? "The interchange, group, and implementation versions match the selected format pack."
-        : "The EDI version identifiers do not match the selected format pack.",
-    ),
-  );
-
-  const interchangeControlsMatch = element(isa, 13) !== "" && element(isa, 13) === element(iea, 2);
-  const groupControlsMatch = element(gs, 6) !== "" && element(gs, 6) === element(ge, 2);
-  const transactionControlsMatch = stSegments.every(
-    (st, index) => element(st, 2) !== "" && element(st, 2) === element(seSegments[index], 2),
-  );
-  const controlsMatch = interchangeControlsMatch && groupControlsMatch && transactionControlsMatch;
-  results.push(
-    result(
-      results.length,
-      "edi.control-numbers",
-      controlsMatch ? "PASS" : "ERROR",
-      "Envelope control numbers",
-      "ISA13/IEA02, GS06/GE02, ST02/SE02",
-      controlsMatch
-        ? "Interchange, group, and transaction control numbers match."
-        : "Envelope control numbers must be populated and match their closing segments.",
-    ),
-  );
-
-  const segmentCountsMatch = stSegments.length > 0 && stSegments.every((st, index) => {
-    const se = seSegments[index];
-    if (!se || !/^\d+$/.test(element(se, 1))) return false;
-    return Number(element(se, 1)) === se.position - st.position + 1;
-  });
-  results.push(
-    result(
-      results.length,
-      "edi.segment-count",
-      segmentCountsMatch ? "PASS" : "ERROR",
-      "Transaction segment count",
-      "SE/SE01",
-      segmentCountsMatch
-        ? "Every SE segment count matches its transaction set."
-        : "Each SE01 value must equal the number of segments from ST through SE.",
-    ),
-  );
-
-  const hasBpr = find(segments, "BPR").length >= stSegments.length && stSegments.length > 0;
-  results.push(
-    result(
-      results.length,
-      "edi.payment-remittance",
-      hasBpr ? "PASS" : "ERROR",
-      "Payment order / remittance data",
-      "BPR",
-      hasBpr
-        ? "A BPR payment/remittance segment is present for each transaction set."
-        : "Each EDI 820 transaction set requires a BPR segment.",
-    ),
-  );
-
-  const edi: EdiDocument = Object.freeze({
-    elementSeparator,
-    componentSeparator,
-    segmentTerminator,
-    segments: Object.freeze(segments),
-  });
-  const context: ValidationContext = Object.freeze({ source, parserKind: "EDI_X12", edi });
-  return { context, results };
+  const add = (id: string, ok: boolean, field: string, message: string, segment?: LocatedEdiSegment, context = false): void => {
+    if (results.length >= 5000) throw new ResourceLimitError();
+    const location: FindingLocation = segment ? { kind: "located", primary: { kind: context ? "context" : "exact", label: `${segment.id} at segment ${segment.position}`, span: segment.span }, related: [] } : { kind: "file-wide", explanation: "This check concerns the file envelope." };
+    results.push({ ...result(results.length, id, ok ? "PASS" : "ERROR", field, segment ? `${segment.id}[${segment.position}]` : "file", message), location });
+  };
+  const sep = source[3] ?? "", component = source[104] ?? "", term = source[105] ?? "";
+  const positions = [3,6,17,20,31,34,50,53,69,76,81,83,89,99,101,103];
+  const fixed = source.startsWith("ISA") && source.length >= 106 && new Set([sep, component, term]).size === 3
+    && [sep, component, term].every((s) => /^[^a-zA-Z0-9\s]$/.test(s))
+    && positions.every((p) => source[p] === sep)
+    && ![...source.slice(0,105)].some((s,i) => s === sep && !positions.includes(i));
+  add("edi.fixed-header", fixed, "Interchange header", "A fixed-width ISA with distinct delimiters at the required positions is required.");
+  if (!fixed) return { context: null, results };
+  const segments = scanEdiSegments(source, sep, term);
+  if (segments.length > MAX_MODEL_NODES) throw new ResourceLimitError();
+  add("edi.final-termination", source.trimEnd().endsWith(term), "Final segment terminator", "The final segment must be terminated.", segments.at(-1));
+  if (!source.trimEnd().endsWith(term)) return { context: null, results };
+  const groups: EdiGroup[] = [];
+  let gs: LocatedEdiSegment | undefined, st: LocatedEdiSegment | undefined;
+  let transactions: EdiTransaction[] = [], transactionSegments: LocatedEdiSegment[] = [];
+  let iea: LocatedEdiSegment | undefined;
+  let nesting = true;
+  let multiple = false;
+  for (let i=1; i<segments.length; i++) {
+    const segment = segments[i]!;
+    if (iea) { if (segment.id === "ISA") { multiple = true; break; } nesting = false; break; }
+    if (segment.id === "GS" && !gs && !st) { gs = segment; transactions = []; }
+    else if (segment.id === "ST" && gs && !st) { st = segment; transactionSegments = [segment]; }
+    else if (segment.id === "SE" && st) { transactionSegments.push(segment); transactions.push({start:st,end:segment,segments:transactionSegments}); st = undefined; }
+    else if (segment.id === "GE" && gs && !st) { groups.push({start:gs,end:segment,transactions}); gs = undefined; }
+    else if (segment.id === "IEA" && !gs && !st) { iea = segment; }
+    else if (!["ISA","GS","ST","SE","GE","IEA"].includes(segment.id) && st) { transactionSegments.push(segment); }
+    else { nesting = false; break; }
+  }
+  if (multiple) {
+    const starts = segments.filter(segment => segment.id === "ISA").map(segment => segment.span.start);
+    for (let index = 0; index < starts.length; index++) {
+      const part = parseEdi(source.slice(starts[index], starts[index + 1] ?? source.length), pack);
+      if (!part.context) { add("edi.envelope-nesting", false, "Envelope ownership", "A subsequent interchange is malformed; no recovery is attempted."); return { context: null, results }; }
+    }
+    throw new UnsupportedInputError("Multiple complete interchanges are outside the supported assessment scope.");
+  }
+  nesting = nesting && !gs && !st && Boolean(iea) && groups.length > 0 && groups.every(g => g.transactions.length > 0);
+  add("edi.envelope-nesting", nesting, "Envelope ownership", "One interchange containing complete nonempty groups and transactions is required; data segments must belong to a transaction.");
+  if (!nesting || !iea) return { context: null, results };
+  const isa = segments[0]!;
+  add("edi.interchange-envelope", isa.elements.length === 16 && iea.elements.length === 2, "Interchange envelope", "ISA and IEA have their required envelope fields.", iea);
+  add("edi.group-count", /^\d+$/.test(value(iea,1)) && Number(value(iea,1)) === groups.length, "Group count", "IEA01 must equal the number of groups in this interchange.", iea);
+  add("edi.control-numbers", Boolean(value(isa,13)) && value(isa,13) === value(iea,2), "Interchange controls", "ISA13 and IEA02 must match.", iea);
+  const ids = pack.identifiers as EdiVersionIdentifiers;
+  add("edi.version", value(isa,12) === ids.isa12, "Interchange version", "ISA12 must match the selected profile.", isa);
+  for (const group of groups) {
+    add("edi.functional-group-envelope", group.start.elements.length >= 8 && group.end.elements.length === 2, "Functional group", "GS and GE have their required envelope fields.", group.start);
+    add("edi.version", value(group.start,8) === ids.gs08, "Group version", "Every GS08 must match the selected profile. ST03 guide requirements are not evaluated.", group.start);
+    add("edi.transaction-count", /^\d+$/.test(value(group.end,1)) && Number(value(group.end,1)) === group.transactions.length, "Transaction count", "GE01 must equal this group's transaction count.", group.end);
+    add("edi.control-numbers", Boolean(value(group.start,6)) && value(group.start,6) === value(group.end,2), "Group controls", "GS06 and GE02 must match within their group.", group.end);
+    for (const tx of group.transactions) {
+      add("edi.transaction-set-envelope", tx.start.elements.length >= 2 && tx.end.elements.length === 2, "Transaction envelope", "ST and SE have their required envelope fields.", tx.start);
+      add("edi.transaction-set-code", value(tx.start,1) === "820", "Transaction code", "Every ST01 must declare 820.", tx.start);
+      add("edi.control-numbers", Boolean(value(tx.start,2)) && value(tx.start,2) === value(tx.end,2), "Transaction controls", "ST02 and SE02 must match within their transaction.", tx.end);
+      add("edi.segment-count", /^\d+$/.test(value(tx.end,1)) && Number(value(tx.end,1)) === tx.segments.length, "Segment count", "SE01 must equal the segment count from this ST through its SE.", tx.end);
+      add("edi.payment-remittance", tx.segments.filter(s => s.id === "BPR").length === 1, "Payment/remittance", "The DEMO profile expects exactly one BPR within each transaction; full 820 content is not assessed.", tx.start, true);
+    }
+  }
+  const edi: EdiDocument = { elementSeparator: sep, componentSeparator: component, segmentTerminator: term, segments, groups };
+  return { context: { source, parserKind: "EDI_X12", edi }, results };
 }

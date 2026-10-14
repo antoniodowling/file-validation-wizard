@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_DECODED_UNITS } from "../src/resource-policy";
 import { MAX_FILE_BYTES, type WorkerRequest } from "../src/types";
 import { validateWorkerRequest } from "../src/worker-request";
 import { validateSource } from "../src/validation";
@@ -25,7 +26,7 @@ describe("worker input and failure boundaries", () => {
   it("permits the exact byte limit through the size gate", () => {
     const source = validPain001.replace("pain.001.001.99", "pain.001.001.09");
     const response = validateWorkerRequest(request(encoded(source.padEnd(MAX_FILE_BYTES, " "))));
-    expect(response.type).toBe("complete");
+    expect(response).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
     expect(validateSource).toHaveBeenCalledOnce();
   });
   it("distinguishes an unavailable profile and invalid UTF-8", () => {
@@ -72,4 +73,10 @@ describe("worker input and failure boundaries", () => {
     if (withBom.type === "complete") expect(withBom.run.overallStatus).toBe("FAIL");
   });
 
+});
+
+it("does not produce a NACHA verdict or exportable run above the decoded resource limit", () => {
+  const response = validateWorkerRequest(request(encoded("9".repeat(MAX_DECODED_UNITS + 1)), "nacha-origination-public-2026"));
+  expect(response).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
+  expect(response).not.toHaveProperty("run");
 });

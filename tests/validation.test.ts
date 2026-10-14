@@ -114,8 +114,8 @@ describe("EDI 820 validation", () => {
       .replace("SE*3*0001~", "SE*4*9999~");
     const run = validateSource("remittance.edi", source, ediPack());
     expect(run.overallStatus).toBe("FAIL");
-    expect(run.results.find((result) => result.ruleId === "edi.version")?.outcome).toBe("ERROR");
-    expect(run.results.find((result) => result.ruleId === "edi.control-numbers")?.outcome).toBe("ERROR");
+    expect(run.results.find((result) => result.ruleId === "edi.version" && result.outcome === "ERROR")?.outcome).toBe("ERROR");
+    expect(run.results.find((result) => result.ruleId === "edi.control-numbers" && result.outcome === "ERROR")?.outcome).toBe("ERROR");
     expect(run.results.find((result) => result.ruleId === "edi.segment-count")?.outcome).toBe("ERROR");
     expect(run.results.find((result) => result.ruleId === "edi.payment-remittance")?.outcome).toBe("ERROR");
   });

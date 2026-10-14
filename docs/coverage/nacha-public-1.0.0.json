@@ -1,0 +1,453 @@
+[
+  {
+    "schemaVersion": "2",
+    "profileId": "nacha-origination-public-2026",
+    "messageVersion": "origination-public-2026",
+    "implementationGuideRevision": "Public sources reviewed 2026-10-14; origination-public-2026 subset; full current Operating Rules comparison deferred",
+    "mode": "CANDIDATE",
+    "rulesetRevision": "nacha-public-1.0.0",
+    "coverageRevision": "nacha-origination-public-2026@nacha-public-1.0.0",
+    "coverage": [
+      {
+        "id": "nacha.framing",
+        "description": "Exactly 94 characters per record; complete concatenation or consistent LF/CRLF/CR delimiters, optional terminal delimiter, no blank records.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Every admitted source.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.ascii",
+        "description": "Every record contains only printable ASCII characters; tabs, control characters and non-ASCII text fail.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Every framed record.",
+        "prerequisite": "nacha.framing passed",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.record-order",
+        "description": "One file header, complete nonempty batches, adjacent entry addenda, one file control, then only all-9 padding.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Entire framed ASCII file.",
+        "prerequisite": "nacha.framing and nacha.ascii passed",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.blocking",
+        "description": "Total records, including all-9 padding, must form complete blocks of ten.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Entire framed ASCII file, including files with an order failure.",
+        "prerequisite": "nacha.framing and nacha.ascii passed",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-header",
+        "description": "Priority 01, size 094, block factor 10, format code 1, uppercase alphanumeric modifier, leading-blank destination routing and populated immediate origin.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File header; origin is an assigned identifier, not forced to a routing number.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.creation-date",
+        "description": "Creation date is a real YYMMDD calendar date interpreted in 2000–2099.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File header creation date.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.creation-time",
+        "description": "Optional creation time is blank or valid HHMM (00:00–23:59).",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File header creation time, including a blank optional time which passes.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.service-class",
+        "description": "Batch service class is 200, 220 or 225.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.sec-code",
+        "description": "SEC is CCD, PPD, CTX, WEB or TEL and belongs to the selected profile's supported SEC list.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-required",
+        "description": "Company name, identification and entry description are populated; REVERSAL is outside ordinary origination.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.effective-date",
+        "description": "Effective entry date is a real YYMMDD calendar date interpreted in 2000–2099.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.effective-weekend",
+        "description": "A valid effective entry date falling on Saturday or Sunday generates a WARNING; no holiday/cutoff determination.",
+        "ruleClass": "nacha-structure",
+        "severity": "WARNING",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch with a valid effective entry date; invalid dates suppress weekend evaluation as not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); valid date for the evaluated batch",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.settlement-date",
+        "description": "Settlement date must be blank or Julian 001–366. Invalid syntax/range is ERROR; a valid populated operator field generates WARNING.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header; blank is permitted, populated values require operator-field caution.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.originator-status",
+        "description": "Ordinary origination status code is 1.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.odfi",
+        "description": "Originating DFI is eight routing digits with a valid nonzero ABA prefix; no directory lookup.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-number",
+        "description": "Batch numbers are numeric, positive and ascending within the file; gaps are permitted.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch header, compared with preceding batch numbers.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.entry-required",
+        "description": "Receiving account and name are populated, using the CTX-specific name positions when applicable.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each entry detail record.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.transaction-code",
+        "description": "Only ordinary checking/savings credits/debits 22/27/32/37 and loan credit 52 are supported.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each entry detail; prenotes/nonmonetary codes are outside the profile.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.entry-amount",
+        "description": "Entry amount is a positive ten-digit integer-cent value.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each ordinary monetary entry detail.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.routing",
+        "description": "Receiving routing number has nine digits, a valid nonzero ABA prefix and matching checksum; no directory membership proof.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each entry detail.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.trace",
+        "description": "Trace is fifteen digits with the batch ODFI prefix and a positive seven-digit sequence.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each entry detail.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.trace-order",
+        "description": "Numeric trace sequence ascends within each batch; gaps are permitted.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each entry detail, compared with preceding entry sequences in its batch.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.trace-unique",
+        "description": "Entry trace numbers are unique within the admitted file.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). All entry details in this file; no historical/cross-file comparison.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.sec-transaction",
+        "description": "Entry direction matches credit-only/debit-only service class; TEL permits debits only.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each entry detail in its batch's SEC/service-class context.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.web-credit-originator",
+        "description": "WEB credits have populated originator identification in the entry's identification field.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). WEB credit entries only; other SECs and WEB debits are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.addenda-type",
+        "description": "Payment addenda use type 05; return/notification addenda are outside the profile.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Present addenda records; absent addenda are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.addenda-indicator",
+        "description": "Entry indicator is 0 without addenda or 1 with adjacent addenda.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Every entry, including entries without addenda.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.addenda-count",
+        "description": "TEL has no addenda, CCD/PPD/WEB at most one, CTX at most 9,999; CTX declared count equals actual following addenda.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Every entry in its SEC context, including zero-addenda entries.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.addenda-sequence",
+        "description": "Addenda sequence begins at 0001 and increases consecutively per entry.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Present addenda records; absent addenda are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.addenda-link",
+        "description": "Addenda entry sequence is numeric and matches the preceding entry trace's final seven digits.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Present addenda records; absent addenda are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-mirror",
+        "description": "Batch control mirrors header service class, company identification, ODFI and batch number.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch control/header pair.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-count",
+        "description": "Batch numeric entry/addenda count equals actual entry plus addenda records.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch control.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-hash",
+        "description": "Batch numeric hash equals summed eight-digit receiving DFI prefixes modulo ten billion.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch control; numeric prefixes contribute even when their routing checksum is invalid.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-debit",
+        "description": "Batch numeric debit total equals interpreted entry amounts in exact integer cents.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch with interpretable numeric amounts and supported entry directions; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all batch amounts numeric and transaction directions supported",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.batch-credit",
+        "description": "Batch numeric credit total equals interpreted entry amounts in exact integer cents; debit/credit equality is not required.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Each batch with interpretable numeric amounts and supported entry directions; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all batch amounts numeric and transaction directions supported",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.reserved",
+        "description": "Batch/file control reserved fields and CTX entry reserved columns contain spaces.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). All batch/file controls and CTX entry details.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-batches",
+        "description": "File numeric batch count equals actual complete batches.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File control.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-blocks",
+        "description": "File numeric block count equals total records divided by ten, with complete ten-record blocking required.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File control, including padding records.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-count",
+        "description": "File numeric entry/addenda count equals actual entry plus addenda records across batches.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File control.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-hash",
+        "description": "File numeric hash equals summed batch receiving DFI hashes modulo ten billion.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File control; no external routing verification.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-debit",
+        "description": "File numeric debit total equals interpreted entry amounts in exact integer cents across batches.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File with interpretable amounts and supported directions in every batch; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all file amounts numeric and transaction directions supported",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.file-credit",
+        "description": "File numeric credit total equals interpreted entry amounts in exact integer cents; debit/credit equality is not required.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). File with interpretable amounts and supported directions in every batch; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all file amounts numeric and transaction directions supported",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      },
+      {
+        "id": "nacha.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-public-2026 (origination-public-2026). Selected NACHA profile after trusted parser context is available.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset",
+        "evidence": "tests/nacha-parser.test.ts; tests/nacha-fixtures.test.ts; tests/nacha-coverage.test.ts; demo-files/nacha/manifest.json; synthetic local evidence, not independent business approval or hosted/bank acceptance"
+      }
+    ],
+    "exclusions": [
+      "CANDIDATE public-source subset only. No production approval, full 2026 Operating Rules compliance, bank acceptance, funds availability, or execution guarantee.",
+      "No customer authorization, consent, account existence or eligibility, fraud approval, or real transaction-purpose verification; purpose-dependent PAYROLL/PURCHASE requirements are not established.",
+      "Routing syntax, prefix and checksum do not verify bank routing-directory membership or external account/payment details.",
+      "No holiday calendar, transmission cutoff, bank processing window, live-date qualification, or actual settlement verification.",
+      "No historical or cross-file duplicate detection; trace uniqueness applies only within the admitted file.",
+      "No MAC authentication or validation of embedded EDI, UN/EDIFACT, tax, healthcare, or other remittance content semantics.",
+      "Only ordinary monetary CCD, PPD, CTX, WEB and TEL originations using transaction codes 22/27/32/37/52; other SEC/account codes, prenotes, zero-dollar remittance entries, returns/NOCs and reversals are outside the profile.",
+      "Field checks cover numeric syntax, constants, reserved spaces and required values, not complete alphabetic-field semantic validation or bank-specific identifier/padding policies."
+    ]
+  }
+]

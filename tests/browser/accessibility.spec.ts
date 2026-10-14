@@ -9,18 +9,7 @@ async function scan(page: Page, info: TestInfo): Promise<void> {
   await info.attach("accessibility.json", {
     body: JSON.stringify(report, null, 2), contentType: "application/json",
   });
-  const unexpected = [];
-  for (const violation of report.violations) {
-    for (const node of violation.nodes) {
-      const selector = node.target.length === 1 ? node.target[0] : undefined;
-      const knownWarning = violation.id === "color-contrast" && typeof selector === "string"
-        && await page.locator(selector).evaluateAll((elements) => elements.length > 0
-          && elements.every((element) => element.matches('button[data-outcome="WARNING"], .severity.warning')));
-      if (!knownWarning) unexpected.push({ rule: violation.id, target: node.target, summary: node.failureSummary });
-    }
-  }
-  if (report.violations.length) info.annotations.push({ type: "known-accessibility-issue", description: "A11Y-001: warning contrast remains open; see attached full axe report." });
-  expect(unexpected).toEqual([]);
+  expect(report.violations).toEqual([]);
 }
 
 async function uploadStep(page: Page): Promise<void> {

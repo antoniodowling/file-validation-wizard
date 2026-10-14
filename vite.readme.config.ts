@@ -1,6 +1,10 @@
+// @ts-ignore build helper is plain Node ESM
+import { buildRevision } from "./scripts/build-revision.mjs";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  define: { __BUILD_REVISION__: JSON.stringify(buildRevision) },
+  worker: { plugins: () => [], },
   build: {
     target: "es2022",
     outDir: "readme-package",

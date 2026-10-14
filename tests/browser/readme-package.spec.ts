@@ -179,7 +179,6 @@ test("inline and modal layouts fit narrow containers", async ({ page, browserNam
   const modalFits = await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth);
   await expect(dialog.getByRole("button", { name: "Close validator" })).toBeInViewport();
   // HANDOFF-UI-002: preserve Linux geometry failures without masking modal behavior.
-  test.fail(process.platform === "linux" && browserName !== "chromium", "HANDOFF-UI-002: narrow-container overflow on Linux Firefox/WebKit.");
   expect({ inlineFits, modalFits }).toEqual({ inlineFits: true, modalFits: true });
 });
 
@@ -222,7 +221,7 @@ test("ReadMe inline NACHA preset validates the mixed public-profile fixture", as
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/mixed-five-sec-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="result-basis"]')).toContainText("public specification profile");
+  await expect(root.locator('[id$="result-basis"]')).toContainText(/public specification profile/i);
   await root.getByRole("button", { name: "Back to file" }).click();
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/routing-check-digit-fail.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
