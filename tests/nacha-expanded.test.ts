@@ -39,6 +39,17 @@ describe("expanded origination revision", () => {
     for (const id of ["sec-transaction", "web-credit-originator", "remittance-required", "ctx-remittance"]) expect(state(change(source, 1, 51, 53, "BAD"), id)).toBe("not-evaluated");
     const malformed = source.slice(1); expect(run(malformed).results.map(rule => rule.ruleId)).toEqual(["nacha.framing"]);
   });
+  it("preserves a meaningful reference space across multiple fixed-record payload chunks", () => {
+    const source = fixture("ctx-cross-record-reference-pass"); const rows = source.trimEnd().split("\n");
+    expect(rows[2]?.slice(54, 58)).toBe("0002");
+    const first = rows[3]!.slice(3, 83), second = rows[4]!.slice(3, 83);
+    expect(first.endsWith("AB ")).toBe(true); expect(second.startsWith("CD~")).toBe(true);
+    expect(rows[5]?.slice(4, 10)).toBe("000003"); expect(rows[5]?.slice(10, 20)).toBe("0001000000");
+    expect(rows[5]?.slice(20, 44)).toBe("000000000000000000000001");
+    expect(rows[6]?.slice(13, 21)).toBe("00000003");
+    expect(run(source).overallStatus).toBe("PASS");
+    expect(ctxX12Syntax(first.trimEnd() + second.trimEnd(), pack)).toBe(false);
+  });
   it("allows uppercase REVERSAL within the field and TEL monetary credits, withholding historical claims", () => {
     expect(run(fixture("tel-22-reversal-pass")).overallStatus).toBe("PASS");
     expect(run(fixture("loan-reversal-marker-fail")).results.some(rule => rule.ruleId === "nacha.reversal-transaction" && rule.outcome === "ERROR")).toBe(true);

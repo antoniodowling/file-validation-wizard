@@ -169,6 +169,14 @@ const expandedFailures = [
   ['ctx-reference', 'CTX SE reference mismatch', buildFile([batch('CTX', [entry(22, 1n, ['ST*813*1~BPS*1~SE*3*2~'])])]), 'ctx-remittance'],
 ];
 for (const [name, description, source, id] of expandedFailures) add(`${name}-fail.ach`, description, source, 'FAIL', [`nacha.${id}`]);
+// The first 80-character chunk ends inside a meaningful transaction reference.
+// Trimming each chunk would turn AB CD into ABCD and break its SE linkage.
+const prefix = 'ST*813*1~BPS*1~NTE*GEN*';
+const between = '~SE*4*1~ST*813*AB ';
+const crossRecord = prefix + 'X'.repeat(80 - prefix.length - between.length) + between + 'CD~BPS*1~SE*3*AB CD~';
+const crossChunks = crossRecord.match(/.{1,80}/g);
+if (crossChunks.length !== 2 || !crossChunks[0].endsWith('AB ')) throw new Error('Cross-record fixture boundary drift');
+add('ctx-cross-record-reference-pass.ach', 'Two addenda retain a meaningful space across the 80-column payload boundary', buildFile([batch('CTX', [entry(22, 1n, crossChunks)])]));
 add('ctx-non-820-pass.ach', 'CTX is not restricted to EDI 820', buildFile([batch('CTX', [entry(22, 1n, ['ST*813*1~BPS*1~SE*3*1~'])])]));
 add('ctx-edifact-unsupported.ach', 'UN/EDIFACT qualification gate produces no verdict', buildFile([batch('CTX', [entry(22, 1n, ["UNH+1+PAYMUL:D:96A:UN'UNT+2+1'"])])]), 'UNSUPPORTED');
 add('web-loan-unsupported.ach', 'WEB loan combinations not source-qualified; no verdict', buildFile([batch('WEB', [entry(52, 1n)])]), 'UNSUPPORTED');

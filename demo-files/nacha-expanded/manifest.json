@@ -1378,6 +1378,14 @@
       "bytes": 950
     },
     {
+      "file": "ctx-cross-record-reference-pass.ach",
+      "description": "Two addenda retain a meaningful space across the 80-column payload boundary",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "834ea50962dabe53a89f2229687cbf28c92a9b1cc5b4493730a96d4948f110c2",
+      "bytes": 950
+    },
+    {
       "file": "ctx-non-820-pass.ach",
       "description": "CTX is not restricted to EDI 820",
       "expectedStatus": "PASS",
