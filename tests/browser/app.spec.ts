@@ -136,14 +136,34 @@ test("format controls fit and stack in the narrow explorer pane", async ({ page 
   expect(Math.max(...geometry.map(box => box.right)) - Math.min(...geometry.map(box => box.right))).toBeLessThan(2);
 });
 
-test("lets users explore reference formats without advancing", async ({ page }) => {
+test("offers only formats and versions with enabled validators", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Browse all format references" }).click();
-  await chooseFormat(page, "MT940", /MT940.*Customer Statement/i, "sr2025");
-  await expect(page.getByText("Accepted extensions: FIN, MT, TXT")).toBeVisible();
-  await expect(page.getByText("Reference only — validation is unavailable in this demo.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-  await expect(page.locator('[data-open-step="2"]').first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Browse all format references" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Show executable DEMO validators" })).toHaveCount(0);
+
+  const search = page.locator("#format-search");
+  await search.focus();
+  const options = page.locator('#format-listbox [role="option"]');
+  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820"]);
+  for (const query of ["MT940", "Nacha", "camt", "821"]) {
+    await search.fill(query);
+    await expect(options).toHaveCount(0);
+    await expect(page.getByText("No formats match your search.")).toBeVisible();
+  }
+
+  for (const [query, versions] of [
+    ["pain.001", ["pain.001.001.03", "pain.001.001.09", "pain.001.001.13"]],
+    ["pain.008", ["pain.008.001.02", "pain.008.001.08", "pain.008.001.12"]],
+    ["820", ["004010", "005010", "008030"]],
+  ] as const) {
+    await search.fill(query);
+    await options.click();
+    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions]);
+    for (const version of versions) {
+      await page.locator("#version-select").selectOption(version);
+      await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
+    }
+  }
 });
 
 test("enforces extensions dynamically and preserves a valid file after an invalid replacement", async ({ page }) => {

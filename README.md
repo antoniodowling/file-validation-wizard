@@ -2,10 +2,8 @@
 
 A browser-local demo for exploring and validating common payment-file formats. Its format-first wizard provides:
 
-- a searchable, frozen catalog of 50 legitimate payments and treasury format/message profiles;
-- three relevant versions for each catalog entry;
-- nine executable demo profiles covering PAIN.001, PAIN.008, and ASC X12 EDI 820; and
-- reference-only metadata for every other catalog entry; and
+- a searchable format picker limited to PAIN.001, PAIN.008, and ASC X12 EDI 820;
+- three implemented versions per format, covering nine executable demo profiles; and
 - a dedicated-page, read-only file explorer that links current findings to exact source, honest context, or an explicit unavailable state.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee ABC Bank acceptance or payment readiness.
