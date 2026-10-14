@@ -10,8 +10,8 @@ import { FORMAT_PACKS } from "../src/format-packs";
 
 describe("focused format catalog", () => {
   it("retains executable demo families and all four ACH candidate families", () => {
-    expect(FORMAT_CATALOG.map((item) => item.id)).toEqual(["pain-001", "pain-008", "x12-820", "nacha", "nacha-returns", "huntington-control-totals", "huntington-ack"]);
-    expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(7);
+    expect(FORMAT_CATALOG.map((item) => item.id)).toEqual(["pain-001", "pain-008", "x12-820", "nacha", "nacha-returns", "huntington-control-totals", "huntington-ack", "bai2"]);
+    expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(8);
     expect(FORMAT_CATALOG.filter((item) => item.status === "REFERENCE_ONLY").map((item) => item.id)).toEqual([]);
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").every((item) => item.versions.length === 3)).toBe(true);
   });
@@ -30,11 +30,11 @@ describe("focused format catalog", () => {
     }
   });
 
-  it("maps exactly fifteen supported versions to executable profiles", () => {
+  it("maps exactly sixteen supported versions to executable profiles", () => {
     const profileIds = FORMAT_CATALOG.flatMap((item) =>
       item.versions.flatMap((version) => version.validationProfileId ? [version.validationProfileId] : []),
     );
-    expect(profileIds).toHaveLength(15);
+    expect(profileIds).toHaveLength(16);
     expect(new Set(profileIds)).toEqual(new Set(FORMAT_PACKS.map((pack) => pack.id)));
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").map((item) => item.code)).toEqual([
       "pain.001",
@@ -52,6 +52,7 @@ describe("focused format catalog", () => {
       "NACHA Returns": "nacha-returns",
       "Huntington Control Totals": "ach-control-total-flat-file",
       "Huntington ACK": "file-received-ack-flat-file",
+      "BAI2": "bai2",
     };
     for (const pack of FORMAT_PACKS) {
       expect(slugs[pack.family]).toBeDefined();

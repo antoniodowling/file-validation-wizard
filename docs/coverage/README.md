@@ -1,5 +1,7 @@
 # Coverage and report interpretation
 
+The BAI2 candidate has its own frozen [bai2-candidate-1.0.0.json](bai2-candidate-1.0.0.json), schema-3 exports, [source scope](../BAI2_SOURCE_SCOPE.md), and [fixture manifest](../../demo-files/bai2/manifest.json). It does not change historical snapshots. Unqualified funds/currency/code/transport scenarios receive no validity verdict; malformed numeric/layout prerequisites suppress dependent control checks.
+
 `ruleset-2.0.0.json` freezes the exact coverage of all nine executable DEMO profile versions. Regenerate it from the registry with `npm run export:coverage` only while preparing this ruleset revision; subsequent changes require a new revision/file. The same coverage is embedded in every run and export, so a moved URL does not erase the meaning of a historical report.
 
 PASS means the matching profile's promised checks completed with no errors or warnings. PASS WITH WARNINGS means those checks completed with advisory warnings. FAIL is a completed assessment with a failed prerequisite or rule; dependent checks are explicitly not evaluated. Unsupported XML versions/encodings or multiple complete EDI interchanges receive no validity verdict. Read, decode, engine, resource and timeout failures are incomplete, with no completed assessment or result export. The UI keeps previous-run results and source out of incomplete runs.

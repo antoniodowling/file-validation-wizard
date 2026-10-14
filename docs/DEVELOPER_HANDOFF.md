@@ -31,7 +31,9 @@ Use Node.js 22.12 or newer and `npm ci` from the repository root. Run `npm run d
 
 ## Current scope and acceptance
 
-The catalog contains PAIN.001, PAIN.008, EDI 820, and NACHA. Nine ISO/X12 profiles remain DEMO. NACHA offers two executable CANDIDATE revisions: `origination-public-2026` and `origination-expanded-public-2026-r1`. Neither establishes full 2026 Operating Rules compliance or production approval. See [original NACHA scope](NACHA_SOURCE_REVIEW.md) and [expanded entry types and gates](ACH_ORIGINATION_EXPANDED.md).
+BAI2 is now an executable CANDIDATE with [source-defined scope and disclosed assumptions](BAI2_SOURCE_SCOPE.md), parser `src/parsers/bai2.ts`, [new coverage](coverage/bai2-candidate-1.0.0.json), [fixtures](../demo-files/bai2/README.md), unit tests and standalone/generated-mount browser tests. Nine ISO/X12 DEMO profiles and six ACH candidates remain preserved; BAI2 adds the seventh candidate. Hosted/standards/production acceptance remains separate. The historical baseline below predates these additions.
+
+The catalog contains PAIN.001, PAIN.008, EDI 820, NACHA origination, Returns, control totals, ACK and BAI2. NACHA retains three origination candidates; Returns/control totals/ACK each have a declared executable candidate scenario. None establishes full standards compliance or production approval. See [original NACHA scope](NACHA_SOURCE_REVIEW.md), [expanded entry types](ACH_ORIGINATION_EXPANDED.md), [origination r2](ACH_ORIGINATION_R2.md) and [ACH candidates](ACH_EXPANSION_SOURCES.md).
 
 | Area | Current state | Responsible role / next action |
 | --- | --- | --- |
@@ -41,7 +43,7 @@ The catalog contains PAIN.001, PAIN.008, EDI 820, and NACHA. Nine ISO/X12 profil
 | Actual ReadMe integration | Unverified. Local generated-mount tests simulate the portal, including presets and routing; they do not establish actual CSP or customization coexistence. | Portal maintainer: supply an unpublished staging mount and execute the hosted procedure below. |
 | Manual accessibility | Screen-reader, actual 200% zoom, and complete manual workflow acceptance remain unverified. | Accessibility tester: complete the outstanding checks in the follow-up log. |
 | Supported capacity | Byte, decoded-source, structure, and deadline guards exist; representative peak memory and recovery evidence remain deferred. | Performance maintainer: follow [processing limits](PROCESSING_LIMITS.md) before claiming a supported workload. |
-| Standards and production approval | Deep ISO/X12 rules and source-gated Returns, control totals, and ACK work remain excluded or unavailable. No profile has production sign-offs. | API/Product owners: follow the [remaining-work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) and [ACH phase gates](ACH_EXPANSION_SOURCES.md). |
+| Standards and production approval | Deep ISO/X12 rules and scenarios beyond declared ACH/BAI2 candidate coverage remain unqualified. No profile has production sign-offs. | API/Product owners: follow the [remaining-work handoff](REVIEW_FOLLOW_UP_HANDOFF.md), [ACH gates](ACH_EXPANSION_SOURCES.md) and [BAI2 scope](BAI2_SOURCE_SCOPE.md). |
 
 Roles identify responsibilities, not an assigned successor or approval. Passing local checks does not establish hosted compatibility, bank acceptance, full standards conformance, production approval, or WCAG conformance.
 

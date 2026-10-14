@@ -1,4 +1,5 @@
 import { ackCoverageFor, ACK_RULESET_REVISION, ACK_GUIDE_REVISION, ACK_EXCLUSIONS } from "./ack-coverage";
+import { bai2CoverageFor, BAI2_REVISION, BAI2_GUIDE, BAI2_EXCLUSIONS } from "./bai2-coverage";
 import { controlTotalCoverageFor, CONTROL_TOTAL_REVISION, CONTROL_TOTAL_GUIDE, CONTROL_TOTAL_EXCLUSIONS } from "./control-total-coverage";
 import { nachaReturnsCoverageFor, NACHA_RETURNS_RULESET_REVISION, NACHA_RETURNS_GUIDE_REVISION, NACHA_RETURNS_EXCLUSIONS } from "./nacha-returns-coverage";
 import { originationR2CoverageFor, NACHA_ORIGINATION_R2_REVISION, NACHA_ORIGINATION_R2_GUIDE, NACHA_ORIGINATION_R2_EXCLUSIONS } from "./nacha-origination-r2-coverage";
@@ -43,6 +44,7 @@ const descriptions: Record<string, readonly [string, string]> = {
 };
 
 export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
+  if (pack.parserKind === "BAI2") return bai2CoverageFor(pack);
   if (pack.id === "nacha-origination-expanded-public-2026-r2") return originationR2CoverageFor(pack);
   if (pack.parserKind === "NACHA_RETURN_FIXED") return nachaReturnsCoverageFor(pack);
   if (pack.parserKind === "ACH_CONTROL_FIXED") return controlTotalCoverageFor(pack);
@@ -64,6 +66,7 @@ export function provenanceFor(pack: FormatPack): RunProvenance {
   const nacha = pack.parserKind === "NACHA_FIXED";
   const expanded = pack.id === "nacha-origination-expanded-public-2026-r1";
   const profileMetadata: Partial<Record<string, readonly [string, string, readonly string[]]>> = {
+    "BAI2": [BAI2_REVISION, BAI2_GUIDE, BAI2_EXCLUSIONS],
     "nacha-origination-expanded-public-2026-r2": [NACHA_ORIGINATION_R2_REVISION, NACHA_ORIGINATION_R2_GUIDE, NACHA_ORIGINATION_R2_EXCLUSIONS],
     "NACHA_RETURN_FIXED": [NACHA_RETURNS_RULESET_REVISION, NACHA_RETURNS_GUIDE_REVISION, NACHA_RETURNS_EXCLUSIONS],
     "ACH_CONTROL_FIXED": [CONTROL_TOTAL_REVISION, CONTROL_TOTAL_GUIDE, CONTROL_TOTAL_EXCLUSIONS],

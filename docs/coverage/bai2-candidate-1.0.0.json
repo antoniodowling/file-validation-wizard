@@ -1,0 +1,252 @@
+[
+  {
+    "schemaVersion": "3",
+    "profileId": "huntington-bai2-public-2026-r1",
+    "messageVersion": "huntington-bai2-public-2026-r1",
+    "implementationGuideRevision": "Huntington BAI2 guide updated 2026-09-17T20:36:35Z; supplied SHA-256 83a5ccfe3eb6d0919e2cd401670df26d4a30728c0987f84c2aa4cefb8fe48b0e; candidate reviewed 2026-10-14",
+    "mode": "CANDIDATE",
+    "rulesetRevision": "huntington-bai2-candidate-1.0.0",
+    "coverageRevision": "huntington-bai2-public-2026-r1@huntington-bai2-candidate-1.0.0",
+    "coverage": [
+      {
+        "id": "bai2.characters",
+        "description": "Candidate printable-ASCII admission, preserving original source; no BOM/tabs.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Decoded source",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.framing",
+        "description": "Nonempty line-based records, two-digit code plus comma, final slash; no blank physical records.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Admitted characters",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.continuation",
+        "description": "88 attaches to a preceding record; structured field-boundary assembly and opaque 16 text continuation.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Framed physical records",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.hierarchy",
+        "description": "One 01…99 file, nonempty 02…98 groups, nonempty 03…49 accounts; details belong to accounts.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Assembled logical records",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.layout",
+        "description": "Logical field count by record type; optional trailing fields on 02/03/16.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.file-header",
+        "description": "Nonblank identities/file ID, real YYMMDD date, HHMM including 2400, BAI version 2; example IDs are not mandated.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.group-header",
+        "description": "Nonblank originator, status 1, real as-of date and optional valid time.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.account-id",
+        "description": "Numeric account ID without leading zeros, surrounding spaces tolerated as in source sample.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.currency",
+        "description": "USD or omitted currency; other well-formed currency codes are unsupported.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.summary-code",
+        "description": "Summary/status code from union of guide common-code and transaction-code lists, correct level.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.detail-code",
+        "description": "Detail code from guide transaction-code list, correct level; absent details are not applicable.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.summary-fields",
+        "description": "Optional summary item count, zero when present; only omitted funds fields qualified.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.amount",
+        "description": "Exact integer syntax; optional absent data amounts, required trailer amounts; no floating-point or scaling assumptions.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.trailer-fields",
+        "description": "Mandatory unsigned integer trailer counts.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.account-total",
+        "description": "49 total equals reported 03 summary and 16 detail amounts, including 88 storage once.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, owned logical layouts and valid numeric operands",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.account-count",
+        "description": "49 count equals physical records 03 through 49, including attached continuations.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, trailer layout and unsigned count",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.group-total",
+        "description": "98 total equals sum of account trailer totals in that group.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, owned logical layouts and valid numeric operands",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.group-accounts",
+        "description": "98 account count equals number of owned 03 records.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, trailer layout and unsigned count",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.group-count",
+        "description": "98 count equals physical records 02 through 98 including attached continuations.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, trailer layout and unsigned count",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.file-total",
+        "description": "99 total equals sum of group trailer totals.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, owned logical layouts and valid numeric operands",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.file-groups",
+        "description": "99 group count equals number of owned 02 records.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, trailer layout and unsigned count",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "bai2.file-count",
+        "description": "99 count equals all physical records, including 01/99 and every continuation.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy, trailer layout and unsigned count",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      },
+      {
+        "id": "huntington-bai2-public-2026-r1.non-empty-source",
+        "description": "Nonempty source in trusted BAI2 context.",
+        "ruleClass": "flat-file-structure",
+        "severity": "ERROR",
+        "applicability": "Selected Huntington BAI2 candidate; per-record/account/group occurrences where present.",
+        "prerequisite": "Valid hierarchy; subject logical layout",
+        "reference": "https://developer.huntington.com/enterprisepayments/docs/bai2; docs/BAI2_SOURCE_SCOPE.md (source versus candidate assumptions)",
+        "evidence": "tests/bai2.test.ts; tests/browser/bai2.spec.ts; demo-files/bai2/manifest.json; source sample arithmetic and synthetic scenarios, no independent bank approval"
+      }
+    ],
+    "exclusions": [
+      "CANDIDATE only, not complete BAI/X9 or bank conformance. No Product/SC/FT, rules/fixtures approval, Production activation or hosted ReadMe acceptance.",
+      "Candidate transport: printable ASCII (decoded as strict UTF-8), no BOM/tabs, one physical record per LF/CRLF/CR-separated line, optional one final separator. Mixed separators admitted. Blocked, translated, encrypted and concatenated transports are not qualified.",
+      "Structured 88 continuation at comma field boundaries and opaque 16 text continuation are supported after any record, including 88. Scalar splits are unsupported. Physical counts include continuations of headers and trailers; no universal maximum 80-column length is imposed.",
+      "Only omitted funds fields, omitted physical length/block size, USD/omitted currency and omitted/2 as-of modifier are qualified. Nonempty funds layouts, declared blocking, other currencies/modifiers/versions and unlisted three-digit type codes receive UNSUPPORTED with no verdict.",
+      "Guide defaults are not fixed customer identities. Dates use a disclosed 2000–2099 interpretation; optional minus signs and up to 40-digit integers are candidate policies. No decimal scaling, real account/routing ownership, balance economics, net-debit/credit reconciliation, historical duplication or external verification.",
+      "Controls sum reported numeric summary and detail amounts once; omitted optional amounts contribute no numeric operand. Counts include the opening and closing physical records. Dependent total/count checks are not evaluated when their numeric/layout prerequisites are malformed.",
+      "CSV conversion, funds availability correctness, custom OpenText layouts, delivery scheduling/entitlements and current-day modifier semantics are excluded; omitted modifiers do not establish reporting mode."
+    ]
+  }
+]

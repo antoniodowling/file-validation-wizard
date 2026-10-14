@@ -1,4 +1,6 @@
 import ackPass from "../demo-files/ach-candidates/ack-received-pass.txt?raw";
+import bai2Pass from "../demo-files/bai2/balances-pass.bai2?raw";
+import bai2Fail from "../demo-files/bai2/account-total-fail.bai2?raw";
 import ackFail from "../demo-files/ach-candidates/ack-date-fail.txt?raw";
 import returnsPass from "../demo-files/ach-candidates/returns-ccd-pass.ach?raw";
 import returnsFail from "../demo-files/ach-candidates/returns-trace-fail.ach?raw";
@@ -11,6 +13,7 @@ import nachaFail from "../demo-files/nacha/routing-check-digit-fail.ach?raw";
 import type { FormatPack, IsoVersionIdentifiers, EdiVersionIdentifiers } from "./types";
 /** Synthetic wiring samples, intentionally not represented as conformant payment messages. */
 export function syntheticSample(pack: FormatPack, fail: boolean): string {
+  if (pack.parserKind === "BAI2") return fail ? bai2Fail : bai2Pass;
   if (pack.parserKind === "HUNTINGTON_ACK") return fail ? ackFail : ackPass;
   if (pack.parserKind === "NACHA_RETURN_FIXED") return fail ? returnsFail : returnsPass;
   if (pack.parserKind === "ACH_CONTROL_FIXED") return fail ? totalsFail : totalsPass;

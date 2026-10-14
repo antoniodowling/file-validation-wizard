@@ -154,7 +154,13 @@ export const CONTROL_TOTAL_PACK = flatCandidate("huntington-control-total-public
   Object.freeze({ kind: "ACH_CONTROL_FIXED", profile: "control-total-public-2026-r1" }), "https://developer.huntington.com/enterprisepayments/docs/ach-control-total-flat-file");
 export const ACK_PACK = flatCandidate("huntington-ack-pipe-1.0-candidate-r1", "Huntington ACK", "pipe-1.0-candidate-r1",
   Object.freeze({ kind: "HUNTINGTON_ACK", profile: "huntington-ack-pipe-1.0-candidate-r1" }), "https://developer.huntington.com/enterprisepayments/docs/file-received-ack-flat-file");
-export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK]);
+export const BAI2_PACK: FormatPack = Object.freeze({
+  ...flatCandidate("huntington-bai2-public-2026-r1", "BAI2", "huntington-bai2-public-2026-r1",
+    Object.freeze({ kind: "BAI2", profile: "huntington-bai2-public-2026-r1" }), "https://developer.huntington.com/enterprisepayments/docs/bai2"),
+  label: "BAI2 — Huntington public-guide candidate",
+  extensions: Object.freeze([".bai", ".bai2", ".txt"]),
+});
+export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.enabled) return [];

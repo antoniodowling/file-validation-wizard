@@ -2,9 +2,10 @@
 
 A browser-local demo for exploring and validating common payment-file formats. Its format-first wizard provides:
 
-- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, and File Received ACK;
+- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, File Received ACK, and BAI2;
 - nine existing ISO/X12 profiles, with three versions per format;
-- six ACH candidates across four format families, including three preserved/current origination revisions for CCD, PPD, CTX, WEB, and TEL; and
+- six ACH candidates across four format families, including three preserved/current origination revisions for CCD, PPD, CTX, WEB, and TEL;
+- one Huntington-guide BAI2 reporting candidate with multiple groups/accounts, continuations and exact trailer controls; and
 - a dedicated-page, read-only file explorer that links current findings to exact source, honest context, or an explicit unavailable state.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee ABC Bank acceptance or payment readiness.
@@ -49,6 +50,8 @@ Select **PAIN.001**, choose version **pain.001.001.09**, and upload one of the s
 Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The nine ISO/X12 packs retain their existing `DEMO` approval status and validation behavior. The six enabled ACH profiles are `CANDIDATE` revisions based on public specifications and declared scenarios. They include three origination revisions plus ordinary Returns/COR, standalone control totals and the single-scenario ACK. None is an approved production pack or a complete 2026 Operating Rules implementation. Other catalog placeholders have been removed.
 
 Select **NACHA**, then **Public specification profile (2026 review)**. Supported ordinary monetary transaction codes are 22, 27, 32, 37, and 52. Files may combine the five supported SEC codes in separate batches. Both balanced and unbalanced files are accepted when their controls reconcile. LF, CRLF, CR, and concatenated 94-character records are supported. See [NACHA sources and validation scope](docs/NACHA_SOURCE_REVIEW.md) and the [synthetic NACHA fixture kit](demo-files/nacha/README.md).
+
+BAI2 is available as **Huntington public-guide candidate (BAI2 2026 r1)**. It checks the declared line-based USD reporting scenario, continuations, record hierarchy, fields and trailer controls. Funds availability layouts and other unqualified scenarios receive no verdict. See [source scope and assumptions](docs/BAI2_SOURCE_SCOPE.md) and [source/synthetic fixtures](demo-files/bai2/README.md).
 
 To enable a production pack, provide its exact version identifiers, approved guide URL, approved rules and fixtures, and Product/SC/FT sign-offs. The registry fails closed when any of those production release gates are missing.
 
