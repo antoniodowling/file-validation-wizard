@@ -8,11 +8,11 @@ import {
 import { isoPack } from "./helpers";
 
 describe("format-pack release gates", () => {
-  it("retains nine demo profiles and seven candidates without claiming release approval", () => {
-    expect(FORMAT_PACKS).toHaveLength(16);
-    expect(enabledFormatPacks()).toHaveLength(16);
+  it("retains nine demo profiles and eight candidates without claiming release approval", () => {
+    expect(FORMAT_PACKS).toHaveLength(17);
+    expect(enabledFormatPacks()).toHaveLength(17);
     expect(FORMAT_PACKS.filter((pack) => pack.mode === "DEMO")).toHaveLength(9);
-    expect(FORMAT_PACKS.filter((pack) => pack.mode === "CANDIDATE").map((pack) => pack.family)).toEqual(["NACHA", "NACHA", "NACHA", "NACHA Returns", "Huntington Control Totals", "Huntington ACK", "BAI2"]);
+    expect(FORMAT_PACKS.filter((pack) => pack.mode === "CANDIDATE").map((pack) => pack.family)).toEqual(["NACHA", "NACHA", "NACHA", "NACHA Returns", "Huntington Control Totals", "Huntington ACK", "BAI2", "CSV Wire"]);
     expect(FORMAT_PACKS.every((pack) => Object.values(pack.approval).every((value) => !value))).toBe(true);
   });
 

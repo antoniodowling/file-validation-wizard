@@ -160,7 +160,13 @@ export const BAI2_PACK: FormatPack = Object.freeze({
   label: "BAI2 — Huntington public-guide candidate",
   extensions: Object.freeze([".bai", ".bai2", ".txt"]),
 });
-export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK]);
+export const CSV_WIRE_PACK: FormatPack = Object.freeze({
+  ...flatCandidate("huntington-csv-wire-public-2026-r1", "CSV Wire", "huntington-csv-wire-public-2026-r1",
+    Object.freeze({ kind: "CSV_WIRE", profile: "huntington-csv-wire-public-2026-r1" }), "https://developer.huntington.com/enterprisepayments/docs/wires-payments-automation"),
+  label: "CSV Wire — Huntington public-guide candidate",
+  extensions: Object.freeze([".csv", ".txt"]),
+});
+export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK, CSV_WIRE_PACK]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.enabled) return [];

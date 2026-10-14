@@ -55,7 +55,7 @@ test("starts with format search and keeps later-step messaging inside its step",
   await page.locator("#format-search").focus();
   await expect(page.locator("#format-search")).toHaveCSS("outline-style", "none");
   await expect(page.locator("#format-search")).toHaveCSS("box-shadow", /rgb\(3, 79, 84\).*inset/);
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(8);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(9);
   await expect(page.locator(".format-list-header")).toHaveText("FormatCodeStandard");
   await expect(page.locator(".support-badge")).toHaveCount(0);
   await expect(page.locator('#format-listbox [role="option"]').first().locator("span")).toHaveCount(3);
@@ -182,7 +182,7 @@ test("offers only formats and versions with enabled validators", async ({ page }
   const search = page.locator("#format-search");
   await search.focus();
   const options = page.locator('#format-listbox [role="option"]');
-  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820", "NACHA", "ACH Returns", "ACH Control Totals", "File Received ACK", "BAI2"]);
+  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820", "NACHA", "ACH Returns", "ACH Control Totals", "File Received ACK", "BAI2", "CSV Wire"]);
   for (const query of ["MT940", "camt", "821"]) {
     await search.fill(query);
     await expect(options).toHaveCount(0);

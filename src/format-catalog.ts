@@ -29,7 +29,7 @@ const entry = (
     code,
     name,
     aliases: Object.freeze(aliases),
-    status: id.startsWith("nacha") || id.startsWith("huntington") || id === "bai2" ? "CANDIDATE_SUPPORTED" : "DEMO_SUPPORTED",
+    status: id.startsWith("nacha") || id.startsWith("huntington") || id === "bai2" || id === "csv-wire" ? "CANDIDATE_SUPPORTED" : "DEMO_SUPPORTED",
     versions: Object.freeze(versions),
   });
 
@@ -88,6 +88,9 @@ export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
   })]),
   entry("bai2", "Information Reporting", "BAI2", "Balance and Transaction Reporting", ["BAI", "BAI2", "Bank statements", "Cash management", "Balance reporting"], [Object.freeze({
     id: "huntington-bai2-public-2026-r1", label: "Huntington public-guide candidate (BAI2 2026 r1)", extensions: Object.freeze([".bai", ".bai2", ".txt"]), validationProfileId: "huntington-bai2-public-2026-r1",
+  })]),
+  entry("csv-wire", "Huntington", "CSV Wire", "Domestic and International Wire Import", ["USWIRE", "INT", "Wire payments", "Comma separated"], [Object.freeze({
+    id: "huntington-csv-wire-public-2026-r1", label: "Huntington CSV Wire — USD candidate (2026 r1)", extensions: Object.freeze([".csv", ".txt"]), validationProfileId: "huntington-csv-wire-public-2026-r1",
   })]),
 ]);
 

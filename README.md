@@ -2,10 +2,11 @@
 
 A browser-local demo for exploring and validating payment-file formats. The wizard includes:
 
-- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, File Received ACK, and BAI2;
+- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, File Received ACK, BAI2, and CSV Wire;
 - nine ISO/X12 profiles, with three versions per format;
 - six ACH candidates across four format families, including three origination revisions for CCD, PPD, CTX, WEB, and TEL;
-- one Huntington-guide BAI2 reporting candidate with multiple groups/accounts, continuations, and exact trailer controls; and
+- one Huntington-guide BAI2 reporting candidate with multiple groups/accounts, continuations, and exact trailer controls;
+- one Huntington CSV Wire candidate for 54-field domestic USD and 58-field international USD imports within its [declared scope](docs/CSV_WIRE_SOURCE_SCOPE.md); and
 - a read-only file explorer on the dedicated explorer page. Findings link to the source or nearby context; findings without a source location are labeled explicitly.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee bank acceptance or payment readiness.
@@ -61,12 +62,15 @@ Select the format and version shown, upload a linked file, and press **Validate*
 | ACH Control Totals | 58-column standalone candidate (2026 r1) | [PASS](demo-files/ach-candidates/totals-pass.txt), [FAIL](demo-files/ach-candidates/totals-date-fail.txt) |
 | File Received ACK | Single pipe-delimited scenario — candidate (1.0 r1) | [PASS](demo-files/ach-candidates/ack-received-pass.txt), [FAIL](demo-files/ach-candidates/ack-date-fail.txt) |
 | BAI2 | Huntington public-guide candidate (BAI2 2026 r1) | [PASS](demo-files/bai2/balances-pass.bai2), [FAIL](demo-files/bai2/account-total-fail.bai2), [UNSUPPORTED](demo-files/bai2/funds-unsupported.bai2) |
+| CSV Wire | Huntington CSV Wire — USD candidate (2026 r1) | [Domestic PASS](demo-files/csv-wire/domestic-pass.csv), [International USD PASS](demo-files/csv-wire/international-usd-pass.csv), [FAIL](demo-files/csv-wire/amount-fail.csv), [UNSUPPORTED](demo-files/csv-wire/cad-unsupported.csv) |
 
 The PAIN.001 warning example omits the recommended XML declaration. Its FAIL example has a namespace mismatch, which stops validation before structural checks run. Use these examples to inspect finding locations and CSV exports as well as the result summary.
 
 For ACK, format validity and reported disposition are separate. [ack-rejected-pass.txt](demo-files/ach-candidates/ack-rejected-pass.txt) passes format checks while reporting REJECTED for the original file.
 
 PAIN.008 and the other ISO/X12 versions have synthetic wiring samples in [src/samples.ts](src/samples.ts), exercised by unit tests. There is no separate PAIN.008 upload kit; the starter table covers the checked-in upload examples available here.
+
+CSV Wire requires every field, including empty fields, to be quoted. Its candidate excludes non-USD scheduling, IBAN and ambiguous intermediary SWIFT layouts; an unsupported file receives no verdict. See [source and scope](docs/CSV_WIRE_SOURCE_SCOPE.md) for guide conflicts and candidate decisions.
 
 ### Regression fixtures
 
@@ -79,6 +83,7 @@ Each kit covers valid inputs, specific errors, warnings, or unsupported cases. E
 | [nacha-expanded/](demo-files/nacha-expanded/README.md) | 159 | **Expanded entry types — public-source candidate (2026 r1)**, retained alongside r2 |
 | [ach-candidates/](demo-files/ach-candidates/README.md) | 57 | Latest origination r2, ordinary Returns/COR, control totals, and ACK candidates; each manifest entry names its profile |
 | [bai2/](demo-files/bai2/README.md) | 22 | Huntington BAI2 candidate: 21 synthetic fixtures and one preserved public guide sample |
+| [csv-wire/](demo-files/csv-wire/README.md) | 23 | Synthetic domestic/international USD CSV Wire input, failures and unsupported scenarios; separate candidate r1 and manifest |
 
 The remaining PAIN.001 examples cover:
 

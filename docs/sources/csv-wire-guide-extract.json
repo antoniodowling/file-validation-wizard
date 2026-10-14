@@ -1,0 +1,811 @@
+{
+  "sourceUrl": "https://developer.huntington.com/enterprisepayments/docs/wires-payments-automation",
+  "title": "CSV Wire",
+  "accessed": "2026-10-14",
+  "discovery": "Portal welcome \u2192 File Format Guides (BAI2) \u2192 SWIFT MT103 \u2192 MT940 \u2192 MT942 \u2192 ISO PAIN.001 US Fedwire \u2192 ISO PAIN.001 SWIFT \u2192 CSV Wire; actual links followed, no guessed slug.",
+  "revision": "Portal rendering stated Updated 20 days ago; no semantic version or exact update timestamp verified. Local candidate r1 is pinned to this functional extraction, not a claimed upstream version.",
+  "structure": "One payment per row; comma-separated; all fields must be wrapped in double quotes. Encoding, headers, line endings and quote escaping are not specified.",
+  "formatKey": {
+    "N": "Maximum numeric length",
+    "Nx.y": "Maximum digits before and after decimal",
+    "C": "Maximum printable characters"
+  },
+  "layouts": {
+    "domestic": [
+      {
+        "sequence": 1,
+        "name": "Payment Type",
+        "format": "",
+        "mandatory_optional": "M",
+        "validation": "= 'USWIRE'"
+      },
+      {
+        "sequence": 2,
+        "name": "Effective Date",
+        "format": "YYYYMMDD",
+        "mandatory_optional": "M",
+        "validation": "May not exceed 30 days in the future"
+      },
+      {
+        "sequence": 3,
+        "name": "Payment Amount",
+        "format": "N18.2",
+        "mandatory_optional": "M",
+        "validation": "Must have decimal point and numbers only and have less than 18 significant figures"
+      },
+      {
+        "sequence": 4,
+        "name": "Customer Reference",
+        "format": "C16",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 5,
+        "name": "Debit Account Number",
+        "format": "C34",
+        "mandatory_optional": "M",
+        "validation": "11-digit account from which the wire should be debited"
+      },
+      {
+        "sequence": 6,
+        "name": "Beneficiary Name",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 7,
+        "name": "Beneficiary Account Type",
+        "format": "C6",
+        "mandatory_optional": "M",
+        "validation": "= 'OTHER'"
+      },
+      {
+        "sequence": 8,
+        "name": "Beneficiary Account Number",
+        "format": "C34",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 9,
+        "name": "Beneficiary Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "If Bene Address Line 1 is populated, then Bene Country and Bene City are also required"
+      },
+      {
+        "sequence": 10,
+        "name": "Beneficiary Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "If Bene Address Line 2 is populated, then Bene Country and Bene City are also required"
+      },
+      {
+        "sequence": 11,
+        "name": "Beneficiary City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Required if Bene Address Line 1 or 2 was populated"
+      },
+      {
+        "sequence": 12,
+        "name": "Beneficiary Postal Code",
+        "format": "C15",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 13,
+        "name": "Beneficiary Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Required if Bene Address Line 1 or 2 was populated. Must be valid ISO Country Code"
+      },
+      {
+        "sequence": 14,
+        "name": "Beneficiary Bank Name",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 15,
+        "name": "Beneficiary Bank Code Type",
+        "format": "C6",
+        "mandatory_optional": "M",
+        "validation": "= 'ABA'"
+      },
+      {
+        "sequence": 16,
+        "name": "Beneficiary Bank Code",
+        "format": "C9",
+        "mandatory_optional": "M",
+        "validation": "Valid 9-digit Domestic ABA/Routing Number"
+      },
+      {
+        "sequence": 17,
+        "name": "Beneficiary Bank Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 18,
+        "name": "Beneficiary Bank Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 19,
+        "name": "Beneficiary Bank City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 20,
+        "name": "Beneficiary Bank Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank. If used, must be valid ISO Country Code"
+      },
+      {
+        "sequence": 21,
+        "name": "Charges",
+        "format": "C3",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 22,
+        "name": "Purpose of Wire",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 23,
+        "name": "Payment Details Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 24,
+        "name": "Payment Details Line 3",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 25,
+        "name": "Payment Details Line 4",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 26,
+        "name": "Intermediary Bank Name",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 27,
+        "name": "Intermediary Bank Code Type",
+        "format": "C6",
+        "mandatory_optional": "O",
+        "validation": "If used = 'ABA'"
+      },
+      {
+        "sequence": 28,
+        "name": "Intermediary Bank Code",
+        "format": "C9",
+        "mandatory_optional": "O",
+        "validation": "If used = Valid 9-digit Domestic ABA/Routing Number"
+      },
+      {
+        "sequence": 29,
+        "name": "Intermediary Bank Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 30,
+        "name": "Intermediary Bank Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 31,
+        "name": "Intermediary Bank City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 32,
+        "name": "Intermediary Bank Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code. Must be valid ISO Country Code"
+      },
+      {
+        "sequence": 33,
+        "name": "Comments",
+        "format": "C140",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 34,
+        "name": "Bank to Bank Instructions Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 35,
+        "name": "Bank to Bank Instructions Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 36,
+        "name": "Bank to Bank Instructions Line 3",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 37,
+        "name": "Bank to Bank Instructions Line 4",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 38,
+        "name": "Orginator ID Type",
+        "format": "C6",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 39,
+        "name": "Originator ID",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 40,
+        "name": "Originator Name",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 41,
+        "name": "Originator Address 1",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 42,
+        "name": "Originator Address 2",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 43,
+        "name": "Originator Postal Code",
+        "format": "C15",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 44,
+        "name": "Originator Country",
+        "format": "C2",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 45,
+        "name": "2nd Intermediary Bank Name",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 46,
+        "name": "2nd Intermediary Bank Code Type",
+        "format": "C6",
+        "mandatory_optional": "O",
+        "validation": "If used = 'ABA'"
+      },
+      {
+        "sequence": 47,
+        "name": "2nd Intermediary Bank Code",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "If used = Valid 9-digit Domestic ABA/Routing Number"
+      },
+      {
+        "sequence": 48,
+        "name": "2nd Intermediary Bank Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 49,
+        "name": "2nd Intermediary Bank Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 50,
+        "name": "2nd Intermediary Bank City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 51,
+        "name": "2nd Intermediary Bank State",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 52,
+        "name": "2nd Intermediary Bank Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code. Must be valid ISO Country Code if used"
+      },
+      {
+        "sequence": 53,
+        "name": "Bank to Bank Instructions Line 5",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 54,
+        "name": "Bank to Bank Instructions Line 6",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      }
+    ],
+    "international": [
+      {
+        "sequence": 1,
+        "name": "Payment Type",
+        "format": "",
+        "mandatory_optional": "M",
+        "validation": "= 'INT'"
+      },
+      {
+        "sequence": 2,
+        "name": "Effective Date",
+        "format": "YYYYMMDD",
+        "mandatory_optional": "M",
+        "validation": "USD = not to exceed 30 days in the future. CAD = today's date + 1 business day. All other currencies = today's date + 2 business days"
+      },
+      {
+        "sequence": 3,
+        "name": "Credit Amount",
+        "format": "N18.3",
+        "mandatory_optional": "O",
+        "validation": "If a Credit Amount is included, the Debit Amount must still also be included. However, the Credit Amount indicated will be used to calculate the actual Debit Amount based on the exchange rate of the Credit Currency regardless of the Debit Amount submitted in the file. Must have decimal point and numbers only and have less than 18 significant figures"
+      },
+      {
+        "sequence": 4,
+        "name": "Customer Reference",
+        "format": "C16",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 5,
+        "name": "Credit Currency",
+        "format": "C3",
+        "mandatory_optional": "M",
+        "validation": "Must be valid ISO Currency Code"
+      },
+      {
+        "sequence": 6,
+        "name": "Debit Account Number",
+        "format": "C34",
+        "mandatory_optional": "M",
+        "validation": "11-digit account from which the wire should be debited"
+      },
+      {
+        "sequence": 7,
+        "name": "Debit Amount",
+        "format": "N18.3",
+        "mandatory_optional": "M",
+        "validation": "USD Amount to be debited from Debit Account Number. Must have decimal point and numbers only and have less than 18 significant figures"
+      },
+      {
+        "sequence": 8,
+        "name": "FX Exchange Rate",
+        "format": "N10",
+        "mandatory_optional": "O",
+        "validation": "This field should only be used if a contract and rate has been provided by HNB FX Desk. Must have less than 10 significant figures with decimal point."
+      },
+      {
+        "sequence": 9,
+        "name": "FX Contract ID",
+        "format": "C16",
+        "mandatory_optional": "O",
+        "validation": "This field should only be used if a contract and rate has been provided by HNB FX Desk"
+      },
+      {
+        "sequence": 10,
+        "name": "Beneficiary Name",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 11,
+        "name": "Beneficiary Account Type",
+        "format": "C6",
+        "mandatory_optional": "M",
+        "validation": "= 'OTHER' or 'IBAN' (When sending to an IBAN country, must use IBAN)"
+      },
+      {
+        "sequence": 12,
+        "name": "Beneficiary Account Number",
+        "format": "C34 or S34 if account type = other",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 13,
+        "name": "Beneficiary Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 14,
+        "name": "Beneficiary Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 15,
+        "name": "Beneficiary City",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 16,
+        "name": "Beneficiary Postal Code",
+        "format": "C15",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 17,
+        "name": "Beneficiary Country",
+        "format": "C2",
+        "mandatory_optional": "M",
+        "validation": "Must be valid ISO Country Code"
+      },
+      {
+        "sequence": 18,
+        "name": "Beneficiary Bank Name",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 19,
+        "name": "Beneficiary Bank Code Type",
+        "format": "C6",
+        "mandatory_optional": "M",
+        "validation": "= 'SWIFT'"
+      },
+      {
+        "sequence": 20,
+        "name": "Beneficiary Bank Code",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Valid 11-char SWIFT/BIC Code"
+      },
+      {
+        "sequence": 21,
+        "name": "Beneficiary Bank Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 22,
+        "name": "Beneficiary Bank Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code"
+      },
+      {
+        "sequence": 23,
+        "name": "Beneficiary Bank City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 24,
+        "name": "Beneficiary Bank Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Beneficiary Bank Code (Country Code is 5th and 6th characters of SWIFT/BIC). Must be valid ISO Country Code"
+      },
+      {
+        "sequence": 25,
+        "name": "Charges",
+        "format": "C3",
+        "mandatory_optional": "M",
+        "validation": "= 'BEN' or 'OUR'"
+      },
+      {
+        "sequence": 26,
+        "name": "Purpose of Wire",
+        "format": "C35",
+        "mandatory_optional": "M",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 27,
+        "name": "Payment Details Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 28,
+        "name": "Payment Details Line 3",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 29,
+        "name": "Payment Details Line 4",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 30,
+        "name": "Intermediary Bank Name",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 31,
+        "name": "Intermediary Bank Code Type",
+        "format": "C6",
+        "mandatory_optional": "O",
+        "validation": "= 'ABA' or 'SWIFT'"
+      },
+      {
+        "sequence": 32,
+        "name": "Intermediary Bank Code",
+        "format": "C34",
+        "mandatory_optional": "O",
+        "validation": "If used, should include a Valid 9-digit Domestic ABA/Routing Number (if Intermediary Bank Code Type = ABA) or 13-char SWIFT/BIC (if Intermediary Bank Code Type = SWIFT)"
+      },
+      {
+        "sequence": 33,
+        "name": "Intermediary Bank Address",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 34,
+        "name": "Intermediary Bank Address",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 35,
+        "name": "Intermediary Bank City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 36,
+        "name": "Intermediary Bank Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on Intermediary Bank Code"
+      },
+      {
+        "sequence": 37,
+        "name": "Comments",
+        "format": "C140",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 38,
+        "name": "Bank to Bank Instructions Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 39,
+        "name": "Bank to Bank Instructions Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 40,
+        "name": "Bank to Bank Instructions Line 3",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 41,
+        "name": "Bank to Bank Instructions Line 4",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 42,
+        "name": "Orginator ID Type",
+        "format": "C6",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 43,
+        "name": "Originator ID",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 44,
+        "name": "Originator Name",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 45,
+        "name": "Originator Address 1",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 46,
+        "name": "Originator Address 2",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 47,
+        "name": "Originator City",
+        "format": "C35",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 48,
+        "name": "Originator Postal Code",
+        "format": "C15",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 49,
+        "name": "Originator Country",
+        "format": "C2",
+        "mandatory_optional": "N/A",
+        "validation": "N/A \u2013 leave blank"
+      },
+      {
+        "sequence": 50,
+        "name": "2nd Intermediary Bank Name",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 51,
+        "name": "2nd Intermediary Bank Code Type",
+        "format": "C6",
+        "mandatory_optional": "O",
+        "validation": "= 'ABA' or 'SWIFT'"
+      },
+      {
+        "sequence": 52,
+        "name": "2nd Intermediary Bank Code",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "If used, should include a Valid 9-digit Domestic ABA/Routing Number (if 2nd Intermediary Bank Code Type = ABA) or 13-char SWIFT/BIC (if 2nd Intermediary Bank Code Type = SWIFT)"
+      },
+      {
+        "sequence": 53,
+        "name": "2nd Intermediary Bank Address Line 1",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 54,
+        "name": "2nd Intermediary Bank Address Line 2",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 55,
+        "name": "2nd Intermediary Bank City",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code"
+      },
+      {
+        "sequence": 56,
+        "name": "2nd Intermediary Bank Country",
+        "format": "C2",
+        "mandatory_optional": "O",
+        "validation": "Will populate based on 2nd Intermediary Bank Code. Must be valid ISO Country Code if used"
+      },
+      {
+        "sequence": 57,
+        "name": "Bank to Bank Instructions Line 5",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      },
+      {
+        "sequence": 58,
+        "name": "Bank to Bank Instructions Line 6",
+        "format": "C35",
+        "mandatory_optional": "O",
+        "validation": "Length Only"
+      }
+    ]
+  },
+  "ambiguities": [
+    "Samples leave empty fields unquoted, contrary to the all-fields-quoted rule.",
+    "Both example debit accounts contain a nonnumeric placeholder despite the required 11-digit account.",
+    "International intermediary SWIFT/BIC is described as 13 characters, unlike the 11-character primary BIC.",
+    "International account format S34 is not defined in the format key.",
+    "No bank time zone, business-day holiday calendar, character encoding or upstream semantic version is supplied.",
+    "Significant figures, positivity, optional intermediary pairing, header handling, row terminators and escaping need disclosed candidate decisions."
+  ]
+}
