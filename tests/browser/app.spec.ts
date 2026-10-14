@@ -174,6 +174,37 @@ test("validates mixed NACHA files, warnings and errors with exact source navigat
   await expect(page.locator("[data-file-explorer] [data-detail-message]")).toContainText("check digit");
 });
 
+test("offers only formats and versions with enabled validators", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Browse all format references" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Show executable DEMO validators" })).toHaveCount(0);
+
+  const search = page.locator("#format-search");
+  await search.focus();
+  const options = page.locator('#format-listbox [role="option"]');
+  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820", "NACHA"]);
+  for (const query of ["MT940", "camt", "821"]) {
+    await search.fill(query);
+    await expect(options).toHaveCount(0);
+    await expect(page.getByText("No formats match your search.")).toBeVisible();
+  }
+
+  for (const [query, versions] of [
+    ["pain.001", ["pain.001.001.03", "pain.001.001.09", "pain.001.001.13"]],
+    ["pain.008", ["pain.008.001.02", "pain.008.001.08", "pain.008.001.12"]],
+    ["820", ["004010", "005010", "008030"]],
+    ["NACHA", ["origination-public-2026"]],
+  ] as const) {
+    await search.fill(query);
+    await options.click();
+    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version)]);
+    for (const version of versions) {
+      await page.locator("#version-select").selectOption(version);
+      await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
+    }
+  }
+});
+
 test("enforces extensions dynamically and preserves a valid file after an invalid replacement", async ({ page }) => {
   await page.goto("/");
   await chooseFormat(page, "820", /ASC X12.*820.*Payment Order/i, "005010");

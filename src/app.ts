@@ -64,7 +64,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           <span><span class="big-number" aria-hidden="true">01</span><strong>Choose format</strong></span>
         </button>
         <div id="step-1-panel" class="step-panel">
-          <button id="browse-reference" class="button text" type="button" aria-pressed="false">Browse all format references</button>
           <div class="selection-grid">
             <div class="field-group">
               <label for="format-search">File format</label>
@@ -330,7 +329,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
 
   let visibleFormats: readonly FormatCatalogEntry[] = FORMAT_CATALOG;
   let activeOptionIndex = -1;
-  let browsingReferences = false;
   let explorerController: FileExplorerController | null = null;
 
   const selectedFormat = () => findCatalogEntry(selectedFormatId);
@@ -508,7 +506,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   }
 
   function renderFormatList(): void {
-    visibleFormats = [...searchFormatCatalog(formatSearch.value)].filter(item => browsingReferences || item.status !== "REFERENCE_ONLY").sort((a, b) => Number(b.status === "DEMO_SUPPORTED") - Number(a.status === "DEMO_SUPPORTED"));
+    visibleFormats = searchFormatCatalog(formatSearch.value).filter(item =>
+      item.versions.some(version => version.validationProfileId && findEnabledFormatPack(version.validationProfileId)));
     formatListbox.replaceChildren();
     if (visibleFormats.length === 0) {
       const empty = document.createElement("li");
@@ -571,7 +570,11 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       return;
     }
     versionSelect.append(new Option("Select a version", ""));
-    for (const item of format.versions) versionSelect.append(new Option(item.label, item.id));
+    for (const item of format.versions) {
+      if (item.validationProfileId && findEnabledFormatPack(item.validationProfileId)) {
+        versionSelect.append(new Option(item.label, item.id));
+      }
+    }
     versionSelect.disabled = false;
     versionField.classList.remove("disabled");
     versionSelect.value = selectedVersionId ?? "";
@@ -687,14 +690,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     }
   }
 
-  requiredElement<HTMLButtonElement>("#browse-reference").hidden = !FORMAT_CATALOG.some(item => item.status === "REFERENCE_ONLY");
-  requiredElement<HTMLButtonElement>("#browse-reference").addEventListener("click", (event) => {
-    browsingReferences = !browsingReferences;
-    const button = event.currentTarget as HTMLButtonElement;
-    button.setAttribute("aria-pressed", String(browsingReferences));
-    button.textContent = browsingReferences ? "Show executable validators" : "Browse all format references";
-    renderFormatList(); setListboxOpen(true); formatSearch.focus();
-  });
   formatSearch.addEventListener("focus", () => {
     formatSearch.select();
     renderFormatList();
