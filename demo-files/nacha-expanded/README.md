@@ -5,3 +5,5 @@ Profile `nacha-origination-expanded-public-2026-r1`; ruleset `nacha-expanded-pub
 Includes all five SECs, monetary/prenote/remittance transaction codes, mixed balanced/unbalanced controls, TEL credit and loan debit reversals, malformed framing/encoding/fields, optional/no-addenda states, prerequisites, within-file traces, control/hash wrap, exact cents, all implemented warning/error branches, X12 BPR/BPS and non-820 framing. Unsupported UN/EDIFACT and WEB loans carry no verdict. Historical `../nacha` fixtures are preserved separately and are not new conformance evidence.
 
 See [source-to-rule matrix and qualification gates](../../docs/ACH_ORIGINATION_EXPANDED.md). Independent tests verify known source field positions and manual count/hash expectations separately from generator arithmetic. Candidate fixtures are not approved bank files.
+
+The 159-file kit also includes `ctx-cross-record-reference-pass.ach`: two addenda preserve a meaningful space in the ST/SE reference across an 80-column payload boundary. The focused regression rejects per-chunk trimming; independent review reconciles its bytes, reference counts and ACH controls.
