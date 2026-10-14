@@ -154,7 +154,7 @@ select {
 .filter-toggle[data-outcome="PASS"].active { border-color: var(--status-pass-text); background: var(--status-pass-bg); color: var(--status-pass-text); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: .92rem; }
-.column-severity { width: 10%; }
+.column-severity { width: 100px; }
 .column-field { width: 18%; }
 .column-location { width: 30%; }
 .column-line { width: 12%; }
@@ -393,7 +393,6 @@ tr.selected-finding > td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
 .step-panel { min-width: 0; }
 .coverage-snapshot { max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
 .table-wrap table { min-width: 760px; }
-.column-severity { width: 100px; }
 th, .severity { overflow-wrap: normal; }
 .format-listbox { container-type: inline-size; }
 @container (max-width: 620px) {

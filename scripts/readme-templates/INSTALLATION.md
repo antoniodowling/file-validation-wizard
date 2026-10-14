@@ -1,6 +1,6 @@
 # ReadMe installation
 
-This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus one executable NACHA public-specification candidate. Other catalog placeholders have been removed. Profiles remain unapproved for production; embedding does not change that status. NACHA validates ordinary CCD, PPD, CTX, WEB, and TEL batches, including mixed files. Its public profile is not a complete 2026 Operating Rules implementation.
+This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus two executable NACHA public-source candidates: the original ordinary-origination profile and the expanded-entry profile. Other catalog placeholders have been removed. Profiles remain unapproved for production; embedding does not change that status. NACHA validates ordinary CCD, PPD, CTX, WEB, and TEL batches, including mixed files. Neither candidate is a complete 2026 Operating Rules implementation.
 
 ## Shared installation
 

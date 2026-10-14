@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { locateFindings } from "../src/finding-locations";
 import { FORMAT_PACKS } from "../src/format-packs";
-import { MAX_SOURCE_INDEX_CHARACTERS } from "../src/explorer-budget";
 import type { FindingLocationEntry, RuleResult } from "../src/types";
 import { validateSource } from "../src/validation";
 import { ediPack, isoPack, validEdi820, validPain001 } from "./helpers";
