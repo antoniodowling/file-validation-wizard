@@ -95,6 +95,33 @@ export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
   ediPack("004010"),
   ediPack("005010"),
   ediPack("008030"),
+  Object.freeze({
+    id: "nacha-origination-public-2026",
+    family: "NACHA",
+    label: "NACHA / ACH — CCD, PPD, CTX, WEB, TEL originations",
+    version: "origination-public-2026",
+    parserKind: "NACHA_FIXED",
+    extensions: Object.freeze([".ach", ".txt"]),
+    guideUrl: "https://achdevguide.nacha.org/ach-file-details",
+    enabled: true,
+    mode: "CANDIDATE",
+    identifiers: Object.freeze({
+      kind: "NACHA_FIXED",
+      profile: "origination-public-2026",
+      secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]),
+    }),
+    approval: noApprovals,
+    rules: Object.freeze([Object.freeze({
+      id: "nacha.non-empty-source",
+      description: "The selected ACH file contains records.",
+      field: "File content",
+      defaultLocator: "file",
+      evaluate: (context: ValidationContext) => ({
+        outcome: context.source.length > 0 ? "PASS" as const : "ERROR" as const,
+        message: context.source.length > 0 ? "The ACH file contains records." : "The ACH file is empty.",
+      }),
+    })]),
+  } as FormatPack),
 ]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
@@ -107,6 +134,7 @@ export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (pack.identifiers && pack.identifiers.kind !== pack.parserKind) {
     errors.push("parser/version identifier agreement");
   }
+  if (pack.mode === "CANDIDATE" && !pack.guideUrl?.trim()) errors.push("source guide URL");
   if (pack.mode === "PRODUCTION") {
     if (!pack.releaseEvidence || Object.values(pack.releaseEvidence).some(value => !value.trim())) errors.push("revision-bound specification/ruleset/fixture/acceptance evidence");
     if (!pack.guideUrl?.trim()) errors.push("approved guide URL");
@@ -116,7 +144,7 @@ export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
     if (!pack.approval.sc) errors.push("SC sign-off");
     if (!pack.approval.ft) errors.push("FT sign-off");
   } else if (Object.values(pack.approval).some(Boolean)) {
-    errors.push("demo profile must not claim release approval");
+    errors.push(`${pack.mode.toLowerCase()} profile must not claim release approval`);
   }
   return errors;
 }

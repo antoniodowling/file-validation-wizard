@@ -3,7 +3,7 @@
 > Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
 
 
-The current demo still has nine executable profiles. These safeguards do not expand validation coverage or introduce a Cancel button.
+The registry has nine ISO/X12 DEMO profiles and one public-source NACHA candidate. The upload ceiling remains 25 MB; the current engine separately admits at most 8,000,000 decoded UTF-16 units and reports excess as an incomplete resource-limited run. These guards do not establish production approval. See [NACHA scope](NACHA_SOURCE_REVIEW.md).
 
 ## Run policy
 

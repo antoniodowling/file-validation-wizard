@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_DECODED_UNITS } from "../src/resource-policy";
 import { MAX_FILE_BYTES, type WorkerRequest } from "../src/types";
 import { validateWorkerRequest } from "../src/worker-request";
 import { validateSource } from "../src/validation";
@@ -57,4 +60,23 @@ describe("worker input and failure boundaries", () => {
     expect(validateWorkerRequest(request(encoded("test"))))
       .toEqual({ type: "error", code: "ENGINE_ERROR" });
   });
+  it("validates NACHA in the worker and preserves a forbidden BOM for completed rejection", () => {
+    const source = readFileSync(resolve(process.cwd(), "demo-files/nacha/mixed-five-sec-pass.ach"), "utf8");
+    const response = validateWorkerRequest({ ...request(encoded(source), "nacha-origination-public-2026"), fileName: "mixed.ach", includeExplorer: true, snapshotId: 9 });
+    expect(response.type).toBe("complete");
+    if (response.type === "complete") {
+      expect(response.run.overallStatus).toBe("PASS");
+      expect(response.source).toBe(source);
+    }
+    const withBom = validateWorkerRequest(request(encoded("\uFEFF" + source), "nacha-origination-public-2026"));
+    expect(withBom.type).toBe("complete");
+    if (withBom.type === "complete") expect(withBom.run.overallStatus).toBe("FAIL");
+  });
+
+});
+
+it("does not produce a NACHA verdict or exportable run above the decoded resource limit", () => {
+  const response = validateWorkerRequest(request(encoded("9".repeat(MAX_DECODED_UNITS + 1)), "nacha-origination-public-2026"));
+  expect(response).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
+  expect(response).not.toHaveProperty("run");
 });

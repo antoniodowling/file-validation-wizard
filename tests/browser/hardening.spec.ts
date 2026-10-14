@@ -41,9 +41,9 @@ test("generated pane reflow, synthetic samples, bounded source, focus and portab
   await divider.press("Home");
   await page.locator(".validator-primary").evaluate(e => { e.scrollTop = 0; });
   await page.screenshot({path:info.outputPath("split-30-percent.png"),fullPage:true});
-  await page.getByText("Versioned DEMO coverage and check evaluations", {exact:true}).click();
+  await page.getByText("Versioned coverage and check evaluations", {exact:true}).click();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByText("Versioned DEMO coverage and check evaluations", {exact:true}).click();
+  await page.getByText("Versioned coverage and check evaluations", {exact:true}).click();
   await page.getByRole("button",{name:"Hide explorer"}).focus(); await page.keyboard.press("Enter");
   await expect(page.getByRole("button",{name:"Show file explorer"})).toBeFocused();
   const download = page.waitForEvent("download"); await page.getByRole("button",{name:"Export JSON report"}).click();

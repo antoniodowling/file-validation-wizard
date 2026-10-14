@@ -20,7 +20,7 @@ test("self-contained ReadMe package mounts on demand and validates locally", asy
   await expect(page.locator("#format-search")).toBeVisible();
   await expect(page.locator("[data-file-explorer]")).toHaveCount(0);
   await page.locator("#format-search").focus();
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(3);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(4);
   await page.locator("#format-search").fill("pain.001");
   await page.getByRole("option", { name: /pain\.001/i }).click();
   await page.locator("#version-select").selectOption("pain.001.001.09");
@@ -213,6 +213,22 @@ test("closing during a pending file read prevents later worker creation", async 
   await expect(dialog).toHaveCount(0);
 });
 
+
+test("ReadMe inline NACHA preset validates the mixed public-profile fixture", async ({ page }) => {
+  await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-public-2026" data-lock-selection="true"></div></main>');
+  const root = page.locator("[data-payment-file-validator]");
+  await expect(root.getByRole("heading", { name: "Upload your NACHA / ACH file" })).toBeVisible();
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/mixed-five-sec-pass.ach"));
+  await root.getByRole("button", { name: "Validate file" }).click();
+  await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
+  await expect(root.locator('[id$="result-basis"]')).toContainText(/public specification profile/i);
+  await root.getByRole("button", { name: "Back to file" }).click();
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/routing-check-digit-fail.ach"));
+  await root.getByRole("button", { name: "Validate file" }).click();
+  await expect(root.locator('[id$="results-title"]')).toHaveText("FAIL");
+  const routing = root.locator('[id$="finding-rows"] tr').filter({ hasText: "Receiving routing number" });
+  await expect(routing.locator(".finding-line")).toHaveText("3");
+});
 
 test("wizard-only results show source lines for errors and warnings without an explorer", async ({ page }) => {
   await installPackage(page, `<main><div id="hnb-payment-file-validator" data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.09"></div></main>`);

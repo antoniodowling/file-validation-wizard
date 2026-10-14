@@ -7,7 +7,7 @@ The dedicated File Explorer demo and standalone preview include a read-only sour
 
 ## Source and location contract
 
-The canonical source is the exact string produced by the worker's strict UTF-8 decoder and passed to validation. A UTF-8 BOM is consumed by `TextDecoder`, so positions describe decoded text rather than original byte offsets.
+The canonical source is the exact string produced by the worker's strict UTF-8 decoder and passed to validation. A UTF-8 BOM is consumed by `TextDecoder` for ISO/X12. The NACHA profile retains a BOM so its ASCII/fixed-width checks reject it. Positions describe decoded text rather than original byte offsets.
 
 - Offsets are zero-based UTF-16 code units.
 - Ranges are half-open `[start, end)`; a point can use `start === end`, including end of file.
@@ -21,6 +21,8 @@ Every non-PASS result receives one of these location outcomes:
 - **Parser position:** the position reported by the XML syntax checker; this is described as where parsing stopped.
 - **File-wide:** no single target truthfully represents the aggregate finding.
 - **Unavailable:** a reliable mapping could not be established or the index budget was exceeded.
+
+NACHA findings supply source locations directly during parsing, avoiding a second location index. Repeated violations aggregate by rule with the first offending location and a disclosed occurrence count; viewer budgets still apply.
 
 Locations are a run-scoped sidecar keyed by the result `ordinal`; the CSV schema and validation messages remain unchanged. The explorer opens the primary target only. Related-target metadata remains available to the mapping contract, is limited to 32 targets, and discloses truncation to non-UI consumers.
 

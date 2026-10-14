@@ -11,7 +11,7 @@ export function validateWorkerRequest(request: WorkerRequest): WorkerResponse {
 
   let source: string;
   try {
-    source = new TextDecoder("utf-8", { fatal: true }).decode(request.bytes);
+    source = new TextDecoder("utf-8", { fatal: true, ignoreBOM: pack.parserKind === "NACHA_FIXED" }).decode(request.bytes);
   } catch {
     return { type: "error", code: "INVALID_ENCODING" };
   }
