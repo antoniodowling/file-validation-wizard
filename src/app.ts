@@ -1,4 +1,3 @@
-import { syntheticSample } from "./samples";
 import { RunController } from "./run-controller";
 import { validationRunToJson } from "./csv";
 import warningTriangleIcon from "bootstrap-icons/icons/exclamation-triangle.svg?raw";
@@ -20,6 +19,7 @@ import { pageForFinding } from "./finding-navigation";
 import { validationFailureMessage } from "./validation-failure";
 import { VALIDATION_DEADLINE_MS } from "./types";
 import type {
+  FindingLineEntry,
   FormatCatalogEntry,
   RuleOutcome,
   RuleResult,
@@ -101,8 +101,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           <span><span class="big-number" aria-hidden="true">02</span><strong>Upload file</strong></span>
         </button>
         <div id="step-2-panel" class="step-panel" hidden>
-          <p class="helper">Try synthetic validation samples (not approved payment instructions):</p>
-          <div class="step-actions"><button id="sample-pass" class="button secondary" type="button">Load PASS sample</button><button id="sample-fail" class="button secondary" type="button">Load FAIL sample</button></div>
           <div class="section-heading">
             <h2 id="upload-title">Upload your payment file</h2>
           </div>
@@ -155,7 +153,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
               <p class="step-label">Validation Summary</p>
               <h2 id="results-title"></h2>
               <p id="result-basis" class="result-basis"></p>
-              <p id="check-summary" class="helper"></p>
             </div>
             <div class="metrics" aria-label="Finding counts">
               <div><span id="error-count">0</span><strong>Errors</strong></div>
@@ -206,15 +203,20 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           </div>
           <div class="step-actions split-actions results-actions">
             <button class="button secondary" type="button" data-open-step="2">← Back to file</button>
-            <details id="local-diagnostics"><summary>Local processing diagnostics (no file values)</summary><pre id="diagnostics-output"></pre></details>
-            <details><summary>Versioned coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
             <button id="export-json" class="button secondary" type="button" disabled>Export JSON report</button>
             <button id="export-csv" class="button secondary" type="button" disabled>Export CSV report</button>
+          </div>
+          <!-- Development-only disclosures; remove before public release. -->
+          <div class="results-technical-details">
+            <details id="local-diagnostics"><summary>Local processing diagnostics (no file values)</summary><pre id="diagnostics-output"></pre></details>
+            <details><summary>Versioned coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
           </div>
         </div>
       </section>
     </div>
     ${explorerEnabled ? explorerMarkup() : ""}
+    <div id="line-context-descriptions" class="visually-hidden"></div>
+    <div id="line-context-tooltip" class="line-context-tooltip" role="tooltip" popover="manual"></div>
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
   </div>
 `;
@@ -317,13 +319,52 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   if (presetFormat) formatSearch.value = `${presetFormat.code} — ${presetFormat.name}`;
   if (presetVersion?.validationProfileId) activeStep = 2;
   let selectedFile: File | null = null;
-  let resultLines = new Map<number, { readonly label: string; readonly description: string }>();
+  let resultLines = new Map<number, FindingLineEntry>();
   let linesPending = false;
 
 
   let resultsPage = 1;
   const runController = new RunController();
   let validating = false;
+  const lineTooltip = requiredElement<HTMLElement>("#line-context-tooltip");
+  const lineDescriptions = requiredElement<HTMLElement>("#line-context-descriptions");
+  let lineTooltipTrigger: HTMLElement | null = null;
+
+  function hideLineTooltip(): void {
+    runController.clearTimer("line-tooltip");
+    if (lineTooltip.matches(":popover-open")) lineTooltip.hidePopover();
+    lineTooltip.textContent = "";
+    lineTooltipTrigger = null;
+  }
+
+  function showLineTooltip(trigger: HTMLElement, message: string): void {
+    runController.clearTimer("line-tooltip");
+    lineTooltipTrigger = trigger;
+    lineTooltip.textContent = message;
+    lineTooltip.showPopover();
+    const anchor = trigger.getBoundingClientRect();
+    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - lineTooltip.offsetWidth - 8));
+    const top = anchor.bottom + lineTooltip.offsetHeight + 8 <= window.innerHeight
+      ? anchor.bottom + 8 : Math.max(8, anchor.top - lineTooltip.offsetHeight - 8);
+    lineTooltip.style.left = `${left}px`;
+    lineTooltip.style.top = `${top}px`;
+  }
+
+  function scheduleLineTooltipHide(): void {
+    runController.schedule("line-tooltip", () => {
+      if (document.activeElement !== lineTooltipTrigger && !lineTooltipTrigger?.matches(":hover") && !lineTooltip.matches(":hover")) hideLineTooltip();
+    }, 150);
+  }
+  lineTooltip.addEventListener("mouseenter", () => runController.clearTimer("line-tooltip"));
+  lineTooltip.addEventListener("mouseleave", scheduleLineTooltipHide);
+  const dismissLineTooltip = (event: KeyboardEvent): void => {
+    if (event.key === "Escape" && lineTooltip.matches(":popover-open")) {
+      hideLineTooltip();
+      event.stopPropagation();
+    }
+  };
+  app.addEventListener("keydown", dismissLineTooltip);
+  app.addEventListener("scroll", hideLineTooltip, true);
 
 
 
@@ -406,7 +447,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       onExpand: toggleExpandedExplorer,
       announce,
     });
-    explorerController.setPlaceholder("Validate a selected file to inspect its decoded source here.");
+    explorerController.setPlaceholder("Validate a selected file to inspect it here.");
     showExplorerButton?.addEventListener("click", revealExplorer);
     mobileResultsButton?.addEventListener("click", () => setMobileWorkspaceView("results"));
     mobileFileButton?.addEventListener("click", revealExplorer);
@@ -454,6 +495,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   }
 
   function invalidateActiveWork(): void {
+    hideLineTooltip();
     runController.dispose();
     terminateWorker();
   }
@@ -467,6 +509,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   function clearRun(): void {
     runController.acceptedRun = null;
     resultLines.clear();
+    lineDescriptions.replaceChildren();
     linesPending = false;
     runController.acceptedSnapshotId = null;
     resultsPage = 1;
@@ -489,7 +532,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     for (const selector of ["file-name", "file-size", "finding-rows", "path-filter"]) {
       app.querySelector(`[id="${prefix}${selector}"]`)?.replaceChildren();
     }
-    explorerController?.setPlaceholder("Validate a selected file to inspect its decoded source here.");
+    explorerController?.setPlaceholder("Validate a selected file to inspect it here.");
   }
 
   function formatDisplay(item: FormatCatalogEntry): string {
@@ -770,12 +813,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     announce(`${candidate.name} selected. Ready to validate.`);
   }
 
-  for (const [id, fail] of [["#sample-pass", false], ["#sample-fail", true]] as const) {
-    requiredElement<HTMLButtonElement>(id).addEventListener("click", () => {
-      const pack = findEnabledFormatPack(selectedProfileId() ?? "");
-      if (pack) chooseFiles([new File([syntheticSample(pack, fail)], `synthetic-${pack.id}-${fail ? "fail" : "pass"}${pack.extensions[0]}`)]);
-    });
-  }
   replaceButton.addEventListener("click", () => {
     fileInput.value = "";
     fileInput.click();
@@ -864,8 +901,10 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       if (activeFindingAction === undefined) return;
       app.querySelector<HTMLButtonElement>(`[data-finding-action="${activeFindingAction}"]`)?.focus();
     };
+    hideLineTooltip();
     const body = requiredElement<HTMLTableSectionElement>("#finding-rows");
     body.replaceChildren();
+    lineDescriptions.replaceChildren();
     const rows = visibleFindings();
     const window = pageWindow(rows.length, resultsPage, resultsPageSize);
     resultsPage = window.page;
@@ -908,6 +947,27 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       const sourceLine = resultLines.get(finding.ordinal);
       line.textContent = finding.outcome === "PASS" ? "—" : sourceLine?.label ?? (linesPending ? "Locating…" : "Unavailable");
       line.title = sourceLine?.description ?? (finding.outcome === "PASS" ? "Line locations are shown for errors and warnings." : "A reliable source line is not available.");
+      if (finding.outcome !== "PASS" && sourceLine?.context) {
+        line.removeAttribute("title");
+        const number = document.createElement("span");
+        number.className = "line-context-number";
+        number.tabIndex = 0;
+        number.textContent = sourceLine.label;
+        const explanation = finding.ruleId === "demo.xml-declaration"
+          ? "XML declaration missing. Expected at the file’s start."
+          : "Nearby context for this finding.";
+        const description = document.createElement("span");
+        description.id = `${prefix}line-context-description-${finding.ordinal}`;
+        description.textContent = explanation;
+        lineDescriptions.append(description);
+        number.setAttribute("aria-describedby", description.id);
+        const show = (): void => showLineTooltip(number, explanation);
+        number.addEventListener("mouseenter", show);
+        number.addEventListener("focus", show);
+        number.addEventListener("mouseleave", scheduleLineTooltipHide);
+        number.addEventListener("blur", scheduleLineTooltipHide);
+        line.replaceChildren(number);
+      }
       const message = document.createElement("td");
       const messageText = document.createElement("span");
       messageText.textContent = finding.message;
@@ -939,13 +999,20 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     resultsPage = 1;
     const label = overallStatusLabel(runController.acceptedRun.overallStatus);
     requiredElement<HTMLElement>("#results-title").textContent = label;
-    requiredElement<HTMLElement>("#result-basis").textContent = `${runController.acceptedRun.provenance?.mode ?? "DEMO"} — ${runController.acceptedRun.executionStatus ?? "COMPLETED"}. ${runController.acceptedRun.executionReason ?? ""} Ruleset ${runController.acceptedRun.provenance?.rulesetRevision ?? "legacy"}. Checks passed refers only to the coverage below. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.`;
+    const executionStatus = runController.acceptedRun.executionStatus ?? "COMPLETED";
+    const completedSummary = runController.acceptedRun.overallStatus === "PASS"
+      ? "No errors or warnings were found."
+      : runController.acceptedRun.overallStatus === "PASS_WITH_WARNINGS"
+        ? "Warnings were found. Review them below."
+        : "Errors were found. Correct them and validate the file again.";
+    requiredElement<HTMLElement>("#result-basis").textContent = executionStatus === "COMPLETED"
+      ? `${completedSummary} Passing these checks does not guarantee payment acceptance or processing.`
+      : `${executionStatus === "UNSUPPORTED" ? "This file is not supported." : "Validation could not be completed."} ${runController.acceptedRun.executionReason ?? ""}`.trim();
     if (runController.acceptedRun.formatId === "nacha-origination-public-2026") {
       requiredElement<HTMLElement>("#result-basis").textContent += " Public specification profile: file fields, addenda relationships, counts, hashes, and amounts. Holidays, cutoffs, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance.";
     }
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
-    requiredElement<HTMLElement>("#check-summary").textContent = `${runController.acceptedRun.checks?.length ?? runController.acceptedRun.results.length} distinct checks; ${runController.acceptedRun.results.length} evaluated occurrence rows; ${runController.acceptedRun.checks?.filter(check => check.state === "not-evaluated").length ?? 0} checks not evaluated. Metrics below count occurrences.`;
     const passCount = runController.acceptedRun.results.filter((result) => result.outcome === "PASS").length;
     requiredElement<HTMLElement>("#error-count").textContent = String(runController.acceptedRun.errorCount);
     requiredElement<HTMLElement>("#warning-count").textContent = String(runController.acceptedRun.warningCount);
@@ -1145,6 +1212,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   renderAll();
 
   return () => {
+    app.removeEventListener("keydown", dismissLineTooltip);
+    app.removeEventListener("scroll", hideLineTooltip, true);
     explorerController?.destroy();
     explorerController = null;
     clearFileAndRun();

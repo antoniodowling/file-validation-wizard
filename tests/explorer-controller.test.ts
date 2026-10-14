@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FileExplorerController, explorerMarkup } from "../src/explorer-controller";
-import type { RuleResult, SourceTarget, ValidationRun } from "../src/types";
+import type { RuleResult, SourceSpan, SourceTarget, ValidationRun } from "../src/types";
 
 const viewerControl = vi.hoisted(() => ({
+  documents: [] as Array<{ source: string; span: SourceSpan }>,
   targets: [] as Array<[SourceTarget | null, "ERROR" | "WARNING" | null]>,
 }));
 
 vi.mock("../src/source-viewer", () => ({
   ReadOnlySourceViewer: class {
+    constructor(_parent: HTMLElement, source: string, span: SourceSpan) {
+      viewerControl.documents.push({ source, span });
+    }
     setFindingTarget(target: SourceTarget | null, severity: "ERROR" | "WARNING" | null) {
       viewerControl.targets.push([target, severity]);
     }
@@ -41,6 +45,7 @@ describe("file explorer finding view", () => {
 
   beforeEach(() => {
     viewerControl.targets = [];
+    viewerControl.documents = [];
     root = document.createElement("div");
     root.innerHTML = explorerMarkup();
   });
@@ -54,7 +59,22 @@ describe("file explorer finding view", () => {
     expect(root.querySelector("[data-detail-message]")).toBeTruthy();
     expect(root.querySelector("[data-finding-previous]")).toBeTruthy();
     expect(root.querySelector("[data-finding-next]")).toBeTruthy();
+    expect(root.querySelector("[data-target-previous], [data-target-next], [data-window-previous], [data-window-next], [data-explorer-scope]")).toBeNull();
     expect(root.querySelector("[data-source-search], [data-go-line], [data-related-status], [data-location-explanation], [data-focus-source], [data-return-finding], [data-return-location]")).toBeNull();
+  });
+
+  it.each(["x".repeat(300_000), "line\n".repeat(60_000)])("keeps the entire source available beyond the former cutoff (%#)", (source) => {
+    const controller = new FileExplorerController({
+      root, getVisibleFindings: () => [finding], showFindingInResults: () => {},
+      onLocationLabelsChanged: () => {}, onHide: () => {}, onExpand: () => false, announce: () => {},
+    });
+    controller.acceptSnapshot({ id: 8, fileName: "large.xml", fileSizeLabel: "300KB", source, run });
+    const primary: SourceTarget = { kind: "exact", label: "Near end", span: { start: source.length - 4, end: source.length } };
+    controller.setLocations(8, [{ ordinal: finding.ordinal, location: { kind: "located", primary, related: [] } }]);
+    controller.selectFinding(finding);
+    expect(viewerControl.documents).toEqual([{ source, span: { start: 0, end: source.length } }]);
+    expect(viewerControl.targets.at(-1)).toEqual([primary, "ERROR"]);
+    controller.destroy();
   });
 
   it("sends only the primary target and finding severity to the viewer", () => {
@@ -79,6 +99,7 @@ describe("file explorer finding view", () => {
 
     expect(viewerControl.targets.at(-1)).toEqual([primary, "ERROR"]);
     expect(viewerControl.targets.some(([target]) => target === related)).toBe(false);
+    expect(root.querySelector("[data-detail-confidence]")?.textContent).not.toContain("Showing occurrence");
     controller.destroy();
   });
 });
