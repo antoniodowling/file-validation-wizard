@@ -20,7 +20,7 @@ test("self-contained ReadMe package mounts on demand and validates locally", asy
   await expect(page.locator("#format-search")).toBeVisible();
   await expect(page.locator("[data-file-explorer]")).toHaveCount(0);
   await page.locator("#format-search").focus();
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(4);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(7);
   await page.locator("#format-search").fill("pain.001");
   await page.getByRole("option", { name: /pain\.001/i }).click();
   await page.locator("#version-select").selectOption("pain.001.001.09");
@@ -283,4 +283,19 @@ test("ReadMe expanded NACHA inline and modal presets use the new candidate indep
   await expect(dialog.locator('[id$="results-title"]')).toHaveText("FAIL");
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
   await page.keyboard.press("Escape"); await expect(dialog).toHaveCount(0);
+});
+
+test("ACK candidate preset in the shared modal keeps rejection separate from validity", async ({page}) => {
+  await installPackage(page, `<main><h1>Guide</h1><a id="ack-launch" href="/page/payment-file-validator#payment-file-validator?format=File%20Received%20ACK&amp;version=pipe-1.0-candidate-r1&amp;lockSelection=true">Validate ACK</a></main>`);
+  await page.getByRole("link",{name:"Validate ACK"}).click();
+  const dialog=page.getByRole("dialog",{name:"Payment File Validation Wizard"});
+  await expect(dialog).toBeVisible();
+  await dialog.locator('input[type="file"]').setInputFiles(demoFile("ach-candidates/ack-rejected-pass.txt"));
+  await dialog.getByRole("button",{name:"Validate file"}).click();
+  await expect(dialog.locator('[id$="results-title"]')).toHaveText("PASS");
+  await expect(dialog.locator('[id$="reported-disposition"]')).toContainText("REJECTED");
+  await page.keyboard.press("Escape"); await expect(dialog).toHaveCount(0);
+  await page.getByRole("link",{name:"Validate ACK"}).click();
+  await expect(dialog.locator('[id$="reported-disposition"]')).toBeHidden();
+  await expect(dialog.locator('input[type="file"]')).toHaveValue("");
 });

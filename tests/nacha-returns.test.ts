@@ -68,3 +68,15 @@ describe("ordinary administrative COR",()=>{
   it("does not invent retired C04 or continuous code range",()=>expect(errors(buildReturns({sec:"COR",reason:"C04"}))).toContain("nacha-returns.reason-code"));
   it("coverage includes parser and configured rules without duplicates",()=>{const coverage=nachaReturnsCoverageFor(pack);expect(coverage.map(c=>c.id)).toEqual(NACHA_RETURNS_RULE_IDS);expect(coverage.every(c=>c.reference&&c.prerequisite&&c.evidence)).toBe(true);});
 });
+
+it("suppresses partial conditional PASS when another exception lacks prerequisites", () => {
+  for (const sec of ["CCD", "COR"]) {
+    const rows = buildReturns({ sec, entries: 2 });
+    rows[5] = field(rows[5]!, 4, 6, sec === "COR" ? "C99" : "R99");
+    const output = parseNachaReturns(rows.join("\n"), pack);
+    for (const id of sec === "COR" ? ["corrected-data"] : ["death-date", "return-information", "reason-applicability"]) {
+      expect(output.results.some(result => result.ruleId === `nacha-returns.${id}` && result.outcome === "PASS")).toBe(false);
+      expect(output.notApplicable).not.toContain(`nacha-returns.${id}`);
+    }
+  }
+});

@@ -9,11 +9,11 @@ import {
 import { FORMAT_PACKS } from "../src/format-packs";
 
 describe("focused format catalog", () => {
-  it("retains executable formats and one NACHA candidate", () => {
-    expect(FORMAT_CATALOG.map((item) => item.id)).toEqual(["pain-001", "pain-008", "x12-820", "nacha"]);
-    expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(4);
+  it("retains executable demo families and all four ACH candidate families", () => {
+    expect(FORMAT_CATALOG.map((item) => item.id)).toEqual(["pain-001", "pain-008", "x12-820", "nacha", "nacha-returns", "huntington-control-totals", "huntington-ack"]);
+    expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(7);
     expect(FORMAT_CATALOG.filter((item) => item.status === "REFERENCE_ONLY").map((item) => item.id)).toEqual([]);
-    expect(FORMAT_CATALOG.filter((item) => item.id !== "nacha").every((item) => item.versions.length === 3)).toBe(true);
+    expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").every((item) => item.versions.length === 3)).toBe(true);
   });
 
   it("connects the public NACHA candidate without claiming an embedded annual version", () => {
@@ -30,11 +30,11 @@ describe("focused format catalog", () => {
     }
   });
 
-  it("maps exactly eleven supported versions to executable profiles", () => {
+  it("maps exactly fifteen supported versions to executable profiles", () => {
     const profileIds = FORMAT_CATALOG.flatMap((item) =>
       item.versions.flatMap((version) => version.validationProfileId ? [version.validationProfileId] : []),
     );
-    expect(profileIds).toHaveLength(11);
+    expect(profileIds).toHaveLength(15);
     expect(new Set(profileIds)).toEqual(new Set(FORMAT_PACKS.map((pack) => pack.id)));
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").map((item) => item.code)).toEqual([
       "pain.001",
@@ -44,7 +44,7 @@ describe("focused format catalog", () => {
     expect(FORMAT_PACKS.filter((pack) => pack.family === "PAIN.001").every(
       (pack) => pack.guideUrl === "https://developer.huntington.com/enterprisepayments/docs/iso-pain001",
     )).toBe(true);
-    expect(FORMAT_PACKS.filter((pack) => pack.family !== "PAIN.001" && pack.family !== "NACHA").every((pack) => pack.guideUrl === null)).toBe(true);
+    expect(FORMAT_PACKS.filter((pack) => pack.mode === "DEMO" && pack.family !== "PAIN.001").every((pack) => pack.guideUrl === null)).toBe(true);
   });
 
   it("searches codes, names, standards, and aliases case-insensitively", () => {

@@ -1,3 +1,9 @@
+import ackPass from "../demo-files/ach-candidates/ack-received-pass.txt?raw";
+import ackFail from "../demo-files/ach-candidates/ack-date-fail.txt?raw";
+import returnsPass from "../demo-files/ach-candidates/returns-ccd-pass.ach?raw";
+import returnsFail from "../demo-files/ach-candidates/returns-trace-fail.ach?raw";
+import totalsPass from "../demo-files/ach-candidates/totals-pass.txt?raw";
+import totalsFail from "../demo-files/ach-candidates/totals-date-fail.txt?raw";
 import expandedPass from "../demo-files/nacha-expanded/mixed-entry-types-pass.ach?raw";
 import expandedFail from "../demo-files/nacha-expanded/prenote-amount-fail.ach?raw";
 import nachaPass from "../demo-files/nacha/ccd-pass.ach?raw";
@@ -5,7 +11,10 @@ import nachaFail from "../demo-files/nacha/routing-check-digit-fail.ach?raw";
 import type { FormatPack, IsoVersionIdentifiers, EdiVersionIdentifiers } from "./types";
 /** Synthetic wiring samples, intentionally not represented as conformant payment messages. */
 export function syntheticSample(pack: FormatPack, fail: boolean): string {
-  if (pack.id === "nacha-origination-expanded-public-2026-r1") return fail ? expandedFail : expandedPass;
+  if (pack.parserKind === "HUNTINGTON_ACK") return fail ? ackFail : ackPass;
+  if (pack.parserKind === "NACHA_RETURN_FIXED") return fail ? returnsFail : returnsPass;
+  if (pack.parserKind === "ACH_CONTROL_FIXED") return fail ? totalsFail : totalsPass;
+  if (["nacha-origination-expanded-public-2026-r1", "nacha-origination-expanded-public-2026-r2"].includes(pack.id)) return fail ? expandedFail : expandedPass;
   if (pack.parserKind === "NACHA_FIXED") return fail ? nachaFail : nachaPass;
   if (pack.parserKind === "ISO_XML") {
     const ids = pack.identifiers as IsoVersionIdentifiers;

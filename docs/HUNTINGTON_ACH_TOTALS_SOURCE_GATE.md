@@ -1,5 +1,7 @@
 # Phase 3 — Huntington ACH Control Total source gate
 
+**Current implementation:** The live Markdown source was recovered on 2026-10-14. An executable standalone field/single-record candidate supersedes the implementation hold below; transport assumptions are disclosed. See [HUNTINGTON_CONTROL_TOTAL_CANDIDATE](HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md). The original assessment below is retained as dated source-review history.
+
 Assessment 2026-10-14. This is Huntington’s separate control-total format, not NACHA record type 8/9. Standalone validation is the settled scope; companion uploads, original-NACHA matching and cross-file reconciliation are excluded. No executable profile or placeholder is added while its contract remains unconfirmed.
 
 The transferred source assessment identifies this [official page](https://developer.huntington.com/enterprisepayments/docs/ach-control-total-flat-file) and layout:

@@ -7,7 +7,7 @@ export const NACHA_ORIGINATION_R2_EXCLUSIONS = Object.freeze([
   "Healthcare classification is declared only by HCCLAIMPMT. Missing descriptors do not prove absence of healthcare, payroll or e-commerce purpose; actual purpose, TEL standing authorization and complete ASC X12 5010 835 business-guide conformance remain unverified.",
 ]);
 const added: Readonly<Record<string, readonly [string, string, string]>> = {
-  "description-case": ["Declared standardized Company Entry Description markers are uppercase; PAYROLL has three discretionary suffix columns.", "Recognized standardized descriptors, including case-insensitive declarations.", "Trusted record envelopes"],
+  "description-case": ["Declared standardized Company Entry Description fields are uppercase, including alphabetic suffixes; PAYROLL has three discretionary suffix columns.", "Recognized standardized descriptors, including case-insensitive declarations.", "Trusted record envelopes"],
   "description-sec": ["Declared PAYROLL is PPD credit; PURCHASE is WEB or permitted TEL debit; HCCLAIMPMT is CCD. Real purpose/standing authorization is unverified.", "Recognized declarations with known SEC and entry type for direction checks.", "Trusted record envelopes; known SEC/entry type where needed"],
   "healthcare-addenda": ["Declared healthcare CCD entries require addenda and indicator 1 except prenotes.", "HCCLAIMPMT CCD entries with known non-prenote transaction type.", "Trusted record envelopes; known entry type"],
   "healthcare-trn": ["Declared healthcare CCD payment addenda contain a complete reassociation TRN segment; full 835 guide conformance is excluded.", "HCCLAIMPMT CCD non-prenotes with present type-05 addenda.", "Trusted record envelopes; known entry type and payment addenda type"],

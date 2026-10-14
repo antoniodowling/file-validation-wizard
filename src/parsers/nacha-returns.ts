@@ -172,7 +172,7 @@ export function parseNachaReturns(source: string, pack: FormatPack): ParserOutpu
           check("death-date", dd === "      " || (["R14","R15"].includes(code) && !!date(dd)), "Date of death", "Optional real YYMMDD death date is allowed only for R14/R15.",row,22,27);
           if (code === "R17") check("return-information", nonblank(slice(row,36,79)), "Return information", "R17 requires explanatory information; legitimacy and questionable-use facts are unverified.",row,36,79);
           const entryCode = current ? slice(current,2,3) : "";
-          if (!CREDIT.has(entryCode) && !DEBIT.has(entryCode)) conditionalAbsent.delete("reason-applicability");
+          if (!CREDIT.has(entryCode) && !DEBIT.has(entryCode)) { conditionalAbsent.delete("reason-applicability"); incompleteChecks.add("reason-applicability"); }
           if (CREDIT.has(entryCode) || DEBIT.has(entryCode)) {
             const debit = DEBIT.has(entryCode);
             const corporate = ["CCD","CTX"].includes(sec);
@@ -187,7 +187,7 @@ export function parseNachaReturns(source: string, pack: FormatPack): ParserOutpu
           }
         }
         if (!(noc ? CHANGE_CODES : RETURN_CODES).has(code)) {
-          for (const id of (noc ? ["corrected-data"] : ["death-date","return-information","reason-applicability"]) as Id[]) conditionalAbsent.delete(id);
+          for (const id of (noc ? ["corrected-data"] : ["death-date","return-information","reason-applicability"]) as Id[]) { conditionalAbsent.delete(id); incompleteChecks.add(id); }
         }
         continue;
       }

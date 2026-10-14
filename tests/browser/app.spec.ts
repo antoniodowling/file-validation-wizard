@@ -55,7 +55,7 @@ test("starts with format search and keeps later-step messaging inside its step",
   await page.locator("#format-search").focus();
   await expect(page.locator("#format-search")).toHaveCSS("outline-style", "none");
   await expect(page.locator("#format-search")).toHaveCSS("box-shadow", /rgb\(3, 79, 84\).*inset/);
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(4);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(7);
   await expect(page.locator(".format-list-header")).toHaveText("FormatCodeStandard");
   await expect(page.locator(".support-badge")).toHaveCount(0);
   await expect(page.locator('#format-listbox [role="option"]').first().locator("span")).toHaveCount(3);
@@ -182,7 +182,7 @@ test("offers only formats and versions with enabled validators", async ({ page }
   const search = page.locator("#format-search");
   await search.focus();
   const options = page.locator('#format-listbox [role="option"]');
-  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820", "NACHA"]);
+  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820", "NACHA", "ACH Returns", "ACH Control Totals", "File Received ACK"]);
   for (const query of ["MT940", "camt", "821"]) {
     await search.fill(query);
     await expect(options).toHaveCount(0);
@@ -193,11 +193,14 @@ test("offers only formats and versions with enabled validators", async ({ page }
     ["pain.001", ["pain.001.001.03", "pain.001.001.09", "pain.001.001.13"]],
     ["pain.008", ["pain.008.001.02", "pain.008.001.08", "pain.008.001.12"]],
     ["820", ["004010", "005010", "008030"]],
-    ["NACHA", ["origination-public-2026", "origination-expanded-public-2026-r1"]],
+    ["NACHA", ["origination-public-2026", "origination-expanded-public-2026-r1", "origination-expanded-public-2026-r2"]],
+    ["ACH Returns", ["returns-network-public-2026-r1"]],
+    ["ACH Control Totals", ["control-total-public-2026-r1"]],
+    ["File Received ACK", ["pipe-1.0-candidate-r1"]],
   ] as const) {
     await search.fill(query);
-    await options.click();
-    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version === "origination-expanded-public-2026-r1" ? "Expanded entry types — public-source candidate (2026 r1)" : version)]);
+    await (query === "NACHA" ? options.filter({hasText:"ACH Payment Instructions"}) : options).click();
+    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version === "origination-expanded-public-2026-r1" ? "Expanded entry types — public-source candidate (2026 r1)" : version === "origination-expanded-public-2026-r2" ? "Expanded entries and declared healthcare — candidate (2026 r2)" : version === "returns-network-public-2026-r1" ? "General network returns — public-source candidate (2026 r1)" : version === "control-total-public-2026-r1" ? "58-column standalone candidate (2026 r1)" : version === "pipe-1.0-candidate-r1" ? "Single pipe-delimited scenario — candidate (1.0 r1)" : version)]);
     for (const version of versions) {
       await page.locator("#version-select").selectOption(version);
       await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
@@ -591,4 +594,50 @@ test("expanded NACHA candidate runs locally, exports its coverage, navigates a f
   await expect(page.locator("#finding-rows")).not.toContainText("Entry amount");
   expect(sourcePosts).toEqual([]);
   const scan = await new AxeBuilder({ page }).analyze(); expect(scan.violations.filter(v => ["critical", "serious"].includes(v.impact ?? ""))).toEqual([]);
+});
+
+for (const scenario of [
+  {query:"ACK", option:/File Received ACK/i, version:"pipe-1.0-candidate-r1", pass:"ack-rejected-pass.txt", fail:"ack-date-fail.txt"},
+  {query:"Control Totals", option:/ACH Control Totals/i, version:"control-total-public-2026-r1", pass:"totals-pass.txt", fail:"totals-date-fail.txt"},
+  {query:"ACH Returns", option:/ACH Returns/i, version:"returns-network-public-2026-r1", pass:"returns-ccd-pass.ach", fail:"returns-trace-fail.ach"},
+  {query:"NACHA", option:/NACHA.*ACH Payment Instructions/i, version:"origination-expanded-public-2026-r2", pass:"origination-healthcare-pass.ach", fail:"origination-healthcare-trn-fail.ach"},
+]) test(`candidate ${scenario.version} validates locally and navigates malformed fields`, async ({page}) => {
+  const posts:string[]=[]; page.on("request",request=>{if(request.postData()?.includes("SYNTHETIC"))posts.push(request.url());});
+  await page.goto("/"); await chooseFormat(page,scenario.query,scenario.option,scenario.version);
+  await page.getByRole("button",{name:"Continue"}).click();
+  await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.pass}`));
+  await page.getByRole("button",{name:"Validate file"}).click();
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  if(scenario.query==="ACK") await expect(page.locator("#reported-disposition")).toContainText("REJECTED");
+  else await expect(page.locator("#reported-disposition")).toBeHidden();
+  const download=page.waitForEvent("download"); await page.locator("#export-json").click();
+  const report=await download; const file=await report.path();
+  const {readFileSync}=await import("node:fs"); const json=JSON.parse(readFileSync(file!,"utf8"));
+  expect(json.exportSchemaVersion).toBe("3"); expect(json.verdict).toBe("PASS");
+  if(scenario.query==="ACK")expect(json.reportedDisposition.file.status).toBe("REJECTED");
+  await page.getByRole("button",{name:"Back to file"}).click();
+  await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.fail}`));
+  await page.getByRole("button",{name:"Validate file"}).click();
+  await expect(page.locator("#results-title")).toHaveText("FAIL");
+  await expect(page.locator("#reported-disposition")).toBeHidden();
+  await page.locator('.filter-toggle[data-outcome="PASS"]').click();
+  await page.locator("#finding-rows tr").filter({has:page.locator(".severity.error")}).first().getByRole("button",{name:/View/}).click();
+  await expect(page.locator("[data-file-explorer] [data-detail-message]")).not.toBeEmpty();
+  expect(posts).toEqual([]);
+});
+
+test("ACK disposition is safe text and clears on unsupported replacement", async ({page}) => {
+  await page.goto("/"); await chooseFormat(page,"ACK",/File Received ACK/i,"pipe-1.0-candidate-r1");
+  await page.getByRole("button",{name:"Continue"}).click();
+  await page.locator("#file-input").setInputFiles(demoFile("ach-candidates/ack-html-qualifier-pass.txt"));
+  await page.getByRole("button",{name:"Validate file"}).click();
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  await expect(page.locator("#reported-disposition")).toContainText("<img src=SYNTHETIC");
+  await expect(page.locator("#reported-disposition img")).toHaveCount(0);
+  await page.getByRole("button",{name:"Back to file"}).click();
+  await page.locator("#file-input").setInputFiles(demoFile("ach-candidates/ack-status-unsupported.txt"));
+  await page.getByRole("button",{name:"Validate file"}).click();
+  await expect(page.locator("#results-title")).toHaveText("UNSUPPORTED");
+  await expect(page.locator("#reported-disposition")).toBeHidden();
+  await expect(page.locator("#reported-disposition")).toHaveText("");
 });

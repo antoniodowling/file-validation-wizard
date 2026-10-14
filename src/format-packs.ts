@@ -132,7 +132,26 @@ export const EXPANDED_NACHA_PACK: FormatPack = Object.freeze({
   identifiers: Object.freeze({ kind: "NACHA_FIXED", profile: "origination-expanded-public-2026-r1", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]) }),
 });
 
-export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK]);
+export const ORIGINATION_R2_PACK: FormatPack = Object.freeze({
+  ...EXPANDED_NACHA_PACK,
+  id: "nacha-origination-expanded-public-2026-r2",
+  label: "NACHA / ACH — expanded entries and declared healthcare (2026 r2 candidate)",
+  version: "origination-expanded-public-2026-r2",
+  identifiers: Object.freeze({ kind: "NACHA_FIXED", profile: "origination-expanded-public-2026-r2", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]) }),
+});
+const flatCandidate = (id: string, family: FormatPack["family"], version: string, identifiers: NonNullable<FormatPack["identifiers"]>, guideUrl: string): FormatPack => Object.freeze({
+  id, family, label: family, version, parserKind: identifiers.kind, identifiers,
+  extensions: Object.freeze(family === "NACHA Returns" ? [".ach", ".txt"] : [".txt"]),
+  guideUrl, enabled: true, mode: "CANDIDATE", approval: noApprovals,
+  rules: Object.freeze([Object.freeze({ ...nonEmptyRule, id: `${id}.non-empty-source` })]),
+});
+export const RETURNS_PACK = flatCandidate("nacha-returns-network-public-2026-r1", "NACHA Returns", "returns-network-public-2026-r1",
+  Object.freeze({ kind: "NACHA_RETURN_FIXED", profile: "returns-network-public-2026-r1", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL", "COR"]) }), "https://www.nacha.org/content/iso-20022-ach-mapping-guide-tools");
+export const CONTROL_TOTAL_PACK = flatCandidate("huntington-control-total-public-2026-r1", "Huntington Control Totals", "control-total-public-2026-r1",
+  Object.freeze({ kind: "ACH_CONTROL_FIXED", profile: "control-total-public-2026-r1" }), "https://developer.huntington.com/enterprisepayments/docs/ach-control-total-flat-file");
+export const ACK_PACK = flatCandidate("huntington-ack-pipe-1.0-candidate-r1", "Huntington ACK", "pipe-1.0-candidate-r1",
+  Object.freeze({ kind: "HUNTINGTON_ACK", profile: "huntington-ack-pipe-1.0-candidate-r1" }), "https://developer.huntington.com/enterprisepayments/docs/file-received-ack-flat-file");
+export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.enabled) return [];

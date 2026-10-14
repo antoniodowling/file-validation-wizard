@@ -8,7 +8,7 @@ import { expandedNachaCoverageFor } from "../src/nacha-expanded-coverage";
 import { buildNacha, field } from "./nacha-builder";
 const pack = { ...EXPANDED_NACHA_PACK, id: "nacha-origination-expanded-public-2026-r2", identifiers: { ...EXPANDED_NACHA_PACK.identifiers, profile: "origination-expanded-public-2026-r2" } } as unknown as FormatPack;
 const source = (sec = "CCD", code = "22", description = "HCCLAIMPMT", payload: string | null = "TRN*1*TRACE*COMPANY~") => {
-  const rows = buildNacha([{ sec, codes: [code], amounts: [code === "23" ? 0n : 12345n], addenda: [payload === null ? 0 : 1], service: code === "23" ? "220" : undefined }]);
+  const rows = buildNacha([{ sec, codes: [code], amounts: [code === "23" ? 0n : 12345n], addenda: [payload === null ? 0 : 1], ...(code === "23" ? { service: "220" } : {}) }]);
   rows[1] = field(rows[1]!, 54, 63, description.padEnd(10));
   if (payload !== null) rows[3] = field(rows[3]!, 4, 83, payload.padEnd(80));
   return rows.join("\n");
@@ -37,13 +37,14 @@ describe("origination r2 declarations", () => {
     for (const payload of ["TRN*1*TRACE*COMPANY", "TRN*1**COMPANY~", "TRN*1*TRACE*~", "TRN*1* *COMPANY~", "TRN*2*TRACE*COMPANY~", "trn*1*TRACE*COMPANY~", "TRN*1*TRACE*COMPANY~NTE*X~"])
       expect(state(source("CCD", "22", "HCCLAIMPMT", payload), "healthcare-trn"), payload).toBe("ERROR");
   });
-  it("checks declared uppercase markers but leaves freeform descriptions and payroll suffixes alone", () => {
+  it("checks uppercase standardized fields and admits discretionary uppercase payroll suffixes", () => {
     for (const [sec, code, description] of [["PPD", "22", "payroll"], ["WEB", "27", "purchase"], ["CCD", "22", "hcclaimpmt"], ["CCD", "22", "reversal"]])
       expect(state(source(sec, code, description, null), "description-case")).toBe("ERROR");
-    for (const description of ["PAYROLL", "PAYROLL424", "PAYROLLemp"])
+    for (const description of ["PAYROLL", "PAYROLL424", "PAYROLLEMP"])
       expect(state(source("PPD", "22", description, null), "description-case")).toBe("PASS");
     for (const description of ["acctverify", "retry pymt", "return fee", "reclaim", "nonsettled", "autoenroll", "redepcheck", "no check"])
       expect(state(source("CCD", "22", description, null), "description-case")).toBe("ERROR");
+    expect(state(source("PPD", "22", "PAYROLLemp", null), "description-case")).toBe("ERROR");
     expect(state(source("PPD", "22", "XXPAYROLL", null), "description-case")).toBe("ERROR");
     expect(parseNacha(source("CCD", "22", "Gas bill", null), pack).notApplicable).toContain("nacha.description-case");
   });
@@ -71,4 +72,16 @@ describe("origination r2 declarations", () => {
     for (const name of ["ctx-edifact-unsupported", "web-loan-unsupported"])
       expect(() => parseNacha(readFileSync(`demo-files/nacha-expanded/${name}.ach`, "utf8"), pack)).toThrow(/source|qualif/i);
   });
+});
+
+it("suppresses partial healthcare PASS when another declared entry has unknown prerequisites", () => {
+  const rows = buildNacha([{ sec: "CCD", codes: ["22", "99"], amounts: [1n, 1n], addenda: [1, 1] }]);
+  rows[1] = field(rows[1]!, 54, 63, "HCCLAIMPMT");
+  rows[3] = field(rows[3]!, 4, 83, "TRN*1*TRACE*COMPANY~".padEnd(80));
+  rows[5] = field(rows[5]!, 4, 83, "TRN*1*TRACE*COMPANY~".padEnd(80));
+  const output = parseNacha(rows.join("\n"), pack);
+  for (const id of ["healthcare-addenda", "healthcare-trn"]) {
+    expect(output.results.some(result => result.ruleId === `nacha.${id}` && result.outcome === "PASS")).toBe(false);
+    expect(output.notApplicable).not.toContain(`nacha.${id}`);
+  }
 });

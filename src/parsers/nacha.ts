@@ -39,6 +39,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   const originationR2 = profile === "origination-expanded-public-2026-r2";
   const expanded = originationR2 || profile === "origination-expanded-public-2026-r1";
   const checks = new Map<Id, Check>();
+  const incompleteR2Checks = new Set<Id>();
   const conditionalAbsent = new Set<Id>(["addenda-type", "addenda-sequence", "addenda-link", "web-credit-originator", ...(expanded ? ["reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const : [])]);
   if (originationR2) for (const id of ORIGINATION_R2_IDS) conditionalAbsent.add(id);
   // Aggregate by rule, retain the first offending field, and count every violation.
@@ -59,7 +60,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   const finish = (parseable: boolean): ParserOutput => ({
     notApplicable: parseable ? [...conditionalAbsent].filter(id => !checks.has(id) && (id !== "web-credit-originator" || expanded || checks.get("transaction-code")?.outcome !== "ERROR")).map(id => `nacha.${id}`) : [],
     context: parseable ? ({ source, parserKind: "NACHA_FIXED" }) : null,
-    results: [...checks].map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
+    results: [...checks].filter(([id, c]) => c.outcome !== "PASS" || !incompleteR2Checks.has(id)).map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
       severity: c.outcome === "PASS" ? null : c.outcome, field: c.field,
       locator: c.row ? `Record ${c.row.number} / Columns ${c.from}-${c.to}` : "file",
       message: c.message + (c.count > 1 ? ` (${c.count} violations; first location shown.)` : ""),
@@ -145,7 +146,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const healthcare = originationR2 && upperDescription === "HCCLAIMPMT";
     if (originationR2) {
       const markers = ["ACCTVERIFY", "PAYROLL", "PURCHASE", "RETRY PYMT", "REVERSAL", "RETURN FEE", "RECLAIM", "NONSETTLED", "AUTOENROLL", "REDEPCHECK", "NO CHECK", "HCCLAIMPMT"];
-      for (const marker of markers) if (upperDescription.includes(marker)) check("description-case", marker === "PAYROLL" ? description.startsWith(marker) : description.includes(marker), "Company entry description case", "Declared standardized markers must use uppercase letters. PAYROLL occupies the leftmost seven columns and permits three discretionary suffix characters.", bh, 54, 63);
+      for (const marker of markers) if (upperDescription.includes(marker)) check("description-case", description === upperDescription && (marker === "PAYROLL" ? description.startsWith(marker) : description.includes(marker)), "Company entry description case", "Declared standardized description fields must use uppercase letters, including suffixes. PAYROLL occupies the leftmost seven columns and permits three discretionary suffix characters.", bh, 54, 63);
       if (healthcare) check("description-sec", sec === "CCD", "Healthcare descriptor SEC", "HCCLAIMPMT declares a healthcare CCD entry.", bh, 51, 63);
     }
     const reversal = expanded && description.includes("REVERSAL");
@@ -184,7 +185,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
           check("remittance-required", addenda > 0, "Required remittance addenda", "Zero-dollar remittance entries and live CTX entries require payment addenda; prenotes do not require associated live-entry addenda.", current, 79, 79);
         }
         if (healthcare && sec === "CCD") {
-          if (!entryType) { conditionalAbsent.delete("healthcare-addenda"); conditionalAbsent.delete("healthcare-trn"); }
+          if (!entryType) { conditionalAbsent.delete("healthcare-addenda"); conditionalAbsent.delete("healthcare-trn"); incompleteR2Checks.add("healthcare-addenda"); incompleteR2Checks.add("healthcare-trn"); }
           else if (entryType.kind !== "prenote") {
             check("healthcare-addenda", indicator === "1" && addenda > 0, "Healthcare addenda", "Declared healthcare CCD entries require addenda and indicator 1, except prenotes.", current, 79, 79);
             if (addenda > 0 && payloadKnown) {
@@ -193,7 +194,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
               const trn = payload.join("").trimEnd();
               const elements = trn.slice(0, -1).split("*");
               check("healthcare-trn", /^TRN\*1\*[^*~]+\*[^*~]+(?:\*[^*~]*)?~$/.test(trn) && !!elements[2]?.trim() && !!elements[3]?.trim(), "Healthcare TRN segment", "Healthcare CCD payment addenda must contain a complete 835 reassociation TRN segment with trace type 1, trace number and originating company identifier. Full 835 business-guide conformance remains unverified.", current, 79, 79);
-            } else conditionalAbsent.delete("healthcare-trn");
+            } else { conditionalAbsent.delete("healthcare-trn"); incompleteR2Checks.add("healthcare-trn"); }
           }
         }
         if (sec === "CTX" && addenda > 0) {
@@ -238,6 +239,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
         if (entryType) check("reversal-transaction", reversal && entryType.kind === "monetary", "Reversal entry type", "Reversal entries must be monetary and loan debit 55 requires the REVERSAL description. Original matching, purpose and deadlines are unverified.", row, 2, 3);
         else conditionalAbsent.delete("reversal-transaction");
       }
+      if (originationR2 && (payroll || purchase) && !entryType) { conditionalAbsent.delete("description-sec"); incompleteR2Checks.add("description-sec"); }
       if (!entryType && expanded) conditionalAbsent.delete("web-credit-originator");
       required(row, 13, 29, "entry-required", "Receiving account");
       required(row, sec === "CTX" ? 59 : 55, sec === "CTX" ? 74 : 76, "entry-required", "Receiving name");
