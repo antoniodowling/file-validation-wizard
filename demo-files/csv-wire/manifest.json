@@ -1,0 +1,219 @@
+{
+  "revision": "csv-wire-fixtures-1.0.0",
+  "profile": "huntington-csv-wire-public-2026-r1",
+  "reference": "Dates are past or equal to 2026-10-14; guide supplies no past-date floor. Future-bound tests use a fixed clock.",
+  "fixtures": [
+    {
+      "file": "domestic-pass.csv",
+      "sha256": "acf13c3cfa9ce9cedf234033209e4747a3a12902a4469e1a267fd105f8f7e98d",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "domestic-pass.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "international-usd-pass.csv",
+      "sha256": "3c09bd4b9d3df163b0e7fa2a9c2b48f9537dec6a6905b85af17d2738e110d144",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "international-usd-pass.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "mixed-rows-pass.csv",
+      "sha256": "bcb04a6a11c476c10166b2714df724133b12a92c73ada40713d4f6b4298c80aa",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "mixed-rows-pass.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "quoted-comma-pass.csv",
+      "sha256": "91c4094be6d64c0231cebace0c076fcc7b2cafa6a93de34c6707c1ca42739e91",
+      "expected": "PASS",
+      "rules": [],
+      "scenario": "quoted-comma-pass.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "amount-fail.csv",
+      "sha256": "1e72cd912f81f480a545ced6e40432e1cb1a1088df80b25c19470cbc1a709d66",
+      "expected": "FAIL",
+      "rules": [
+        "wire.amount"
+      ],
+      "scenario": "amount-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "date-fail.csv",
+      "sha256": "4cbd8158a6b61c95ba00eae72f80e1ac139be848b82c01ce90ea6709a540cada",
+      "expected": "FAIL",
+      "rules": [
+        "wire.date"
+      ],
+      "scenario": "date-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "required-fail.csv",
+      "sha256": "5a10fd44dc16071e87e59b089fc650cd479e2ac31bd8f387bf9f136cbddf1e90",
+      "expected": "FAIL",
+      "rules": [
+        "wire.required"
+      ],
+      "scenario": "required-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "length-fail.csv",
+      "sha256": "75f3309a7d9ca9620716c431386e4eb3d67f938e293cb4b4ad33e4f2b452f841",
+      "expected": "FAIL",
+      "rules": [
+        "wire.length"
+      ],
+      "scenario": "length-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "routing-fail.csv",
+      "sha256": "c31492c6e78927d365650b896831d2f6daf14fb6b5a0f341b4e1c132fff079ca",
+      "expected": "FAIL",
+      "rules": [
+        "wire.bank"
+      ],
+      "scenario": "routing-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "address-fail.csv",
+      "sha256": "f1ad5ebe5d6c9e02ec50446d943d3c5639dd7af862fae6099a1a3fcad065f2f1",
+      "expected": "FAIL",
+      "rules": [
+        "wire.address"
+      ],
+      "scenario": "address-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "reserved-fail.csv",
+      "sha256": "f4992bdb748beb814de30f84505e6780fe5c37798907ae90210afa2cfa4484bc",
+      "expected": "FAIL",
+      "rules": [
+        "wire.reserved"
+      ],
+      "scenario": "reserved-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "country-fail.csv",
+      "sha256": "4751708a0a3b9e213ef0b81498fa2b215c7e2cec2418452f2586752c4fba2849",
+      "expected": "FAIL",
+      "rules": [
+        "wire.country"
+      ],
+      "scenario": "country-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "charges-fail.csv",
+      "sha256": "d72c18b2245f582697244c77f786ad90c217ee6fe20057470658bd66a65b8f6f",
+      "expected": "FAIL",
+      "rules": [
+        "wire.charges"
+      ],
+      "scenario": "charges-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "debit-account-fail.csv",
+      "sha256": "440bf7e6c95301a2b73fd1c0ff5094b5e0c67ae5b3abe64c0dbc5159de206180",
+      "expected": "FAIL",
+      "rules": [
+        "wire.debit-account"
+      ],
+      "scenario": "debit-account-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "field-count-fail.csv",
+      "sha256": "45ef4a9bc6af59ae0ea7bf43861580f4de8d327bd0c6e88ad217f794a0e1a8cb",
+      "expected": "FAIL",
+      "rules": [
+        "wire.layout"
+      ],
+      "scenario": "field-count-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "unquoted-empty-fail.csv",
+      "sha256": "6af4d8844aec3016ac1f792b4b37975c07efd591efd18e88fd8b37ae4e5e8947",
+      "expected": "FAIL",
+      "rules": [
+        "wire.framing"
+      ],
+      "scenario": "unquoted-empty-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "unterminated-fail.csv",
+      "sha256": "8e75ce8ef14ba64cbaadf0e956552c40704c891c9f008267731ce5c17e4243df",
+      "expected": "FAIL",
+      "rules": [
+        "wire.framing"
+      ],
+      "scenario": "unterminated-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "bom-fail.csv",
+      "sha256": "bd57d7a6eba041f2abb76be672c2a31957f2b1cea6602793cd22d54521daf83c",
+      "expected": "FAIL",
+      "rules": [
+        "wire.characters"
+      ],
+      "scenario": "bom-fail.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "cad-unsupported.csv",
+      "sha256": "1b1bc4682187153ce916b5dccc2dd6a961d83a2d4bca9744947a0a9b7d3aff47",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "cad-unsupported.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "iban-unsupported.csv",
+      "sha256": "9bd17432d670f1514c5aa9962f6b3fb9630c41e753e38549b2c0ca7b12aae85f",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "iban-unsupported.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "intermediary-swift-unsupported.csv",
+      "sha256": "9231db17cc1c494bf246ad479ea973565b2186c7cd22524f6a2f4849a5585d65",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "intermediary-swift-unsupported.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "embedded-newline-unsupported.csv",
+      "sha256": "e4ceb2e0219a5cfa411b0de5adb5bad6055f73b36d1f0c1663e13565ff566aa2",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "embedded-newline-unsupported.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    },
+    {
+      "file": "header-unsupported.csv",
+      "sha256": "f3711031b3917e9b26708b36859c059a5e1e7b50e473d360930c41955dec0bd8",
+      "expected": "UNSUPPORTED",
+      "rules": [],
+      "scenario": "header-unsupported.csv",
+      "provenance": "Synthetic local fixture, derived from public guide field definitions; no customer instructions or bank acceptance"
+    }
+  ]
+}

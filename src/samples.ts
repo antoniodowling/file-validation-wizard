@@ -1,3 +1,5 @@
+import wirePass from "../demo-files/csv-wire/domestic-pass.csv?raw";
+import wireFail from "../demo-files/csv-wire/amount-fail.csv?raw";
 import ackPass from "../demo-files/ach-candidates/ack-received-pass.txt?raw";
 import bai2Pass from "../demo-files/bai2/balances-pass.bai2?raw";
 import bai2Fail from "../demo-files/bai2/account-total-fail.bai2?raw";
@@ -13,6 +15,7 @@ import nachaFail from "../demo-files/nacha/routing-check-digit-fail.ach?raw";
 import type { FormatPack, IsoVersionIdentifiers, EdiVersionIdentifiers } from "./types";
 /** Synthetic wiring samples, intentionally not represented as conformant payment messages. */
 export function syntheticSample(pack: FormatPack, fail: boolean): string {
+  if (pack.parserKind === "CSV_WIRE") return fail ? wireFail : wirePass;
   if (pack.parserKind === "BAI2") return fail ? bai2Fail : bai2Pass;
   if (pack.parserKind === "HUNTINGTON_ACK") return fail ? ackFail : ackPass;
   if (pack.parserKind === "NACHA_RETURN_FIXED") return fail ? returnsFail : returnsPass;

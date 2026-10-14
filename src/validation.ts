@@ -6,6 +6,7 @@ import { parseNacha } from "./parsers/nacha";
 import { parseNachaReturns } from "./parsers/nacha-returns";
 import { parseHuntingtonControlTotals } from "./parsers/huntington-control-totals";
 import { parseHuntingtonAck } from "./parsers/huntington-ack";
+import { parseCsvWire } from "./parsers/csv-wire";
 import { parseBai2 } from "./parsers/bai2";
 import { parseIso } from "./parsers/iso";
 import { result } from "./parsers/shared";
@@ -27,6 +28,7 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
       : pack.parserKind === "ACH_CONTROL_FIXED" ? parseHuntingtonControlTotals(source, pack)
       : pack.parserKind === "HUNTINGTON_ACK" ? parseHuntingtonAck(source, pack)
       : pack.parserKind === "BAI2" ? parseBai2(source, pack)
+      : pack.parserKind === "CSV_WIRE" ? parseCsvWire(source, pack)
       : (() => { throw new Error("Unsupported parser kind."); })();
   } catch (error) {
     if (!(error instanceof UnsupportedInputError)) throw error;

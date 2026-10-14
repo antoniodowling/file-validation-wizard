@@ -9,6 +9,7 @@ const families = [
   { query: "ACH Returns", name: /ACH Returns/i, slug: "nacha-returns", versions: ["returns-network-public-2026-r1"] },
   { query: "Control Totals", name: /ACH Control Totals/i, slug: "ach-control-total-flat-file", versions: ["control-total-public-2026-r1"] },
   { query: "ACK", name: /ACK/i, slug: "file-received-ack-flat-file", versions: ["pipe-1.0-candidate-r1"] },
+  { query: "CSV Wire", name: /CSV Wire/i, slug: "wires-payments-automation", versions: ["huntington-csv-wire-public-2026-r1"] },
   { query: "BAI2", name: /BAI2/i, slug: "bai2", versions: ["huntington-bai2-public-2026-r1"] },
 ];
 
