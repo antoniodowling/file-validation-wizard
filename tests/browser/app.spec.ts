@@ -641,3 +641,25 @@ test("ACK disposition is safe text and clears on unsupported replacement", async
   await expect(page.locator("#reported-disposition")).toBeHidden();
   await expect(page.locator("#reported-disposition")).toHaveText("");
 });
+
+
+test("large ACK disposition summaries stay bounded while exports retain all reported values", async ({page}) => {
+  const {readFileSync}=await import("node:fs");
+  const original=readFileSync(demoFile("ach-candidates/ack-received-pass.txt"),"utf8");
+  const batches=Array.from({length:20},(_,i)=>`BAT|${i+1}|BatchRef|SYNTHETIC-${i+1}|RecordCount|1\nSTA|BATCH|ACCEPTED|${"B".repeat(1000)}`).join("\n");
+  const text=original.replace("AcceptedForParsing","A".repeat(1000)).replace("CTL|",batches+"\nCTL|");
+  await page.setViewportSize({width:375,height:800}); await page.goto("/");
+  await chooseFormat(page,"ACK",/File Received ACK/i,"pipe-1.0-candidate-r1");
+  await page.getByRole("button",{name:"Continue"}).click();
+  await page.locator("#file-input").setInputFiles({name:"synthetic-large-ack.txt",mimeType:"text/plain",buffer:Buffer.from(text)});
+  await page.getByRole("button",{name:"Validate file"}).click();
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  await expect(page.locator("#reported-disposition")).toContainText("12 more batches");
+  expect((await page.locator("#reported-disposition").textContent())!.length).toBeLessThan(1500);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  const download=page.waitForEvent("download"); await page.locator("#export-json").click();
+  const file=await (await download).path(); const json=JSON.parse(readFileSync(file!,"utf8"));
+  expect(json.reportedDisposition.file.qualifier).toHaveLength(1000);
+  expect(json.reportedDisposition.batches).toHaveLength(20);
+  expect(json.reportedDisposition.batches[19].qualifier).toHaveLength(1000);
+});

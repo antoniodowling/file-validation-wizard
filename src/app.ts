@@ -153,7 +153,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
               <p class="step-label">Validation Summary</p>
               <h2 id="results-title"></h2>
               <p id="result-basis" class="result-basis"></p>
-              <p id="reported-disposition" class="helper" hidden></p>
+              <p id="reported-disposition" class="helper reported-disposition" hidden></p>
             </div>
             <div class="metrics" aria-label="Finding counts">
               <div><span id="error-count">0</span><strong>Errors</strong></div>
@@ -1024,7 +1024,9 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     const reported = runController.acceptedRun.reportedDisposition;
     const dispositionNode = requiredElement<HTMLElement>("#reported-disposition");
     dispositionNode.hidden = !reported;
-    dispositionNode.textContent = reported ? `Reported file disposition: ${reported.file.status} (${reported.file.qualifier}).${reported.batches.length ? " Batch dispositions: " + reported.batches.map(batch => `${batch.batchNumber}: ${batch.status} (${batch.qualifier})`).join("; ") + "." : ""} These are bank-reported statuses, independent of format validity.` : "";
+    const shortText = (value: string, limit = 160): string => value.length > limit ? value.slice(0, limit) + "…" : value;
+    const batchSummary = reported?.batches.slice(0, 8).map(batch => `${shortText(batch.batchNumber, 32)}: ${batch.status} (${shortText(batch.qualifier, 80)})`).join("; ") ?? "";
+    dispositionNode.textContent = reported ? `Reported file disposition: ${reported.file.status} (${shortText(reported.file.qualifier)}).${batchSummary ? " Batch dispositions: " + batchSummary + "." : ""}${reported.batches.length > 8 ? ` ${reported.batches.length - 8} more batches.` : ""} These are bank-reported statuses, independent of format validity. Full reported values are available in exports.` : "";
     if (["HUNTINGTON_ACK", "ACH_CONTROL_FIXED", "NACHA_RETURN_FIXED"].includes(findEnabledFormatPack(runController.acceptedRun.formatId)?.parserKind ?? "")) requiredElement<HTMLElement>("#result-basis").textContent += " Candidate checks only; see the coverage details for scenario limits and exclusions.";
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
