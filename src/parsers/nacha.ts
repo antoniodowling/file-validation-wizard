@@ -24,7 +24,9 @@ const IDS = [
 export const NACHA_RULE_IDS: readonly string[] = Object.freeze(IDS.map((id) => `nacha.${id}`));
 const EXPANDED_IDS = ["field-padding", "reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const;
 export const NACHA_EXPANDED_RULE_IDS: readonly string[] = Object.freeze([...NACHA_RULE_IDS, ...EXPANDED_IDS.map(id => `nacha.${id}`)]);
-type Id = typeof IDS[number] | typeof EXPANDED_IDS[number];
+const ORIGINATION_R2_IDS = ["description-case", "description-sec", "healthcare-addenda", "healthcare-trn"] as const;
+export const NACHA_ORIGINATION_R2_RULE_IDS: readonly string[] = Object.freeze([...NACHA_EXPANDED_RULE_IDS, ...ORIGINATION_R2_IDS.map(id => `nacha.${id}`)]);
+type Id = typeof IDS[number] | typeof EXPANDED_IDS[number] | typeof ORIGINATION_R2_IDS[number];
 interface Check { outcome: RuleOutcome; count: number; field: string; message: string; row: RecordRow | undefined; from: number; to: number }
 function location(check: Check): FindingLocation {
   if (!check.row) return { kind: "file-wide", explanation: "This check applies to the entire ACH file." };
@@ -33,9 +35,12 @@ function location(check: Check): FindingLocation {
 }
 
 export function parseNacha(source: string, pack: FormatPack): ParserOutput {
-  const expanded = pack.identifiers?.kind === "NACHA_FIXED" && pack.identifiers.profile === "origination-expanded-public-2026-r1";
+  const profile = pack.identifiers?.kind === "NACHA_FIXED" ? String(pack.identifiers.profile) : "";
+  const originationR2 = profile === "origination-expanded-public-2026-r2";
+  const expanded = originationR2 || profile === "origination-expanded-public-2026-r1";
   const checks = new Map<Id, Check>();
   const conditionalAbsent = new Set<Id>(["addenda-type", "addenda-sequence", "addenda-link", "web-credit-originator", ...(expanded ? ["reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const : [])]);
+  if (originationR2) for (const id of ORIGINATION_R2_IDS) conditionalAbsent.add(id);
   // Aggregate by rule, retain the first offending field, and count every violation.
   // Memory and output remain bounded even for a 25 MB file with repeated errors.
   const check = (id: Id, ok: boolean, field: string, message: string, row?: RecordRow, from = 1, to = 94, warning = false): void => {
@@ -134,6 +139,15 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     required(bh, 54, 63, "batch-required", "Company entry description");
     if (!expanded) check("batch-required", slice(bh, 54, 63).trim() !== "REVERSAL", "Company entry description", "Reversal batches are outside this ordinary origination profile.", bh, 54, 63);
     const description = slice(bh, 54, 63);
+    const upperDescription = description.toUpperCase();
+    const payroll = originationR2 && upperDescription.includes("PAYROLL");
+    const purchase = originationR2 && upperDescription.includes("PURCHASE");
+    const healthcare = originationR2 && upperDescription === "HCCLAIMPMT";
+    if (originationR2) {
+      const markers = ["ACCTVERIFY", "PAYROLL", "PURCHASE", "RETRY PYMT", "REVERSAL", "RETURN FEE", "RECLAIM", "NONSETTLED", "AUTOENROLL", "REDEPCHECK", "NO CHECK", "HCCLAIMPMT"];
+      for (const marker of markers) if (upperDescription.includes(marker)) check("description-case", marker === "PAYROLL" ? description.startsWith(marker) : description.includes(marker), "Company entry description case", "Declared standardized markers must use uppercase letters. PAYROLL occupies the leftmost seven columns and permits three discretionary suffix characters.", bh, 54, 63);
+      if (healthcare) check("description-sec", sec === "CCD", "Healthcare descriptor SEC", "HCCLAIMPMT declares a healthcare CCD entry.", bh, 51, 63);
+    }
     const reversal = expanded && description.includes("REVERSAL");
     if (expanded && description.toUpperCase().includes("REVERSAL")) check("reversal-marker", reversal, "Reversal description", "A declared reversal must include uppercase REVERSAL within the Company Entry Description.", bh, 54, 63);
     padding(bh, [[5, 20], [21, 40], [41, 50], [54, 63], [64, 69]]);
@@ -169,6 +183,19 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
         } else if (entryType.kind === "remittance" || (sec === "CTX" && entryType.kind !== "prenote")) {
           check("remittance-required", addenda > 0, "Required remittance addenda", "Zero-dollar remittance entries and live CTX entries require payment addenda; prenotes do not require associated live-entry addenda.", current, 79, 79);
         }
+        if (healthcare && sec === "CCD") {
+          if (!entryType) { conditionalAbsent.delete("healthcare-addenda"); conditionalAbsent.delete("healthcare-trn"); }
+          else if (entryType.kind !== "prenote") {
+            check("healthcare-addenda", indicator === "1" && addenda > 0, "Healthcare addenda", "Declared healthcare CCD entries require addenda and indicator 1, except prenotes.", current, 79, 79);
+            if (addenda > 0 && payloadKnown) {
+              // Retain all 80 payload columns; only final fixed-field padding is removed.
+              // This checks a whole TRN segment, not the complete ASC X12 5010 835 guide.
+              const trn = payload.join("").trimEnd();
+              const elements = trn.slice(0, -1).split("*");
+              check("healthcare-trn", /^TRN\*1\*[^*~]+\*[^*~]+(?:\*[^*~]*)?~$/.test(trn) && !!elements[2]?.trim() && !!elements[3]?.trim(), "Healthcare TRN segment", "Healthcare CCD payment addenda must contain a complete 835 reassociation TRN segment with trace type 1, trace number and originating company identifier. Full 835 business-guide conformance remains unverified.", current, 79, 79);
+            } else conditionalAbsent.delete("healthcare-trn");
+          }
+        }
         if (sec === "CTX" && addenda > 0) {
           if (payloadKnown) check("ctx-remittance", ctxX12Syntax(payload.join(""), pack), "CTX remittance syntax", "CTX X12 requires a complete transaction set with BPR or BPS and matching envelope references/counts. Complete X12 business-guide conformance is outside scope.", current, 55, 58);
           else conditionalAbsent.delete("ctx-remittance");
@@ -182,7 +209,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       bt.count += 1n;
       if (row.text[0] === "7") {
         addenda += 1;
-        if (expanded && sec === "CTX") { payload.push(slice(row, 4, 83)); payloadKnown = payloadKnown && slice(row, 2, 3) === "05"; }
+        if (expanded && (sec === "CTX" || (healthcare && sec === "CCD"))) { payload.push(slice(row, 4, 83)); payloadKnown = payloadKnown && slice(row, 2, 3) === "05"; }
         check("addenda-type", slice(row, 2, 3) === "05", "Addenda type", "Only payment-related addenda type 05 is supported; return and notification addenda are outside this profile.", row, 2, 3);
         check("addenda-sequence", number(slice(row, 84, 87)) === BigInt(addenda), "Addenda sequence", "Addenda sequence must begin at 0001 and increase consecutively for each entry.", row, 84, 87);
         check("addenda-link", !!current && digits(slice(row, 88, 94)) && slice(row, 88, 94) === slice(current, 88, 94), "Addenda entry sequence", "Addenda entry sequence must match the final seven digits of its preceding entry trace.", row, 88, 94);
@@ -202,6 +229,10 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
           (!expanded || entryType?.kind !== "remittance" || ["CCD", "CTX"].includes(sec)) &&
           (!expanded || !entryType?.loan || ["CCD", "CTX", "PPD"].includes(sec)),
           "SEC and service class transaction", expanded ? "Direction must match service class. Zero-dollar remittance is CCD/CTX only; loan types are qualified here only for CCD/CTX/PPD. TEL credits are checking/savings monetary reversals only." : "Entry direction must match service class; TEL permits debits only.", row, 2, 3);
+      }
+      if (originationR2 && (payroll || purchase)) {
+        if (entryType && secKnown) check("description-sec", payroll ? sec === "PPD" && entryType.direction === "credit" : ["WEB", "TEL"].includes(sec) && entryType.direction === "debit", "Declared descriptor SEC and direction", "Declared PAYROLL is a PPD credit; declared PURCHASE is a WEB or permitted TEL debit. Purpose and TEL standing authorization cannot be established from this file.", row, 2, 3);
+        else conditionalAbsent.delete("description-sec");
       }
       if (expanded && (reversal || code === "55")) {
         if (entryType) check("reversal-transaction", reversal && entryType.kind === "monetary", "Reversal entry type", "Reversal entries must be monetary and loan debit 55 requires the REVERSAL description. Original matching, purpose and deadlines are unverified.", row, 2, 3);
