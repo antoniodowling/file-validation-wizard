@@ -1,16 +1,9 @@
-import {
-  evaluateExplorerBudget,
-  sourceExcerpt,
-  type ExplorerBudgetDecision,
-} from "./explorer-budget";
 import { adjacentFinding, navigableFindings } from "./finding-navigation";
-import { sourceLineColumnAtOffset } from "./source-coordinates";
 import { ReadOnlySourceViewer } from "./source-viewer";
 import type {
   FindingLocation,
   FindingLocationEntry,
   RuleResult,
-  SourceSpan,
   SourceTarget,
   ValidationRun,
 } from "./types";
@@ -51,12 +44,6 @@ export function explorerMarkup(): string {
         <button class="button secondary compact" type="button" data-finding-previous disabled>← Previous finding</button>
         <button class="button secondary compact" type="button" data-finding-next disabled>Next finding →</button>
       </div>
-      <div class="explorer-toolbar">
-        <button class="button secondary compact" type="button" data-target-previous disabled>Previous occurrence</button>
-        <button class="button secondary compact" type="button" data-target-next disabled>Next occurrence</button>
-        <button class="button secondary compact" type="button" data-window-previous disabled>Previous source window</button>
-        <button class="button secondary compact" type="button" data-window-next disabled>Next source window</button>
-      </div>
       <div class="explorer-details" data-explorer-details hidden>
         <div class="explorer-details-heading">
           <div><span class="severity" data-detail-outcome></span> <strong data-detail-rule></strong></div>
@@ -69,11 +56,10 @@ export function explorerMarkup(): string {
         </dl>
       </div>
       <div class="explorer-notice" data-explorer-notice role="status">
-        Validate a selected file to inspect its decoded source here.
+        Validate a selected file to inspect it here.
       </div>
-      <p class="explorer-scope-note" data-explorer-scope hidden></p>
       <div class="source-viewer-host" data-source-viewer hidden></div>
-      <pre class="source-fallback" data-source-fallback hidden tabindex="0" aria-label="Read-only source excerpt"></pre>
+      <pre class="source-fallback" data-source-fallback hidden tabindex="0" aria-label="Read-only source"></pre>
     </aside>`;
 }
 
@@ -84,27 +70,10 @@ export class FileExplorerController {
   private locations = new Map<number, FindingLocation>();
   private selectedOrdinal: number | null = null;
   private viewer: ReadOnlySourceViewer | null = null;
-  private budget: ExplorerBudgetDecision | null = null;
-  private targetIndex = 0;
-  private windowStart = 0;
 
   constructor(options: ExplorerControllerOptions) {
     this.options = options;
     this.root = options.root;
-    for (const [selector, delta] of [["[data-target-previous]", -1], ["[data-target-next]", 1]] as const) {
-      this.q<HTMLButtonElement>(selector).addEventListener("click", () => {
-        this.targetIndex += delta; this.renderSelection();
-      });
-    }
-    for (const [selector, delta] of [["[data-window-previous]", -1], ["[data-window-next]", 1]] as const) {
-      this.q<HTMLButtonElement>(selector).addEventListener("click", () => {
-        if (!this.snapshot) return;
-        const start = Math.max(0, Math.min(this.snapshot.source.length - 1, this.windowStart + delta * 12_000));
-        this.configureViewer({ start: start + 3000, end: start + 3000 });
-        this.viewer?.setFindingTarget(this.selectedTarget(), this.selectedFinding()?.severity ?? null);
-        this.options.announce(this.q<HTMLElement>("[data-explorer-scope]").textContent ?? "Source window changed.");
-      });
-    }
     this.q<HTMLButtonElement>("[data-explorer-hide]").addEventListener("click", options.onHide);
     this.q<HTMLButtonElement>("[data-explorer-expand]").addEventListener("click", () => {
       const expanded = options.onExpand();
@@ -148,13 +117,12 @@ export class FileExplorerController {
   acceptSnapshot(snapshot: AcceptedSourceSnapshot): void {
     this.clearSnapshot();
     this.snapshot = snapshot;
-    this.budget = evaluateExplorerBudget(snapshot.source);
     this.q<HTMLElement>("[data-explorer-file-name]").textContent = snapshot.fileName;
     this.q<HTMLElement>("[data-explorer-file-size]").textContent = snapshot.fileSizeLabel;
     this.q<HTMLElement>("[data-explorer-read-only]").hidden = false;
     this.q<HTMLElement>("[data-explorer-notice]").textContent = "Validation is complete. Source locations are preparing; results and CSV remain available.";
     this.q<HTMLElement>("[data-explorer-notice]").hidden = false;
-    this.configureViewer(null);
+    this.configureViewer();
     this.updateFindingButtons();
   }
 
@@ -184,7 +152,6 @@ export class FileExplorerController {
   selectFinding(finding: RuleResult): void {
     if (!this.snapshot || finding.outcome === "PASS") return;
     this.selectedOrdinal = finding.ordinal;
-    this.targetIndex = 0;
     this.renderSelection();
     this.updateFindingButtons();
     this.options.showFindingInResults(finding.ordinal, false);
@@ -207,25 +174,18 @@ export class FileExplorerController {
     this.snapshot = null;
     this.locations.clear();
     this.selectedOrdinal = null;
-    this.budget = null;
-    this.targetIndex = 0; this.windowStart = 0;
-    for (const button of this.root.querySelectorAll<HTMLButtonElement>("[data-target-previous], [data-target-next], [data-window-previous], [data-window-next], [data-finding-previous], [data-finding-next]")) button.disabled = true;
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>("[data-finding-previous], [data-finding-next]")) button.disabled = true;
     for (const field of this.root.querySelectorAll<HTMLElement>("[data-detail-field], [data-detail-locator], [data-detail-message], [data-detail-rule], [data-detail-confidence]")) field.textContent = "";
     this.q<HTMLElement>("[data-explorer-details]").hidden = true;
     this.q<HTMLElement>("[data-source-viewer]").hidden = true;
     this.q<HTMLElement>("[data-source-viewer]").replaceChildren();
     this.q<HTMLElement>("[data-source-fallback]").hidden = true;
     this.q<HTMLElement>("[data-source-fallback]").textContent = "";
-    this.q<HTMLElement>("[data-explorer-scope]").hidden = true;
   }
 
-  private configureViewer(focus: SourceSpan | null): void {
-    if (!this.snapshot || !this.budget) return;
-    const excerpt = this.budget.mode === "excerpt" ? sourceExcerpt(this.snapshot.source, focus) : null;
-    const displaySpan = excerpt?.span ?? { start: 0, end: this.snapshot.source.length };
-    this.windowStart = displaySpan.start;
-    this.q<HTMLButtonElement>("[data-window-previous]").disabled = displaySpan.start === 0;
-    this.q<HTMLButtonElement>("[data-window-next]").disabled = displaySpan.end === this.snapshot.source.length;
+  private configureViewer(): void {
+    if (!this.snapshot) return;
+    const displaySpan = { start: 0, end: this.snapshot.source.length };
     this.viewer?.destroy();
     this.viewer = null;
     const host = this.q<HTMLElement>("[data-source-viewer]");
@@ -239,19 +199,10 @@ export class FileExplorerController {
       host.hidden = true;
       host.replaceChildren();
       const fallback = this.q<HTMLElement>("[data-source-fallback]");
-      fallback.textContent = sourceExcerpt(this.snapshot.source, focus).text;
+      fallback.textContent = this.snapshot.source;
       fallback.hidden = false;
-      this.q<HTMLElement>("[data-explorer-notice]").textContent = "The interactive viewer could not start. A bounded read-only source excerpt is shown instead.";
+      this.q<HTMLElement>("[data-explorer-notice]").textContent = "The interactive viewer could not start. The full read-only source is shown instead.";
       this.q<HTMLElement>("[data-explorer-notice]").hidden = false;
-    }
-    const scope = this.q<HTMLElement>("[data-explorer-scope]");
-    if (excerpt) {
-      const start = sourceLineColumnAtOffset(this.snapshot.source, displaySpan.start);
-      const end = sourceLineColumnAtOffset(this.snapshot.source, displaySpan.end);
-      scope.textContent = `${this.budget.reason} Showing a clipped original-source window at UTF-16 offsets ${displaySpan.start}–${displaySpan.end} (end exclusive), line ${start?.line ?? 1} through ${end?.line ?? 1}. Large targets may continue beyond this window.`;
-      scope.hidden = false;
-    } else {
-      scope.hidden = true;
     }
   }
 
@@ -263,7 +214,7 @@ export class FileExplorerController {
   private selectedTarget(): SourceTarget | null {
     if (this.selectedOrdinal === null) return null;
     const location = this.locations.get(this.selectedOrdinal);
-    return location?.kind === "located" ? [location.primary, ...location.related][this.targetIndex] ?? location.primary : null;
+    return location?.kind === "located" ? location.primary : null;
   }
 
   private renderSelection(): void {
@@ -283,9 +234,6 @@ export class FileExplorerController {
     this.q<HTMLElement>("[data-detail-confidence]").textContent = location?.kind === "located"
       ? `${location.primary.kind}: ${location.primary.label}. ${location.related.length} related targets${location.relatedTruncated ? " (additional targets omitted)" : ""}.`
       : location ? `${location.kind}: ${location.explanation}` : "Locations are preparing.";
-    this.q<HTMLButtonElement>("[data-target-previous]").disabled = this.targetIndex <= 0;
-    this.q<HTMLButtonElement>("[data-target-next]").disabled = location?.kind !== "located" || this.targetIndex >= location.related.length;
-    if (location?.kind === "located") this.q<HTMLElement>("[data-detail-confidence]").textContent += ` Showing occurrence ${this.targetIndex + 1} of ${location.related.length + 1}.`;
     this.showSelectedTarget();
     this.options.announce(`${finding.outcome}: ${finding.field}. ${finding.message}. ${this.q<HTMLElement>("[data-detail-confidence]").textContent}`);
   }
@@ -297,7 +245,6 @@ export class FileExplorerController {
       this.viewer?.setFindingTarget(null, null);
       return;
     }
-    if (this.budget?.mode === "excerpt") this.configureViewer(selected.span);
     this.viewer?.setFindingTarget(selected, finding?.severity ?? null);
   }
 

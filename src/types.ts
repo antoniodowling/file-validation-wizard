@@ -36,6 +36,7 @@ export type FindingLocation =
   | { readonly kind: "unavailable"; readonly explanation: string };
 
 export interface FindingLineEntry {
+  readonly context?: boolean;
   readonly ordinal: number;
   readonly label: string;
   readonly description: string;
