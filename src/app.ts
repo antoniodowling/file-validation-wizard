@@ -1,3 +1,6 @@
+import { syntheticSample } from "./samples";
+import { RunController } from "./run-controller";
+import { validationRunToJson } from "./csv";
 import warningTriangleIcon from "bootstrap-icons/icons/exclamation-triangle.svg?raw";
 import InlineValidationWorker from "./validation.worker?worker&inline";
 import { validationReportFileName, validationRunToCsv } from "./csv";
@@ -61,6 +64,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           <span><span class="big-number" aria-hidden="true">01</span><strong>Choose format</strong></span>
         </button>
         <div id="step-1-panel" class="step-panel">
+          <button id="browse-reference" class="button text" type="button" aria-pressed="false">Browse all format references</button>
           <div class="selection-grid">
             <div class="field-group">
               <label for="format-search">File format</label>
@@ -98,6 +102,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           <span><span class="big-number" aria-hidden="true">02</span><strong>Upload file</strong></span>
         </button>
         <div id="step-2-panel" class="step-panel" hidden>
+          <p class="helper">Try synthetic DEMO structural samples (not conformant payment instructions):</p>
+          <div class="step-actions"><button id="sample-pass" class="button secondary" type="button">Load PASS sample</button><button id="sample-fail" class="button secondary" type="button">Load FAIL sample</button></div>
           <div class="section-heading">
             <h2 id="upload-title">Upload your payment file</h2>
           </div>
@@ -150,6 +156,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
               <p class="step-label">Validation Summary</p>
               <h2 id="results-title"></h2>
               <p id="result-basis" class="result-basis"></p>
+              <p id="check-summary" class="helper"></p>
             </div>
             <div class="metrics" aria-label="Finding counts">
               <div><span id="error-count">0</span><strong>Errors</strong></div>
@@ -177,7 +184,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
                 </select>
               </label>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="region" aria-label="Validation findings; scroll horizontally for all columns">
               <table>
                 <colgroup>
                   <col class="column-severity" />
@@ -200,6 +207,9 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           </div>
           <div class="step-actions split-actions results-actions">
             <button class="button secondary" type="button" data-open-step="2">← Back to file</button>
+            <details id="local-diagnostics"><summary>Local processing diagnostics (no file values)</summary><pre id="diagnostics-output"></pre></details>
+            <details><summary>Versioned DEMO coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
+            <button id="export-json" class="button secondary" type="button" disabled>Export JSON report</button>
             <button id="export-csv" class="button secondary" type="button" disabled>Export CSV report</button>
           </div>
         </div>
@@ -308,21 +318,19 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   if (presetFormat) formatSearch.value = `${presetFormat.code} — ${presetFormat.name}`;
   if (presetVersion?.validationProfileId) activeStep = 2;
   let selectedFile: File | null = null;
-  let currentRun: ValidationRun | null = null;
   let resultLines = new Map<number, { readonly label: string; readonly description: string }>();
   let linesPending = false;
-  let acceptedSnapshotId: number | null = null;
+
+
   let resultsPage = 1;
-  let activeWorker: Worker | null = null;
+  const runController = new RunController();
   let validating = false;
-  // Replacement, reset, and unmount advance this token. File reads cannot be
-  // cancelled, so continuations and worker messages must match the current
-  // generation before changing UI state; terminating the worker is not enough.
-  let runGeneration = 0;
-  let validationDeadline: number | null = null;
-  let explorerDeadline: number | null = null;
+
+
+
   let visibleFormats: readonly FormatCatalogEntry[] = FORMAT_CATALOG;
   let activeOptionIndex = -1;
+  let browsingReferences = false;
   let explorerController: FileExplorerController | null = null;
 
   const selectedFormat = () => findCatalogEntry(selectedFormatId);
@@ -347,7 +355,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
 
   function announce(message: string): void {
     liveStatus.textContent = "";
-    window.setTimeout(() => {
+    runController.schedule("announcement", () => {
       liveStatus.textContent = message;
     }, 10);
   }
@@ -376,6 +384,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (expandButton) expandButton.textContent = "Expand explorer";
     if (showExplorerButton) showExplorerButton.hidden = false;
     setMobileWorkspaceView("results");
+    showExplorerButton?.focus();
   }
 
   function toggleExpandedExplorer(): boolean {
@@ -441,35 +450,35 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   }
 
   function terminateWorker(): void {
-    if (validationDeadline !== null) window.clearTimeout(validationDeadline);
-    if (explorerDeadline !== null) window.clearTimeout(explorerDeadline);
-    validationDeadline = null;
-    explorerDeadline = null;
-    activeWorker?.terminate();
-    activeWorker = null;
+    runController.stopWorker();
     validating = false;
     validateButton.textContent = "Validate file →";
   }
 
   function invalidateActiveWork(): void {
-    runGeneration += 1;
+    runController.dispose();
     terminateWorker();
   }
 
   function completeValidationPhase(): void {
-    if (validationDeadline !== null) window.clearTimeout(validationDeadline);
-    validationDeadline = null;
+    runController.clearTimer("core");
     validating = false;
     validateButton.textContent = "Validate file →";
   }
 
   function clearRun(): void {
-    currentRun = null;
+    runController.acceptedRun = null;
     resultLines.clear();
     linesPending = false;
-    acceptedSnapshotId = null;
+    runController.acceptedSnapshotId = null;
     resultsPage = 1;
     exportButton.disabled = true;
+    const jsonButton = app.querySelector<HTMLButtonElement>(`#${prefix}export-json`);
+    if (jsonButton) jsonButton.disabled = true;
+    const coverageNode = app.querySelector<HTMLElement>(`#${prefix}coverage-snapshot`);
+    if (coverageNode) coverageNode.textContent = "";
+    const diagnosticsNode = app.querySelector<HTMLElement>(`#${prefix}diagnostics-output`);
+    if (diagnosticsNode) diagnosticsNode.textContent = "";
   }
 
   function clearFileAndRun(): void {
@@ -479,6 +488,9 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     selectedFilePanel.hidden = true;
     setUploadError(null);
     clearRun();
+    for (const selector of ["file-name", "file-size", "finding-rows", "path-filter"]) {
+      app.querySelector(`[id="${prefix}${selector}"]`)?.replaceChildren();
+    }
     explorerController?.setPlaceholder("Validate a selected file to inspect its decoded source here.");
   }
 
@@ -496,7 +508,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   }
 
   function renderFormatList(): void {
-    visibleFormats = searchFormatCatalog(formatSearch.value);
+    visibleFormats = [...searchFormatCatalog(formatSearch.value)].filter(item => browsingReferences || item.status === "DEMO_SUPPORTED").sort((a, b) => Number(b.status === "DEMO_SUPPORTED") - Number(a.status === "DEMO_SUPPORTED"));
     formatListbox.replaceChildren();
     if (visibleFormats.length === 0) {
       const empty = document.createElement("li");
@@ -522,7 +534,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       option.setAttribute("role", "option");
       option.setAttribute("aria-selected", String(item.id === selectedFormatId));
       if (index === activeOptionIndex) option.classList.add("active");
-      for (const value of [item.standard, item.code, item.name]) {
+      for (const value of [item.standard, item.code, `${item.name} · ${item.status === "DEMO_SUPPORTED" ? "DEMO validator" : "Reference only"}`]) {
         const cell = document.createElement("span");
         cell.textContent = value;
         option.append(cell);
@@ -574,7 +586,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (!format) {
       helper.hidden = true;
     } else if (!version) {
-      helper.hidden = true;
+      helper.textContent = format.status === "DEMO_SUPPORTED" ? "DEMO validator available. Choose an exact version to inspect its limited coverage." : "Reference browsing only — no executable validator is available.";
     } else if (!version.validationProfileId) {
       helper.textContent = `Accepted extensions: ${extensionList(version.extensions)} · Reference only — validation is unavailable in this demo.`;
     } else {
@@ -584,7 +596,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         guideLink.href = guideUrl;
         guideLink.target = "_blank";
         guideLink.rel = "noopener noreferrer";
-        guideLink.textContent = "File Format Guide";
+        guideLink.textContent = "General family guide (version applicability unverified)";
         const sampleLink = document.createElement("a");
         sampleLink.href = `${guideUrl}#sample-file`;
         sampleLink.target = "_blank";
@@ -595,7 +607,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         helper.textContent = "File Format Guide unavailable.";
       }
     }
-    formatContinue.disabled = !version?.validationProfileId;
+    formatContinue.disabled = !version?.validationProfileId || !format || formatSearch.value !== formatDisplay(format);
   }
 
   function renderUpload(): void {
@@ -622,7 +634,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   function canOpenStep(step: number): boolean {
     if (step === 1) return true;
     if (step === 2) return Boolean(selectedProfileId());
-    return Boolean(currentRun);
+    return Boolean(runController.acceptedRun);
   }
 
   function openStep(step: 1 | 2 | 3): void {
@@ -637,7 +649,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     const stepIsComplete = (step: number): boolean => step === 1
       ? Boolean(selectedProfileId()) && activeStep > 1
       : step === 2
-        ? Boolean(currentRun) && activeStep > 2
+        ? Boolean(runController.acceptedRun) && activeStep > 2
         : false;
     app.querySelectorAll<HTMLElement>("[data-wizard-step]").forEach((section) => {
       const step = Number(section.dataset.wizardStep) as 1 | 2 | 3;
@@ -674,6 +686,13 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     }
   }
 
+  requiredElement<HTMLButtonElement>("#browse-reference").addEventListener("click", (event) => {
+    browsingReferences = !browsingReferences;
+    const button = event.currentTarget as HTMLButtonElement;
+    button.setAttribute("aria-pressed", String(browsingReferences));
+    button.textContent = browsingReferences ? "Show executable DEMO validators" : "Browse all format references";
+    renderFormatList(); setListboxOpen(true); formatSearch.focus();
+  });
   formatSearch.addEventListener("focus", () => {
     formatSearch.select();
     renderFormatList();
@@ -681,11 +700,17 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   });
   formatSearch.addEventListener("input", () => {
     activeOptionIndex = -1;
+    renderFormatSelection();
     renderFormatList();
     setListboxOpen(true);
   });
-  comboboxWrap.addEventListener("focusout", () => window.setTimeout(() => {
-    if (!comboboxWrap.contains(document.activeElement)) setListboxOpen(false);
+  comboboxWrap.addEventListener("focusout", () => runController.schedule("combobox", () => {
+    if (!comboboxWrap.contains(document.activeElement)) {
+      setListboxOpen(false);
+      const committed = selectedFormat();
+      if (committed) formatSearch.value = formatDisplay(committed);
+      renderFormatSelection();
+    }
   }, 0));
   formatSearch.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -716,7 +741,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
 
   formatContinue.addEventListener("click", () => {
     if (!selectedProfileId()) return;
-    activeStep = 2;
+    openStep(2);
     renderAll();
     announce("Format selection complete. Upload one matching file.");
   });
@@ -748,6 +773,12 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     announce(`${candidate.name} selected. Ready to validate.`);
   }
 
+  for (const [id, fail] of [["#sample-pass", false], ["#sample-fail", true]] as const) {
+    requiredElement<HTMLButtonElement>(id).addEventListener("click", () => {
+      const pack = findEnabledFormatPack(selectedProfileId() ?? "");
+      if (pack) chooseFiles([new File([syntheticSample(pack, fail)], `synthetic-${pack.id}-${fail ? "fail" : "pass"}${pack.extensions[0]}`)]);
+    });
+  }
   replaceButton.addEventListener("click", () => {
     fileInput.value = "";
     fileInput.click();
@@ -756,6 +787,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     clearFileAndRun();
     activeStep = 2;
     renderAll();
+    fileInput.focus();
     announce("The selected file and results were removed.");
   });
   fileInput.addEventListener("change", () => {
@@ -780,7 +812,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   });
 
   function findings(): readonly RuleResult[] {
-    return currentRun?.results ?? [];
+    return runController.acceptedRun?.results ?? [];
   }
 
   function populatePathFilter(): void {
@@ -822,7 +854,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     renderFindingRows();
     if (!focus) return;
     setMobileWorkspaceView("results");
-    window.setTimeout(() => {
+    runController.schedule("finding-focus", () => {
       app.querySelector<HTMLButtonElement>(`[data-finding-action="${ordinal}"]`)?.focus();
     }, 0);
   }
@@ -893,6 +925,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         action.addEventListener("click", () => {
           revealExplorer();
           explorerController?.selectFinding(finding);
+          const details = app.querySelector<HTMLElement>("[data-explorer-details]");
+          if (details) { details.tabIndex = -1; details.focus({ preventScroll: true }); }
         });
         message.append(action);
       }
@@ -904,24 +938,29 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   }
 
   function renderResults(): void {
-    if (!currentRun) return;
+    if (!runController.acceptedRun) return;
     resultsPage = 1;
-    const label = overallStatusLabel(currentRun.overallStatus);
+    const label = overallStatusLabel(runController.acceptedRun.overallStatus);
     requiredElement<HTMLElement>("#results-title").textContent = label;
-    requiredElement<HTMLElement>("#result-basis").textContent = currentRun.overallStatus === "FAIL"
-      ? "Based on syntax and structure checks, this file contains the errors below. Please resolve them before file submission."
-      : "This result is based on syntax and structure checks. It does not guarantee that ABC Bank will accept, process, or execute the file.";
-    const passCount = currentRun.results.filter((result) => result.outcome === "PASS").length;
-    requiredElement<HTMLElement>("#error-count").textContent = String(currentRun.errorCount);
-    requiredElement<HTMLElement>("#warning-count").textContent = String(currentRun.warningCount);
+    requiredElement<HTMLElement>("#result-basis").textContent = `DEMO — ${runController.acceptedRun.executionStatus ?? "COMPLETED"}. ${runController.acceptedRun.executionReason ?? ""} Ruleset ${runController.acceptedRun.provenance?.rulesetRevision ?? "legacy"}. Checks passed refers only to the coverage below. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.`;
+    const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
+    coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
+    requiredElement<HTMLElement>("#check-summary").textContent = `${runController.acceptedRun.checks?.length ?? runController.acceptedRun.results.length} distinct checks; ${runController.acceptedRun.results.length} evaluated occurrence rows; ${runController.acceptedRun.checks?.filter(check => check.state === "not-evaluated").length ?? 0} checks not evaluated. Metrics below count occurrences.`;
+    const passCount = runController.acceptedRun.results.filter((result) => result.outcome === "PASS").length;
+    requiredElement<HTMLElement>("#error-count").textContent = String(runController.acceptedRun.errorCount);
+    requiredElement<HTMLElement>("#warning-count").textContent = String(runController.acceptedRun.warningCount);
     requiredElement<HTMLElement>("#pass-count").textContent = String(passCount);
-    requiredElement<HTMLDivElement>("#result-banner").dataset.status = currentRun.overallStatus;
+    requiredElement<HTMLDivElement>("#result-banner").dataset.status = runController.acceptedRun.overallStatus;
     exportButton.disabled = false;
+    requiredElement<HTMLButtonElement>("#export-json").disabled = false;
     populatePathFilter();
     renderFindingRows();
-    activeStep = 3;
+    const focusedUpload = requiredElement<HTMLElement>("#step-2-panel").contains(document.activeElement) || document.activeElement === document.body;
+    const presentResults = activeStep === 2 && focusedUpload;
+    if (presentResults) activeStep = 3;
     renderAll();
-    announce(`Validation complete. Result: ${label}. ${currentRun.errorCount} errors, ${currentRun.warningCount} warnings, and ${passCount} passes.`);
+    if (presentResults) requiredElement<HTMLElement>("#step-3-panel").focus({ preventScroll: true });
+    announce(`Validation complete. Result: ${label}. ${runController.acceptedRun.errorCount} errors, ${runController.acceptedRun.warningCount} warnings, and ${passCount} passes.`);
   }
 
   app.querySelectorAll<HTMLButtonElement>(".filter-toggle").forEach((button) => {
@@ -959,7 +998,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     const profileId = selectedProfileId();
     if (!selectedFile || !profileId || validating) return;
     const file = selectedFile;
-    const generation = ++runGeneration;
+    const generation = runController.start();
+    runController.diagnostics.profile = profileId;
     validating = true;
     clearRun();
     explorerController?.setPlaceholder("Validation is in progress. Previous source state has been cleared.", file.name, humanFileSize(file.size));
@@ -969,7 +1009,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     announce("Validation started.");
 
     function failRun(code: ValidationFailureCode): void {
-      if (generation !== runGeneration) return;
+      if (!runController.current(generation)) return;
       invalidateActiveWork();
       const message = validationFailureMessage(code);
       setUploadError(message);
@@ -979,7 +1019,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
 
     // The deadline lives outside the worker so a busy parser cannot block it.
     // It includes file reading; invalidation prevents a late read from starting work.
-    validationDeadline = window.setTimeout(() => failRun("TIMEOUT"), VALIDATION_DEADLINE_MS);
+    runController.schedule("core", () => failRun("TIMEOUT"), VALIDATION_DEADLINE_MS);
     let bytes: ArrayBuffer;
     try {
       bytes = await file.arrayBuffer();
@@ -987,7 +1027,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       failRun("FILE_READ_ERROR");
       return;
     }
-    if (generation !== runGeneration) return;
+    if (!runController.current(generation)) return;
+    runController.mark("readCompleteMs");
 
     let worker: Worker;
     try {
@@ -996,18 +1037,20 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       failRun("WORKER_UNAVAILABLE");
       return;
     }
-    activeWorker = worker;
+    runController.attach(worker);
+    runController.mark("workerCreatedMs");
     worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {
-      if (generation !== runGeneration || worker !== activeWorker) return;
+      if (!runController.current(generation, worker)) return;
       if (event.data.type === "complete") {
+        runController.mark("coreCompleteMs");
         completeValidationPhase();
-        currentRun = event.data.run;
+        runController.acceptedRun = event.data.run;
         resultLines.clear();
         linesPending = event.data.explorerPending === true;
-        acceptedSnapshotId = event.data.snapshotId ?? generation;
+        runController.acceptedSnapshotId = event.data.snapshotId ?? generation;
         if (explorerController && event.data.source !== undefined) {
           explorerController.acceptSnapshot({
-            id: acceptedSnapshotId,
+            id: runController.acceptedSnapshotId,
             fileName: file.name,
             fileSizeLabel: humanFileSize(file.size),
             source: event.data.source,
@@ -1016,8 +1059,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         }
         renderResults();
         if (event.data.explorerPending) {
-          explorerDeadline = window.setTimeout(() => {
-            if (acceptedSnapshotId !== generation) return;
+          runController.schedule("enrichment", () => {
+            if (runController.acceptedSnapshotId !== generation) return;
             linesPending = false;
             renderFindingRows();
             explorerController?.setLocationFailure(generation);
@@ -1027,14 +1070,15 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           terminateWorker();
         }
       } else if (event.data.type === "explorer-ready") {
-        if (event.data.snapshotId !== acceptedSnapshotId) return;
+        if (event.data.snapshotId !== runController.acceptedSnapshotId) return;
         linesPending = false;
         resultLines = new Map((event.data.lines ?? []).map((entry) => [entry.ordinal, entry]));
+        runController.mark("enrichmentCompleteMs");
         explorerController?.setLocations(event.data.snapshotId, event.data.locations);
         renderFindingRows();
         terminateWorker();
       } else if (event.data.type === "explorer-error") {
-        if (event.data.snapshotId !== acceptedSnapshotId) return;
+        if (event.data.snapshotId !== runController.acceptedSnapshotId) return;
         linesPending = false;
         renderFindingRows();
         explorerController?.setLocationFailure(event.data.snapshotId);
@@ -1044,8 +1088,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       }
     });
     const handleWorkerFailure = (): void => {
-      if (generation !== runGeneration || worker !== activeWorker) return;
-      if (acceptedSnapshotId === generation && currentRun) {
+      if (!runController.current(generation, worker)) return;
+      if (runController.acceptedSnapshotId === generation && runController.acceptedRun) {
         linesPending = false;
         renderFindingRows();
         explorerController?.setLocationFailure(generation);
@@ -1073,17 +1117,31 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   });
 
   exportButton.addEventListener("click", () => {
-    if (!currentRun) return;
-    const blob = new Blob([validationRunToCsv(currentRun)], { type: "text/csv;charset=utf-8" });
+    if (!runController.acceptedRun) return;
+    const blob = new Blob([validationRunToCsv(runController.acceptedRun)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = validationReportFileName(currentRun);
+    anchor.download = validationReportFileName(runController.acceptedRun);
     anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    URL.revokeObjectURL(url);
     announce("The complete validation CSV report was downloaded.");
   });
 
+  requiredElement<HTMLDetailsElement>("#local-diagnostics").addEventListener("toggle", () => {
+    const output = app.querySelector<HTMLElement>(`#${prefix}diagnostics-output`);
+    if (!output) return;
+    output.textContent = JSON.stringify({
+      build: runController.acceptedRun?.provenance?.buildRevision ?? "no accepted run", ...runController.diagnostics,
+    }, null, 2);
+  });
+  requiredElement<HTMLButtonElement>("#export-json").addEventListener("click", () => {
+    if (!runController.acceptedRun) return;
+    const url = URL.createObjectURL(new Blob([validationRunToJson(runController.acceptedRun)], { type: "application/json" }));
+    const anchor = document.createElement("a"); anchor.href = url;
+    anchor.download = validationReportFileName(runController.acceptedRun).replace(/csv$/, "json"); anchor.click();
+    URL.revokeObjectURL(url);
+  });
   renderAll();
 
   return () => {

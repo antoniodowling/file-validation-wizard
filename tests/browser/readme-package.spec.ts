@@ -20,7 +20,7 @@ test("self-contained ReadMe package mounts on demand and validates locally", asy
   await expect(page.locator("#format-search")).toBeVisible();
   await expect(page.locator("[data-file-explorer]")).toHaveCount(0);
   await page.locator("#format-search").focus();
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(50);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(3);
   await page.locator("#format-search").fill("pain.001");
   await page.getByRole("option", { name: /pain\.001/i }).click();
   await page.locator("#version-select").selectOption("pain.001.001.09");
@@ -179,7 +179,6 @@ test("inline and modal layouts fit narrow containers", async ({ page, browserNam
   const modalFits = await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth);
   await expect(dialog.getByRole("button", { name: "Close validator" })).toBeInViewport();
   // HANDOFF-UI-002: preserve Linux geometry failures without masking modal behavior.
-  test.fail(process.platform === "linux" && browserName !== "chromium", "HANDOFF-UI-002: narrow-container overflow on Linux Firefox/WebKit.");
   expect({ inlineFits, modalFits }).toEqual({ inlineFits: true, modalFits: true });
 });
 

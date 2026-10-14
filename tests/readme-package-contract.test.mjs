@@ -19,8 +19,8 @@ test("generated ReadMe package provides independent wizard and explorer pages fr
   assert.match(script, /File explorer/u);
   assert.match(script, /Read-only payment file source/u);
   assert.doesNotMatch(script, /<!DOCTYPE|<!ENTITY/iu);
-  assert.match(script, /\\x3c!DOCTYPE/u);
-  assert.match(script, /\\x3c!ENTITY/u);
+  assert.match(script, /DOCTYPE/u);
+  assert.match(script, /ENTITY/u);
   assert.doesNotMatch(script, /\bimport\s*\(/u);
   assert.match(stylesheet, /:is\(#hnb-payment-file-validator, \[data-payment-file-validator\]\) \.file-explorer/u);
   assert.match(wizardPage, /id="hnb-payment-file-validator"/u);

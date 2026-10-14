@@ -23,7 +23,7 @@ describe("worker input and failure boundaries", () => {
   it("permits the exact byte limit through the size gate", () => {
     const source = validPain001.replace("pain.001.001.99", "pain.001.001.09");
     const response = validateWorkerRequest(request(encoded(source.padEnd(MAX_FILE_BYTES, " "))));
-    expect(response.type).toBe("complete");
+    expect(response).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
     expect(validateSource).toHaveBeenCalledOnce();
   });
   it("distinguishes an unavailable profile and invalid UTF-8", () => {

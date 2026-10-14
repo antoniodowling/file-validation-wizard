@@ -80,7 +80,6 @@ const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>
       kind: "EDI_X12",
       isa12: version === "004010" ? "00401" : "00501",
       gs08: version,
-      st03: version,
     }),
     approval: noApprovals,
     rules: Object.freeze([nonEmptyRule]),
@@ -109,6 +108,7 @@ export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
     errors.push("parser/version identifier agreement");
   }
   if (pack.mode === "PRODUCTION") {
+    if (!pack.releaseEvidence || Object.values(pack.releaseEvidence).some(value => !value.trim())) errors.push("revision-bound specification/ruleset/fixture/acceptance evidence");
     if (!pack.guideUrl?.trim()) errors.push("approved guide URL");
     if (!pack.approval.rulesApproved) errors.push("rules approval");
     if (!pack.approval.fixturesApproved) errors.push("fixture approval");

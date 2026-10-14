@@ -5,8 +5,8 @@ import type { SourceSpan } from "./types";
 // validation. Before raising them, measure memory and responsiveness with the
 // synthetic stress kit in supported browsers, including long single-line files.
 // These values are not claims of supported browser capacity (docs/FILE_EXPLORER.md).
-export const MAX_FULL_VIEWER_CHARACTERS = 5_000_000;
-export const MAX_FULL_VIEWER_LINE_CHARACTERS = 250_000;
+export const MAX_FULL_VIEWER_CHARACTERS = 12_000;
+export const MAX_FULL_VIEWER_LINE_CHARACTERS = 12_000;
 export const MAX_SOURCE_INDEX_CHARACTERS = 5_000_000;
 export const EXCERPT_CONTEXT_CHARACTERS = 12_000;
 
@@ -51,15 +51,9 @@ export function evaluateExplorerBudget(source: string): ExplorerBudgetDecision {
 }
 
 export function sourceExcerpt(source: string, focus: SourceSpan | null): SourceExcerpt {
-  const focusStart = focus?.start ?? 0;
-  const focusEnd = focus?.end ?? focusStart;
-  const halfContext = Math.floor(EXCERPT_CONTEXT_CHARACTERS / 2);
-  let start = Math.max(0, focusStart - halfContext);
-  let end = Math.min(source.length, Math.max(focusEnd, focusStart + 1) + halfContext);
-  if (end - start < EXCERPT_CONTEXT_CHARACTERS) {
-    if (start === 0) end = Math.min(source.length, EXCERPT_CONTEXT_CHARACTERS);
-    else if (end === source.length) start = Math.max(0, source.length - EXCERPT_CONTEXT_CHARACTERS);
-  }
+  const focusStart = Math.max(0, Math.min(source.length, focus?.start ?? 0));
+  const start = Math.max(0, Math.min(source.length - EXCERPT_CONTEXT_CHARACTERS, focusStart - Math.floor(EXCERPT_CONTEXT_CHARACTERS / 4)));
+  const end = Math.min(source.length, start + EXCERPT_CONTEXT_CHARACTERS);
   return Object.freeze({
     span: Object.freeze({ start, end }),
     text: source.slice(start, end),

@@ -1,3 +1,4 @@
+import { ResourceLimitError } from "./resource-policy";
 import { findEnabledFormatPack } from "./format-packs";
 import { MAX_FILE_BYTES, type WorkerRequest, type WorkerResponse } from "./types";
 import { validateSource } from "./validation";
@@ -25,7 +26,8 @@ export function validateWorkerRequest(request: WorkerRequest): WorkerResponse {
           explorerPending: true,
         }
       : { type: "complete", run };
-  } catch {
+  } catch (error) {
+    if (error instanceof ResourceLimitError) return { type: "error", code: "RESOURCE_LIMIT" };
     // Parser exceptions can contain file content. Send a category, not raw exception text.
     return { type: "error", code: "ENGINE_ERROR" };
   }

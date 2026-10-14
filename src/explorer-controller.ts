@@ -51,6 +51,12 @@ export function explorerMarkup(): string {
         <button class="button secondary compact" type="button" data-finding-previous disabled>← Previous finding</button>
         <button class="button secondary compact" type="button" data-finding-next disabled>Next finding →</button>
       </div>
+      <div class="explorer-toolbar">
+        <button class="button secondary compact" type="button" data-target-previous disabled>Previous occurrence</button>
+        <button class="button secondary compact" type="button" data-target-next disabled>Next occurrence</button>
+        <button class="button secondary compact" type="button" data-window-previous disabled>Previous source window</button>
+        <button class="button secondary compact" type="button" data-window-next disabled>Next source window</button>
+      </div>
       <div class="explorer-details" data-explorer-details hidden>
         <div class="explorer-details-heading">
           <div><span class="severity" data-detail-outcome></span> <strong data-detail-rule></strong></div>
@@ -58,6 +64,7 @@ export function explorerMarkup(): string {
         <dl class="explorer-finding-data">
           <div><dt>Field</dt><dd data-detail-field></dd></div>
           <div><dt>Path</dt><dd><code data-detail-locator></code></dd></div>
+          <div><dt>Location confidence</dt><dd data-detail-confidence></dd></div>
           <div><dt>Message</dt><dd data-detail-message></dd></div>
         </dl>
       </div>
@@ -78,10 +85,26 @@ export class FileExplorerController {
   private selectedOrdinal: number | null = null;
   private viewer: ReadOnlySourceViewer | null = null;
   private budget: ExplorerBudgetDecision | null = null;
+  private targetIndex = 0;
+  private windowStart = 0;
 
   constructor(options: ExplorerControllerOptions) {
     this.options = options;
     this.root = options.root;
+    for (const [selector, delta] of [["[data-target-previous]", -1], ["[data-target-next]", 1]] as const) {
+      this.q<HTMLButtonElement>(selector).addEventListener("click", () => {
+        this.targetIndex += delta; this.renderSelection();
+      });
+    }
+    for (const [selector, delta] of [["[data-window-previous]", -1], ["[data-window-next]", 1]] as const) {
+      this.q<HTMLButtonElement>(selector).addEventListener("click", () => {
+        if (!this.snapshot) return;
+        const start = Math.max(0, Math.min(this.snapshot.source.length - 1, this.windowStart + delta * 12_000));
+        this.configureViewer({ start: start + 3000, end: start + 3000 });
+        this.viewer?.setFindingTarget(this.selectedTarget(), this.selectedFinding()?.severity ?? null);
+        this.options.announce(this.q<HTMLElement>("[data-explorer-scope]").textContent ?? "Source window changed.");
+      });
+    }
     this.q<HTMLButtonElement>("[data-explorer-hide]").addEventListener("click", options.onHide);
     this.q<HTMLButtonElement>("[data-explorer-expand]").addEventListener("click", () => {
       const expanded = options.onExpand();
@@ -100,7 +123,7 @@ export class FileExplorerController {
   actionLabel(finding: RuleResult): string {
     const location = this.locations.get(finding.ordinal);
     if (location?.kind === "located") {
-      return location.primary.kind === "context" ? "View ›" : "View in file";
+      return location.primary.kind === "context" ? "View context" : "View in file";
     }
     return "View details";
   }
@@ -161,6 +184,7 @@ export class FileExplorerController {
   selectFinding(finding: RuleResult): void {
     if (!this.snapshot || finding.outcome === "PASS") return;
     this.selectedOrdinal = finding.ordinal;
+    this.targetIndex = 0;
     this.renderSelection();
     this.updateFindingButtons();
     this.options.showFindingInResults(finding.ordinal, false);
@@ -175,12 +199,7 @@ export class FileExplorerController {
     this.updateFindingButtons();
   }
 
-  destroy(): void {
-    this.viewer?.destroy();
-    this.viewer = null;
-    this.snapshot = null;
-    this.locations.clear();
-  }
+  destroy(): void { this.clearSnapshot(); }
 
   private clearSnapshot(): void {
     this.viewer?.destroy();
@@ -189,10 +208,14 @@ export class FileExplorerController {
     this.locations.clear();
     this.selectedOrdinal = null;
     this.budget = null;
+    this.targetIndex = 0; this.windowStart = 0;
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>("[data-target-previous], [data-target-next], [data-window-previous], [data-window-next], [data-finding-previous], [data-finding-next]")) button.disabled = true;
+    for (const field of this.root.querySelectorAll<HTMLElement>("[data-detail-field], [data-detail-locator], [data-detail-message], [data-detail-rule], [data-detail-confidence]")) field.textContent = "";
     this.q<HTMLElement>("[data-explorer-details]").hidden = true;
     this.q<HTMLElement>("[data-source-viewer]").hidden = true;
     this.q<HTMLElement>("[data-source-viewer]").replaceChildren();
     this.q<HTMLElement>("[data-source-fallback]").hidden = true;
+    this.q<HTMLElement>("[data-source-fallback]").textContent = "";
     this.q<HTMLElement>("[data-explorer-scope]").hidden = true;
   }
 
@@ -200,18 +223,23 @@ export class FileExplorerController {
     if (!this.snapshot || !this.budget) return;
     const excerpt = this.budget.mode === "excerpt" ? sourceExcerpt(this.snapshot.source, focus) : null;
     const displaySpan = excerpt?.span ?? { start: 0, end: this.snapshot.source.length };
+    this.windowStart = displaySpan.start;
+    this.q<HTMLButtonElement>("[data-window-previous]").disabled = displaySpan.start === 0;
+    this.q<HTMLButtonElement>("[data-window-next]").disabled = displaySpan.end === this.snapshot.source.length;
     this.viewer?.destroy();
     this.viewer = null;
     const host = this.q<HTMLElement>("[data-source-viewer]");
     host.replaceChildren();
     host.hidden = false;
     this.q<HTMLElement>("[data-source-fallback]").hidden = true;
+    this.q<HTMLElement>("[data-source-fallback]").textContent = "";
     try {
       this.viewer = new ReadOnlySourceViewer(host, this.snapshot.source, displaySpan);
     } catch {
       host.hidden = true;
+      host.replaceChildren();
       const fallback = this.q<HTMLElement>("[data-source-fallback]");
-      fallback.textContent = this.snapshot.source.slice(displaySpan.start, displaySpan.end);
+      fallback.textContent = sourceExcerpt(this.snapshot.source, focus).text;
       fallback.hidden = false;
       this.q<HTMLElement>("[data-explorer-notice]").textContent = "The interactive viewer could not start. A bounded read-only source excerpt is shown instead.";
       this.q<HTMLElement>("[data-explorer-notice]").hidden = false;
@@ -220,7 +248,7 @@ export class FileExplorerController {
     if (excerpt) {
       const start = sourceLineColumnAtOffset(this.snapshot.source, displaySpan.start);
       const end = sourceLineColumnAtOffset(this.snapshot.source, displaySpan.end);
-      scope.textContent = `${this.budget.reason} Showing an original-source excerpt from line ${start?.line ?? 1} through ${end?.line ?? 1}.`;
+      scope.textContent = `${this.budget.reason} Showing a clipped original-source window at UTF-16 offsets ${displaySpan.start}–${displaySpan.end} (end exclusive), line ${start?.line ?? 1} through ${end?.line ?? 1}. Large targets may continue beyond this window.`;
       scope.hidden = false;
     } else {
       scope.hidden = true;
@@ -235,7 +263,7 @@ export class FileExplorerController {
   private selectedTarget(): SourceTarget | null {
     if (this.selectedOrdinal === null) return null;
     const location = this.locations.get(this.selectedOrdinal);
-    return location?.kind === "located" ? location.primary : null;
+    return location?.kind === "located" ? [location.primary, ...location.related][this.targetIndex] ?? location.primary : null;
   }
 
   private renderSelection(): void {
@@ -246,13 +274,20 @@ export class FileExplorerController {
     const outcome = this.q<HTMLElement>("[data-detail-outcome]");
     outcome.className = `severity ${finding.outcome.toLowerCase()}`;
     outcome.textContent = finding.outcome;
-    this.q<HTMLElement>("[data-detail-rule]").textContent = finding.ruleId;
+    this.q<HTMLElement>("[data-detail-rule], [data-detail-confidence]").textContent = finding.ruleId;
     this.q<HTMLElement>("[data-detail-field]").textContent = finding.field;
     this.q<HTMLElement>("[data-detail-locator]").textContent = finding.locator;
     this.q<HTMLElement>("[data-detail-message]").textContent = finding.message;
 
+    const location = this.locations.get(finding.ordinal);
+    this.q<HTMLElement>("[data-detail-confidence]").textContent = location?.kind === "located"
+      ? `${location.primary.kind}: ${location.primary.label}. ${location.related.length} related targets${location.relatedTruncated ? " (additional targets omitted)" : ""}.`
+      : location ? `${location.kind}: ${location.explanation}` : "Locations are preparing.";
+    this.q<HTMLButtonElement>("[data-target-previous]").disabled = this.targetIndex <= 0;
+    this.q<HTMLButtonElement>("[data-target-next]").disabled = location?.kind !== "located" || this.targetIndex >= location.related.length;
+    if (location?.kind === "located") this.q<HTMLElement>("[data-detail-confidence]").textContent += ` Showing occurrence ${this.targetIndex + 1} of ${location.related.length + 1}.`;
     this.showSelectedTarget();
-    this.options.announce(`${finding.outcome}: ${finding.field}. ${finding.message}`);
+    this.options.announce(`${finding.outcome}: ${finding.field}. ${finding.message}. ${this.q<HTMLElement>("[data-detail-confidence]").textContent}`);
   }
 
   private showSelectedTarget(): void {

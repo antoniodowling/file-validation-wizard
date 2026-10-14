@@ -1,5 +1,8 @@
 # WCAG 2.2 AA Follow-up Log
 
+> Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
+
+
 The Payment File Validation Wizard targets WCAG 2.2 Level AA. This log separates
 confirmed issues from checks that still require manual evidence. An automated scan
 or a single browser state is not sufficient to claim conformance for the complete
@@ -64,3 +67,11 @@ contrast, and current-run visual inspection of Steps 1 and 2. The browser did
 not permit the local fixture upload used to open Step 3 during this review, so
 the Step 3 visual check remains part of A11Y-006 through A11Y-009. No manual
 screen-reader session or actual 200% browser-zoom pass has been completed.
+
+## Ruleset 2 local resolution
+
+A11Y-001: warning text/state color is now #806000 on the existing pale background. The contrast exception was removed; all full-checkpoint local axe scans passed in Chromium, Firefox and WebKit.
+
+A11Y-003, HANDOFF-UI-001 and HANDOFF-UI-002: container-responsive format controls/options, summary/filter stacking, readable table columns, explicit table scrolling and responsive step labels have passed generated-mount checks at 320/375/400 pixels and splitter 30%/70%. Expected-failure annotations were removed. Actual 200% browser zoom and manual assistive-technology checks remain pending; this closes the reproduced local defects only.
+
+Continue, results completion, Hide Explorer, occurrence navigation and Remove now have explicit focus behavior. Completion preserves the visible control when the user moved back to format selection. See [the exact evidence receipt](evidence/ruleset-2/receipt.json); remaining manual/hosted items above are unchanged.

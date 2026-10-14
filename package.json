@@ -22,7 +22,8 @@
     "@lezer/common": "^1.5.2",
     "@lezer/xml": "^1.0.6",
     "bootstrap-icons": "^1.13.1",
-    "fast-xml-parser": "^5.3.4"
+    "fast-xml-parser": "^5.3.4",
+    "saxes": "6.0.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",

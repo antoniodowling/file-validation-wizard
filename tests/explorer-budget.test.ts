@@ -13,7 +13,7 @@ describe("explorer budgets", () => {
     expect(evaluateExplorerBudget("a\nb").mode).toBe("full");
     expect(evaluateExplorerBudget("x".repeat(MAX_FULL_VIEWER_LINE_CHARACTERS + 1)).mode).toBe("excerpt");
     expect(evaluateExplorerBudget(`${"x\n".repeat(Math.ceil(MAX_FULL_VIEWER_CHARACTERS / 2))}x`).mode).toBe("excerpt");
-    expect(MAX_SOURCE_INDEX_CHARACTERS).toBe(MAX_FULL_VIEWER_CHARACTERS);
+    expect(MAX_SOURCE_INDEX_CHARACTERS).toBeGreaterThanOrEqual(MAX_FULL_VIEWER_CHARACTERS);
   });
 
   it("builds bounded exact-source excerpts around targets", () => {
