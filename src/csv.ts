@@ -26,6 +26,8 @@ export function quoteCsv(value: string): string {
 }
 
 export function validationRunToCsv(run: ValidationRun): string {
+  const schema = run.provenance?.schemaVersion ?? (run.reportedDisposition ? "3" : "2");
+  const headers = schema === "3" ? [...HEADERS, "Reported File Disposition", "Reported File Qualifier", "Reported Batch Dispositions"] : HEADERS;
   const occurrences = run.results.map(result => ({ ...result, rowKind: "evaluation-occurrence" }));
   const skipped = (run.checks ?? []).filter(check => check.state === "not-evaluated" || check.state === "not-applicable").map(check => ({
     ruleId: check.ruleId, outcome: check.state, severity: null, field: "", locator: "", message: "See coverage prerequisites and execution status.",
@@ -45,17 +47,18 @@ export function validationRunToCsv(run: ValidationRun): string {
       result.field,
       result.locator,
       result.message,
-      "2", result.rowKind, run.provenance?.mode ?? "LEGACY UNKNOWN", run.formatId,
+      schema, result.rowKind, run.provenance?.mode ?? "LEGACY UNKNOWN", run.formatId,
       run.provenance?.rulesetRevision ?? "unknown", run.provenance?.coverageRevision ?? "unknown",
       run.provenance?.buildRevision ?? "unknown", run.provenance?.implementationGuideRevision ?? "unknown",
       run.executionStatus ?? "COMPLETED", run.verdict === null ? "" : run.verdict ?? run.overallStatus,
       JSON.stringify(result.location ?? { kind: "unavailable", explanation: "No authoritative source location" }),
       index === 0 ? JSON.stringify({ coverage: run.provenance?.coverage ?? [], exclusions: run.provenance?.exclusions ?? ["Legacy report; coverage unknown"], checks: run.checks ?? [] }) : `Coverage snapshot: first data row; ${run.provenance?.coverageRevision ?? "legacy unknown"}`,
+      ...(schema === "3" ? [run.reportedDisposition?.file.status ?? "", run.reportedDisposition?.file.qualifier ?? "", run.reportedDisposition ? JSON.stringify(run.reportedDisposition.batches) : ""] : []),
     ]
       .map(quoteCsv)
       .join(","),
   );
-  return `\uFEFF${HEADERS.map(quoteCsv).join(",")}\r\n${rows.join("\r\n")}\r\n`;
+  return `\uFEFF${headers.map(quoteCsv).join(",")}\r\n${rows.join("\r\n")}\r\n`;
 }
 
 export function validationReportFileName(run: ValidationRun): string {
@@ -68,5 +71,5 @@ export function validationReportFileName(run: ValidationRun): string {
 
 /** JSON retains occurrence locations, check states and the immutable coverage snapshot. */
 export function validationRunToJson(run: ValidationRun): string {
-  return JSON.stringify({ exportSchemaVersion: "2", ...run }, null, 2) + "\n";
+  return JSON.stringify({ exportSchemaVersion: run.provenance?.schemaVersion ?? (run.reportedDisposition ? "3" : "2"), ...run }, null, 2) + "\n";
 }

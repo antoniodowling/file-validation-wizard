@@ -1,6 +1,6 @@
 # ReadMe installation
 
-This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus two executable NACHA public-source candidates: the original ordinary-origination profile and the expanded-entry profile. Other catalog placeholders have been removed. Profiles remain unapproved for production; embedding does not change that status. NACHA validates ordinary CCD, PPD, CTX, WEB, and TEL batches, including mixed files. Neither candidate is a complete 2026 Operating Rules implementation.
+This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus six ACH candidates across four families: three origination revisions, ordinary network Returns/COR, standalone control totals and the single-scenario ACK. Other catalog placeholders have been removed. Profiles remain unapproved for production; embedding does not change that status. NACHA validates ordinary CCD, PPD, CTX, WEB, and TEL batches, including mixed files. These candidates do not claim a complete 2026 Operating Rules implementation.
 
 ## Shared installation
 
@@ -47,7 +47,7 @@ Create a component in **Settings → Custom Components**, using `PaymentFileVali
 />
 ```
 
-The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. Use `format="NACHA"` and `version="origination-public-2026"` for the historical public NACHA candidate. The expanded candidate uses `version="origination-expanded-public-2026-r1"`; its source/qualification gates remain visible in coverage. Multiple inline instances keep independent file state and unique control IDs.
+The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. Use `format="NACHA"` and `version="origination-public-2026"` for the historical public NACHA candidate. The preserved expanded candidate uses `version="origination-expanded-public-2026-r1"`; the new declared-healthcare revision uses `version="origination-expanded-public-2026-r2"`. Other executable presets are `format="ACH Returns"`, `version="returns-network-public-2026-r1"`; `format="ACH Control Totals"`, `version="control-total-public-2026-r1"`; and `format="File Received ACK"`, `version="pipe-1.0-candidate-r1"`. Candidate source/scenario limits remain visible in coverage. ACK reported disposition is separate from validity, and new profiles export schema 3 while historical profiles retain schema 2. Multiple inline instances keep independent file state and unique control IDs.
 
 For an HTML mount instead of MDX, use:
 

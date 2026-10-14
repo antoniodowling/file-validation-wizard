@@ -4,8 +4,8 @@ export const VALIDATION_DEADLINE_MS = 10_000;
 export type WorkerFailureCode = "FILE_TOO_LARGE" | "PROFILE_UNAVAILABLE" | "INVALID_ENCODING" | "ENGINE_ERROR" | "RESOURCE_LIMIT";
 export type ValidationFailureCode = WorkerFailureCode | "FILE_READ_ERROR" | "WORKER_UNAVAILABLE" | "WORKER_ERROR" | "TIMEOUT";
 
-export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820" | "NACHA";
-export type ParserKind = "ISO_XML" | "EDI_X12" | "NACHA_FIXED";
+export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820" | "NACHA" | "NACHA Returns" | "Huntington Control Totals" | "Huntington ACK";
+export type ParserKind = "ISO_XML" | "EDI_X12" | "NACHA_FIXED" | "NACHA_RETURN_FIXED" | "ACH_CONTROL_FIXED" | "HUNTINGTON_ACK";
 export type FormatPackMode = "DEMO" | "CANDIDATE" | "PRODUCTION";
 export type CatalogStatus = "DEMO_SUPPORTED" | "CANDIDATE_SUPPORTED" | "REFERENCE_ONLY";
 export type RuleOutcome = "PASS" | "ERROR" | "WARNING";
@@ -62,11 +62,37 @@ export interface EdiVersionIdentifiers {
 
 export interface NachaVersionIdentifiers {
   readonly kind: "NACHA_FIXED";
-  readonly profile: "origination-public-2026" | "origination-expanded-public-2026-r1";
+  readonly profile: "origination-public-2026" | "origination-expanded-public-2026-r1" | "origination-expanded-public-2026-r2";
   readonly secCodes: readonly string[];
 }
 
-export type VersionIdentifiers = IsoVersionIdentifiers | EdiVersionIdentifiers | NachaVersionIdentifiers;
+export interface NachaReturnVersionIdentifiers {
+  readonly kind: "NACHA_RETURN_FIXED";
+  readonly profile: "returns-network-public-2026-r1";
+  readonly secCodes: readonly string[];
+}
+export interface ControlTotalVersionIdentifiers {
+  readonly kind: "ACH_CONTROL_FIXED";
+  readonly profile: "control-total-public-2026-r1";
+}
+export interface AckVersionIdentifiers {
+  readonly kind: "HUNTINGTON_ACK";
+  readonly profile: "huntington-ack-pipe-1.0-candidate-r1";
+}
+export type VersionIdentifiers = IsoVersionIdentifiers | EdiVersionIdentifiers | NachaVersionIdentifiers
+  | NachaReturnVersionIdentifiers | ControlTotalVersionIdentifiers | AckVersionIdentifiers;
+
+/** Bank-reported status is independent of document validity. */
+export type ReportedStatus = "RECEIVED" | "ACCEPTED" | "REJECTED";
+export interface ReportedDisposition {
+  readonly file: { readonly status: ReportedStatus; readonly qualifier: string };
+  readonly batches: readonly {
+    readonly batchNumber: string;
+    readonly batchReference: string;
+    readonly status: ReportedStatus;
+    readonly qualifier: string;
+  }[];
+}
 
 export interface RuleEvaluation {
   readonly outcome: RuleOutcome;
@@ -141,6 +167,7 @@ export interface RuleResult {
 }
 
 export interface ValidationRun {
+  readonly reportedDisposition?: ReportedDisposition;
   readonly provenance?: RunProvenance;
   readonly checks?: readonly CheckEvaluation[];
   readonly executionReason?: string;
@@ -200,7 +227,7 @@ export type WorkerResponse =
 export interface CoverageRule {
   readonly id: string;
   readonly description: string;
-  readonly ruleClass: "xml-syntax" | "demo-structure" | "iso-schema" | "nacha-structure" | "advisory" | "tool-policy";
+  readonly ruleClass: "xml-syntax" | "demo-structure" | "iso-schema" | "nacha-structure" | "flat-file-structure" | "advisory" | "tool-policy";
   readonly severity: "ERROR" | "WARNING";
   readonly applicability: string;
   readonly prerequisite: string;
@@ -213,7 +240,7 @@ export interface CheckEvaluation {
   readonly findingOrdinals: readonly number[];
 }
 export interface RunProvenance {
-  readonly schemaVersion: "2";
+  readonly schemaVersion: "2" | "3";
   readonly profileId: string;
   readonly messageVersion: string;
   readonly implementationGuideRevision: string;

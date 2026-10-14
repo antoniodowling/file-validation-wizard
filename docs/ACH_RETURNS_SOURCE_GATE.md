@@ -1,5 +1,7 @@
 # Phase 2 — general ACH Returns source gate
 
+**Current implementation:** Recovered primary evidence now supports an executable ordinary network Returns/COR candidate. The full-pack hold below is superseded; specialized variants and precise qualification exclusions remain individually scoped. See [ACH_RETURNS_CANDIDATE](ACH_RETURNS_CANDIDATE.md). The original assessment below is retained as dated source-review history.
+
 Assessment 2026-10-14. No Returns profile is registered, no placeholder dropdown selection or synthetic conformance kit is published, and no approval/acceptance is claimed. The owner has already selected general network ACH for CCD/PPD/CTX/WEB/TEL, with administrative COR for NOCs. A bank-adapted customer report is not the selected contract. No further product-scope decision is required.
 
 ## Established evidence and conflicts

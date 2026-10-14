@@ -414,7 +414,7 @@ function locateEdiFinding(source: string, pack: FormatPack, finding: RuleResult)
 }
 
 export function locateFindings(source: string, pack: FormatPack, run: ValidationRun): readonly FindingLocationEntry[] {
-  if (run.provenance?.schemaVersion === "2" || pack.parserKind === "NACHA_FIXED") {
+  if (run.provenance?.schemaVersion === "2" || run.provenance?.schemaVersion === "3" || pack.parserKind === "NACHA_FIXED") {
     return run.results.filter(f => f.outcome !== "PASS").map(f => ({ ordinal: f.ordinal,
       location: validatedLocation(f.location ?? (f.ruleId === "demo.xml-declaration" ? { kind: "located", primary: { kind: "context", label: "Expected optional XML declaration", span: { start: 0, end: 0 } }, related: [] } : { kind: "file-wide", explanation: "This advisory concerns the document as a whole." }), source.length) }));
   }

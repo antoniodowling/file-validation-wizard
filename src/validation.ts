@@ -3,6 +3,9 @@ import { MAX_DECODED_UNITS, ResourceLimitError, UnsupportedInputError } from "./
 import { deriveOverallStatus } from "./outcome";
 import { parseEdi } from "./parsers/edi";
 import { parseNacha } from "./parsers/nacha";
+import { parseNachaReturns } from "./parsers/nacha-returns";
+import { parseHuntingtonControlTotals } from "./parsers/huntington-control-totals";
+import { parseHuntingtonAck } from "./parsers/huntington-ack";
 import { parseIso } from "./parsers/iso";
 import { result } from "./parsers/shared";
 import type { FormatPack, RuleResult, ValidationRun } from "./types";
@@ -19,6 +22,9 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
     parsed = pack.parserKind === "ISO_XML" ? parseIso(source, pack)
       : pack.parserKind === "EDI_X12" ? parseEdi(source, pack)
       : pack.parserKind === "NACHA_FIXED" ? parseNacha(source, pack)
+      : pack.parserKind === "NACHA_RETURN_FIXED" ? parseNachaReturns(source, pack)
+      : pack.parserKind === "ACH_CONTROL_FIXED" ? parseHuntingtonControlTotals(source, pack)
+      : pack.parserKind === "HUNTINGTON_ACK" ? parseHuntingtonAck(source, pack)
       : (() => { throw new Error("Unsupported parser kind."); })();
   } catch (error) {
     if (!(error instanceof UnsupportedInputError)) throw error;
@@ -49,6 +55,7 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
   const warningCount = frozenResults.filter((entry) => entry.outcome === "WARNING").length;
   return Object.freeze({
     provenance,
+    ...(parsed.reportedDisposition ? { reportedDisposition: parsed.reportedDisposition } : {}),
     executionStatus: "COMPLETED",
     verdict: deriveOverallStatus(frozenResults) as "PASS" | "PASS_WITH_WARNINGS" | "FAIL",
     checks: provenance.coverage.map(rule => {

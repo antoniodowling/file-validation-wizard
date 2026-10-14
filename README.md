@@ -2,9 +2,9 @@
 
 A browser-local demo for exploring and validating common payment-file formats. Its format-first wizard provides:
 
-- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, and NACHA / ACH;
+- a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, and File Received ACK;
 - nine existing ISO/X12 profiles, with three versions per format;
-- two NACHA public-source candidates: the original ordinary-origination profile and a separately versioned expanded-entry profile, both covering CCD, PPD, CTX, WEB, and TEL; and
+- six ACH candidates across four format families, including three preserved/current origination revisions for CCD, PPD, CTX, WEB, and TEL; and
 - a dedicated-page, read-only file explorer that links current findings to exact source, honest context, or an explicit unavailable state.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee ABC Bank acceptance or payment readiness.
@@ -46,7 +46,7 @@ Select **PAIN.001**, choose version **pain.001.001.09**, and upload one of the s
 
 ## Catalog and validation profiles
 
-Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The nine ISO/X12 packs retain their existing `DEMO` approval status and validation behavior. The two enabled NACHA profiles are `CANDIDATE` revisions based on public Nacha and bank specifications. Neither is an approved production pack or a complete 2026 Operating Rules implementation. Other catalog placeholders have been removed.
+Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The nine ISO/X12 packs retain their existing `DEMO` approval status and validation behavior. The six enabled ACH profiles are `CANDIDATE` revisions based on public specifications and declared scenarios. They include three origination revisions plus ordinary Returns/COR, standalone control totals and the single-scenario ACK. None is an approved production pack or a complete 2026 Operating Rules implementation. Other catalog placeholders have been removed.
 
 Select **NACHA**, then **Public specification profile (2026 review)**. Supported ordinary monetary transaction codes are 22, 27, 32, 37, and 52. Files may combine the five supported SEC codes in separate batches. Both balanced and unbalanced files are accepted when their controls reconcile. LF, CRLF, CR, and concatenated 94-character records are supported. See [NACHA sources and validation scope](docs/NACHA_SOURCE_REVIEW.md) and the [synthetic NACHA fixture kit](demo-files/nacha/README.md).
 
@@ -83,6 +83,8 @@ See [the file explorer implementation](docs/FILE_EXPLORER.md) for coordinate sem
 - Verify the generated package in ReadMe staging, including Blob-worker compatibility and coexistence with the portal's existing Custom JavaScript.
 - Document the smallest hosted-asset fallback only if ReadMe's content security policy blocks the embedded worker.
 
-Ruleset 2: [coverage and export semantics](docs/coverage/README.md), [implementation evidence and remaining gates](docs/IMPLEMENTATION_EVIDENCE.md), and [historical September bundle receipt](docs/evidence/ruleset-2/receipt.json). That receipt binds its original bundle, not later regenerated files. The nine ISO/X12 profiles remain DEMO; the two NACHA candidates have separate coverage revisions.
+Ruleset 2: [coverage and export semantics](docs/coverage/README.md), [implementation evidence and remaining gates](docs/IMPLEMENTATION_EVIDENCE.md), and [historical September bundle receipt](docs/evidence/ruleset-2/receipt.json). That receipt binds its original bundle, not later regenerated files. The nine ISO/X12 profiles remain DEMO; the preserved NACHA and new ACH candidates have separate coverage revisions.
 
 Expanded origination is available as **Expanded entry types — public-source candidate (2026 r1)**. See [expanded source matrix and gates](docs/ACH_ORIGINATION_EXPANDED.md) and [new synthetic kit](demo-files/nacha-expanded/README.md). The earlier public profile remains executable; neither candidate is a fully qualified bank validator.
+
+Four ACH format families now have executable candidates: [origination r2](docs/ACH_ORIGINATION_R2.md), [ordinary network Returns/COR](docs/ACH_RETURNS_CANDIDATE.md), [Huntington standalone control totals](docs/HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md), and [Huntington single-scenario ACK](docs/HUNTINGTON_ACK_CANDIDATE.md). The ACK's reported disposition is separate from format validity: a valid REJECTED response can pass. New profiles export schema 3; historical profiles retain schema 2. [57 synthetic fixtures](demo-files/ach-candidates/README.md) and [version-bound coverage](docs/coverage/ach-candidates-1.0.0.json) document supported checks and remaining exclusions. These are source-based/candidate scenarios, with no bank acceptance or Production activation.

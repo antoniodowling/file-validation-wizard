@@ -1,0 +1,606 @@
+[
+  {
+    "name": "ack-received-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 386,
+    "sha256": "dadab722d17d68bede625aa8f2af4721b8126e517db8d920fc4427d142e024e9",
+    "explanation": "File-only receipt; original count differs from ACK records without error.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "RECEIVED",
+        "qualifier": "AcceptedForParsing"
+      },
+      "batches": []
+    }
+  },
+  {
+    "name": "ack-accepted-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 386,
+    "sha256": "0aa6e6ce2fbee3d347c242e9374a912a8bb6c69cc43c14619c13cae8dff47aff",
+    "explanation": "Reported acceptance remains separate from document validity.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "ACCEPTED",
+        "qualifier": "AcceptedForParsing"
+      },
+      "batches": []
+    }
+  },
+  {
+    "name": "ack-rejected-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 447,
+    "sha256": "2050eeb472e890e4aa8849d3e1a1fe2de85d6c95338f741bcc3f4aeca05a1cd9",
+    "explanation": "Valid rejected ACK with original VAL ERROR and unequal original controls.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "REJECTED",
+        "qualifier": "ChecksumMismatch"
+      },
+      "batches": []
+    }
+  },
+  {
+    "name": "ack-batches-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 559,
+    "sha256": "717a13e193f30a1bb2a0213d7ebf4c655643da618ec18294df8bf19144ab3ea9",
+    "explanation": "Optional batch rejection and original-file warning do not invalidate ACK syntax.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "RECEIVED",
+        "qualifier": "AcceptedForParsing"
+      },
+      "batches": [
+        {
+          "batchNumber": "1",
+          "batchReference": "SYNTHETIC-BATCH",
+          "status": "REJECTED",
+          "qualifier": "BatchValidationFailed"
+        }
+      ]
+    }
+  },
+  {
+    "name": "ack-crlf-comments-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 417,
+    "sha256": "70b50bf66986256ac5754ca389423986d03e815b5dda04382ba66631e52a0a0c",
+    "explanation": "Source offsets retain CRLF and comment lines.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "RECEIVED",
+        "qualifier": "AcceptedForParsing"
+      },
+      "batches": []
+    }
+  },
+  {
+    "name": "ack-html-qualifier-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 404,
+    "sha256": "c17af1e5373f3be862103c229017a0646460dcff49dd9560df8ca9468c822215",
+    "explanation": "Opaque qualifier must render as text, never HTML.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "RECEIVED",
+        "qualifier": "<img src=SYNTHETIC onerror=alert(1)>"
+      },
+      "batches": []
+    }
+  },
+  {
+    "name": "ack-formula-qualifier-pass.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "PASS",
+    "bytes": 375,
+    "sha256": "9b664dd640719e0b79e94ee3cc374cf6a2babfeafe7d48bcbe603499ce20fb45",
+    "explanation": "CSV escapes a spreadsheet-formula qualifier.",
+    "expectedFindingIds": [],
+    "reportedDisposition": {
+      "file": {
+        "status": "RECEIVED",
+        "qualifier": "=SUM(1)"
+      },
+      "batches": []
+    }
+  },
+  {
+    "name": "ack-bom-fail.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 389,
+    "sha256": "1ac5629ae00129be68cbbfa6b04b11a75926c689ad9086b912d62d9a85f7989b",
+    "explanation": "Candidate admits no BOM.",
+    "expectedFindingIds": [
+      "ack.framing"
+    ]
+  },
+  {
+    "name": "ack-date-fail.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 386,
+    "sha256": "c73a754005b95240dfb4872778fae4e9e07617733d837d563a897fb9b00d2011",
+    "explanation": "Impossible timestamp.",
+    "expectedFindingIds": [
+      "ack.header"
+    ]
+  },
+  {
+    "name": "ack-missing-trailer-fail.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 357,
+    "sha256": "931ac606b4dd9d16ca349ccec081ddd3d7f3a142d16d23fd605c18a054ef39bb",
+    "explanation": "Incomplete envelope.",
+    "expectedFindingIds": [
+      "ack.record-order"
+    ]
+  },
+  {
+    "name": "ack-duplicate-identification-fail.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 424,
+    "sha256": "8f97e24b57ce170768b242d0937485a803541913720561190c010f041ff4efa8",
+    "explanation": "Duplicate FIL field.",
+    "expectedFindingIds": [
+      "ack.file-identification"
+    ]
+  },
+  {
+    "name": "ack-control-type-fail.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 386,
+    "sha256": "b08de551b33c3d89818d1bf9d5af2aff055da0b621f84e922e834757ace0c8d0",
+    "explanation": "Malformed original-file count syntax.",
+    "expectedFindingIds": [
+      "ack.control"
+    ]
+  },
+  {
+    "name": "ack-version-unsupported.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 386,
+    "sha256": "7cc555d3406eb9dfc7de23887fad59957ffd8d6cfaeb79cd53607d2d231c208f",
+    "explanation": "Unselected dialect carries no verdict.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "ack-status-unsupported.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 385,
+    "sha256": "29c48919c3cb40241d27ee2ab0d7b2ff4428b4e75e5ff5d3ebeecbe577d20f0e",
+    "explanation": "Unknown disposition vocabulary carries no verdict.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "ack-delimiter-unsupported.txt",
+    "profileId": "huntington-ack-pipe-1.0-candidate-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 386,
+    "sha256": "75b5345959d0007bc5907052113c2cd55b8cd68e55594bf232a9190dd92a6ac3",
+    "explanation": "No customized comma grammar assumed.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "totals-pass.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 58,
+    "sha256": "a508275d2d9a1692a3a5415c10a867a80d93e25686398f0dc58d3a6e74f0474a",
+    "explanation": "One standalone record, exact integer cents and transmission-date syntax.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "totals-crlf-pass.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 60,
+    "sha256": "b34ac8ed817041b08ee4b33646fb6b4c3f90714543d0b3d5278909dbf613201a",
+    "explanation": "Candidate terminal delimiter.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "totals-zero-pass.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 58,
+    "sha256": "3bacb4f64de95aee22ea577f6ead3e9977abd40d0f065e8be6265ce93dece892",
+    "explanation": "Zero totals have valid amount syntax.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "totals-date-fail.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 58,
+    "sha256": "9d894407c51a70d0b129bbeb2cbe8b145e81d8ba4d7d75531ae74e03111f0d1c",
+    "explanation": "Invalid calendar date.",
+    "expectedFindingIds": [
+      "ach-totals.transmission-date"
+    ]
+  },
+  {
+    "name": "totals-company-fail.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 58,
+    "sha256": "37210ea31d5437035147b1f3733032fde1cb0c2a5ba30bc9c39634aa40d77d2c",
+    "explanation": "Published name uppercase requirement.",
+    "expectedFindingIds": [
+      "ach-totals.company"
+    ]
+  },
+  {
+    "name": "totals-amount-fail.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 58,
+    "sha256": "683a381c0c6d3f4d3f5045fcd57fd5ecbfb1814a8f29a0054e18c9d4339d07de",
+    "explanation": "Malformed integer cents.",
+    "expectedFindingIds": [
+      "ach-totals.credit"
+    ]
+  },
+  {
+    "name": "totals-width-fail.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 57,
+    "sha256": "8872f65881dc636036233740bd63952574e0c49f7ccd946561c106dae7323e3f",
+    "explanation": "Invalid field boundary.",
+    "expectedFindingIds": [
+      "ach-totals.framing"
+    ]
+  },
+  {
+    "name": "totals-multiple-unsupported.txt",
+    "profileId": "huntington-control-total-public-2026-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 117,
+    "sha256": "6011af4a3901f9f17cf1150ed10b2325734c44af478f07d264eba09ec31d7384",
+    "explanation": "Outside the single-record candidate.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-ccd-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "a28576c9aee91fe49d58e38506016b3d2c3987c1fc882a206ba57017a7ad4591",
+    "explanation": "Ordinary network return; original references are not matched.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-ppd-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "980f784106e80904fdfceeb4d8c93715b366250dfcec676e96efb2b9fc9ae439",
+    "explanation": "Ordinary network return; original references are not matched.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-ctx-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "9fe3b343a9511d0e8d1846181fd37e2332d38d1d68f3ecb1ffc1b015767ee343",
+    "explanation": "Ordinary network return; original references are not matched.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-web-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "696d03a77dfa9db8cb899c8fed0210d7af8369f47995590709805f24b85a321b",
+    "explanation": "Ordinary network return; original references are not matched.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-tel-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "3b5318a5d502b0bafd4145d42e22925f7c988babd7a606fd8beb167406a89852",
+    "explanation": "Ordinary network return; original references are not matched.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-21-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "27c5c74fa2a7565a4cae873aa625a8bfd7a0b86c1a1da642a47af0df1a25147c",
+    "explanation": "Explicit return-family directional reconciliation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-26-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "a28576c9aee91fe49d58e38506016b3d2c3987c1fc882a206ba57017a7ad4591",
+    "explanation": "Explicit return-family directional reconciliation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-31-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "5585d7e53ceba6ff4e67e2927e68183a6af7695ebc5550b1908e2ee7b51b1183",
+    "explanation": "Explicit return-family directional reconciliation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-36-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "3c2bdef3d6cc45929e7c66a650af06fa17b834561aefdf2aad74a74057008027",
+    "explanation": "Explicit return-family directional reconciliation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-51-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "583194b29dc4edf20dc65279ebca0e54cbcc367c16e986a0d905544a7c8fcb99",
+    "explanation": "Explicit return-family directional reconciliation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-56-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "eeacc0ea1f613d0cbdf48a2c0bef5881028df9df5fe243c76ec59ec274ced9ba",
+    "explanation": "Explicit return-family directional reconciliation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c01-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "e320b38c1c93f1f969a7fbd995058bd5e45990a325815bfd7a037e7f52373517",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c02-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "6be09e24c61bb4953b0755c9d08f0c1c3be0e439234b536d660437065f5c93d3",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c03-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "d9995b8e7ae0e36f58190adb1aae406fecb4d88034f09812f4463a5ad3e0321e",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c05-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "7d7c56d7228a6e19af9e21ff4072b518326b3ca896cf59dcd40ac2142898fc9e",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c06-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "78aa60bc43728dc48302fa4301bd1f3ae33cd3e4d5580656d942577de3e4a0ee",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c07-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "bae66d8a835298536164d20e3e10605a6a1cae0b138b9c7c9822bdb6f323de49",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c09-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "767c709cea3524477539db819a5b00f4b77782e2caa4f1c48d625b1252674ba6",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-c13-pass.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "96456deb07d8014b605be8afd7fb9581dd57e5f5a8f603165d130f1a726103c9",
+    "explanation": "Ordinary COR correction syntax, with no original-file comparison.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-trace-fail.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "397fefcb0f7f5b1141d776755c0467ff6d933648ecbfeda9375fc4483197bb7b",
+    "explanation": "Exception addenda trace differs from preceding detail.",
+    "expectedFindingIds": [
+      "nacha-returns.addenda-link"
+    ]
+  },
+  {
+    "name": "returns-credit-total-fail.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "a5233b07b4534fb355b5e6ba8be5598908fb1b6b5eeb61189604c23974883f36",
+    "explanation": "Batch control differs from exact entry totals.",
+    "expectedFindingIds": [
+      "nacha-returns.batch-credit",
+      "nacha-returns.file-credit"
+    ]
+  },
+  {
+    "name": "returns-r01-credit-fail.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "b9ad6c17e403492f58de427865b24c25f903e1b9827de971c7bae9b4e2f76954",
+    "explanation": "Known debit-only reason in credit family.",
+    "expectedFindingIds": [
+      "nacha-returns.reason-applicability"
+    ]
+  },
+  {
+    "name": "returns-unknown-code-fail.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "2ef92d5b986b63aacbdbe7000bb079217eea1396f3c2aba607ecaee355b4eea6",
+    "explanation": "Unassigned reason is not accepted by a continuous range.",
+    "expectedFindingIds": [
+      "nacha-returns.reason-code"
+    ]
+  },
+  {
+    "name": "returns-r69-unsupported.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 949,
+    "sha256": "982b7d8af39fa23851466a0dcf668891abeb1a4f38078428585a4088d0e6b204",
+    "explanation": "Specialized layout still unqualified; no ordinary99 interpretation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "returns-r73-unsupported.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 949,
+    "sha256": "c26041bfbde615c0b4817419836067202e10049ce2eb5f8bfecb0b0b6dd0576b",
+    "explanation": "Specialized layout still unqualified; no ordinary99 interpretation.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "noc-refused-unsupported.ach",
+    "profileId": "nacha-returns-network-public-2026-r1",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 949,
+    "sha256": "8c888af2383a1b7bb8f846e948488c79340922afcbfb2130dc0fb2d6f47bbfe6",
+    "explanation": "Refused COR layout not invented.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "origination-healthcare-pass.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "983a7f33859e8c8c279a3a2d295dd7fdd737ed5414ff06d6322d4c2ffa711498",
+    "explanation": "Declared healthcare CCD with whole reassociation TRN.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "origination-healthcare-prenote-pass.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "25a042fdf262194a0259b519a4d3b0f505bc7a551768b524cf0c90d343b957b1",
+    "explanation": "Healthcare prenote exemption.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "origination-healthcare-missing-fail.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "7499371a38458a4b51a5c45729f9a368b9c46d9de2ff57db878f373d7e8f92e9",
+    "explanation": "Declared live healthcare requires addenda.",
+    "expectedFindingIds": [
+      "nacha.healthcare-addenda"
+    ]
+  },
+  {
+    "name": "origination-healthcare-trn-fail.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "156102d2e2ffb7a4b3cba9705b1a5bd42c86b211ea24da870e6be30bbb950d58",
+    "explanation": "Missing reassociation trace element.",
+    "expectedFindingIds": [
+      "nacha.healthcare-trn"
+    ]
+  },
+  {
+    "name": "origination-healthcare-case-fail.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "c8a7d1024660695f84f0dceb07b5018be8a2b6870b0b5aec5d3fa599d258e7e3",
+    "explanation": "Standardized descriptor uses uppercase.",
+    "expectedFindingIds": [
+      "nacha.description-case"
+    ]
+  },
+  {
+    "name": "origination-payroll-suffix-pass.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "PASS",
+    "bytes": 949,
+    "sha256": "1eae4d2642db6a6fe725d08bdf8692ca713cfb3a8c7d4e4dc22ce1dfc5d936cf",
+    "explanation": "Discretionary uppercase suffix.",
+    "expectedFindingIds": []
+  },
+  {
+    "name": "origination-payroll-case-fail.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "FAIL",
+    "bytes": 949,
+    "sha256": "aae3596384667d777c7edccb9cfcfdb45540fa6acc82303156033283484d32ea",
+    "explanation": "Alphabetic suffix also follows uppercase field rule.",
+    "expectedFindingIds": [
+      "nacha.description-case"
+    ]
+  },
+  {
+    "name": "origination-ctx-edifact-unsupported.ach",
+    "profileId": "nacha-origination-expanded-public-2026-r2",
+    "expectedStatus": "UNSUPPORTED",
+    "bytes": 950,
+    "sha256": "f952b716494691c3668364ad8ab068e229d424fc95b2560f9e6bf453e583c481",
+    "explanation": "Unqualified CTX payload remains explicit.",
+    "expectedFindingIds": []
+  }
+]

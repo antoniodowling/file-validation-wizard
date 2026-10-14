@@ -1,0 +1,10 @@
+HDR|ACK|1.0|FILE_RECEIVED_ACK|2026-10-14T12:00:00Z|UTC
+FIL|InboundFileName|SYNTHETIC.ach|CorrelationId|SYNTHETIC-ACK-1
+FIL|OriginalFileSizeBytes|950|Transport|SFTP|ChecksumAlgo|SHA256|Checksum|c7b8...9f
+STA|FILE|RECEIVED|AcceptedForParsing|ParserVersion|2.3.1
+MSG|INFO|SYNTHETIC receipt
+BAT|1|BatchRef|SYNTHETIC-BATCH|RecordCount|2500
+STA|BATCH|REJECTED|BatchValidationFailed
+VAL|WARNING|LINE|134|Field: PaymentDate|Adjusted by bank
+CTL|DeclaredRecordCount|2500|ReceivedRecordCount|2500|DeclaredHash|12345678|ReceivedHash|12345678
+TRL|END|2026-10-14T12:00:01Z

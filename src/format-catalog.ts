@@ -29,7 +29,7 @@ const entry = (
     code,
     name,
     aliases: Object.freeze(aliases),
-    status: id === "nacha" ? "CANDIDATE_SUPPORTED" : "DEMO_SUPPORTED",
+    status: id.startsWith("nacha") || id.startsWith("huntington") ? "CANDIDATE_SUPPORTED" : "DEMO_SUPPORTED",
     versions: Object.freeze(versions),
   });
 
@@ -71,6 +71,20 @@ export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
     label: "Expanded entry types — public-source candidate (2026 r1)",
     extensions: ACH_EXTENSIONS,
     validationProfileId: "nacha-origination-expanded-public-2026-r1",
+  }), Object.freeze({
+    id: "origination-expanded-public-2026-r2",
+    label: "Expanded entries and declared healthcare — candidate (2026 r2)",
+    extensions: ACH_EXTENSIONS,
+    validationProfileId: "nacha-origination-expanded-public-2026-r2",
+  })]),
+  entry("nacha-returns", "Nacha ACH", "ACH Returns", "Returns and Notifications of Change", ["NACHA Returns", "ACH NOC", "COR", "Dishonored", "Contested", "Refused NOC"], [Object.freeze({
+    id: "returns-network-public-2026-r1", label: "General network returns — public-source candidate (2026 r1)", extensions: ACH_EXTENSIONS, validationProfileId: "nacha-returns-network-public-2026-r1",
+  })]),
+  entry("huntington-control-totals", "Huntington", "ACH Control Totals", "Separate 58-column Control Total File", ["Huntington totals", "ACH totals"], [Object.freeze({
+    id: "control-total-public-2026-r1", label: "58-column standalone candidate (2026 r1)", extensions: Object.freeze([".txt"]), validationProfileId: "huntington-control-total-public-2026-r1",
+  })]),
+  entry("huntington-ack", "Huntington", "File Received ACK", "File Received Acknowledgment", ["ACK", "Acknowledgement", "Receipt"], [Object.freeze({
+    id: "pipe-1.0-candidate-r1", label: "Single pipe-delimited scenario — candidate (1.0 r1)", extensions: Object.freeze([".txt"]), validationProfileId: "huntington-ack-pipe-1.0-candidate-r1",
   })]),
 ]);
 

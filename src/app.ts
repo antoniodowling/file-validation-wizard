@@ -153,6 +153,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
               <p class="step-label">Validation Summary</p>
               <h2 id="results-title"></h2>
               <p id="result-basis" class="result-basis"></p>
+              <p id="reported-disposition" class="helper reported-disposition" hidden></p>
             </div>
             <div class="metrics" aria-label="Finding counts">
               <div><span id="error-count">0</span><strong>Errors</strong></div>
@@ -516,6 +517,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     exportButton.disabled = true;
     const jsonButton = app.querySelector<HTMLButtonElement>(`#${prefix}export-json`);
     if (jsonButton) jsonButton.disabled = true;
+    const dispositionNode = app.querySelector<HTMLElement>(`#${prefix}reported-disposition`);
+    if (dispositionNode) { dispositionNode.textContent = ""; dispositionNode.hidden = true; }
     const coverageNode = app.querySelector<HTMLElement>(`#${prefix}coverage-snapshot`);
     if (coverageNode) coverageNode.textContent = "";
     const diagnosticsNode = app.querySelector<HTMLElement>(`#${prefix}diagnostics-output`);
@@ -632,7 +635,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (!format) {
       helper.hidden = true;
     } else if (!version) {
-      helper.textContent = format.status === "CANDIDATE_SUPPORTED" ? "Public-source NACHA candidate available. Choose its profile to inspect coverage." : format.status === "DEMO_SUPPORTED" ? "DEMO validator available. Choose an exact version to inspect its limited coverage." : "Reference browsing only — no executable validator is available.";
+      helper.textContent = format.status === "CANDIDATE_SUPPORTED" ? "Candidate validator available. Choose its profile to inspect coverage." : format.status === "DEMO_SUPPORTED" ? "DEMO validator available. Choose an exact version to inspect its limited coverage." : "Reference browsing only — no executable validator is available.";
     } else if (!version.validationProfileId) {
       helper.textContent = `Accepted extensions: ${extensionList(version.extensions)} · Reference only — validation is unavailable in this demo.`;
     } else {
@@ -649,8 +652,13 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         sampleLink.rel = "noopener noreferrer";
         sampleLink.textContent = "sample file";
         if (format.id === "nacha") helper.append("See ", guideLink, ". Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.");
+        else if (format.id.startsWith("huntington") || format.id === "nacha-returns") helper.append("See ", guideLink, ". ");
         else helper.append("See ", guideLink, " and ", sampleLink);
-        if (version.validationProfileId === "nacha-origination-expanded-public-2026-r1") helper.append(" Expanded candidate: monetary, prenote, zero-dollar remittance and reversal entries. CTX X12 syntax is checked; UN/EDIFACT, opt-in XML and WEB/TEL loan combinations remain unavailable pending qualification.");
+        if (["nacha-origination-expanded-public-2026-r1", "nacha-origination-expanded-public-2026-r2"].includes(version.validationProfileId)) helper.append(" Expanded candidate: monetary, prenote, zero-dollar remittance and reversal entries. CTX X12 syntax is checked; UN/EDIFACT, opt-in XML and WEB/TEL loan combinations remain unavailable pending qualification.");
+        if (version.validationProfileId === "nacha-origination-expanded-public-2026-r2") helper.append(" Includes declared healthcare CCD TRN and standardized description checks; actual payment purpose remains unverified.");
+        if (format.id === "nacha-returns") helper.append("Standalone network Returns and NOCs candidate. Unqualified specialized variants receive no verdict; original matching is excluded.");
+        if (format.id === "huntington-control-totals") helper.append("Standalone 58-column candidate: one record, field syntax and date checks. Companion-file matching is excluded.");
+        if (format.id === "huntington-ack") helper.append("Single pipe-delimited ACK 1.0 candidate. Format validity is separate from the reported file or batch disposition.");
       } else {
         helper.textContent = "File Format Guide unavailable.";
       }
@@ -1012,7 +1020,14 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (runController.acceptedRun.formatId === "nacha-origination-public-2026") {
       requiredElement<HTMLElement>("#result-basis").textContent += " Public specification profile: file fields, addenda relationships, counts, hashes, and amounts. Holidays, cutoffs, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance.";
     }
-    if (runController.acceptedRun.formatId === "nacha-origination-expanded-public-2026-r1") requiredElement<HTMLElement>("#result-basis").textContent += " Expanded public-source candidate; original matching, real purpose, deadlines and complete remittance business guides are unverified. See coverage for source gates.";
+    if (["nacha-origination-expanded-public-2026-r1", "nacha-origination-expanded-public-2026-r2"].includes(runController.acceptedRun.formatId)) requiredElement<HTMLElement>("#result-basis").textContent += " Expanded public-source candidate; original matching, real purpose, deadlines and complete remittance business guides are unverified. See coverage for source gates.";
+    const reported = runController.acceptedRun.reportedDisposition;
+    const dispositionNode = requiredElement<HTMLElement>("#reported-disposition");
+    dispositionNode.hidden = !reported;
+    const shortText = (value: string, limit = 160): string => value.length > limit ? value.slice(0, limit) + "…" : value;
+    const batchSummary = reported?.batches.slice(0, 8).map(batch => `${shortText(batch.batchNumber, 32)}: ${batch.status} (${shortText(batch.qualifier, 80)})`).join("; ") ?? "";
+    dispositionNode.textContent = reported ? `Reported file disposition: ${reported.file.status} (${shortText(reported.file.qualifier)}).${batchSummary ? " Batch dispositions: " + batchSummary + "." : ""}${reported.batches.length > 8 ? ` ${reported.batches.length - 8} more batches.` : ""} These are bank-reported statuses, independent of format validity. Full reported values are available in exports.` : "";
+    if (["HUNTINGTON_ACK", "ACH_CONTROL_FIXED", "NACHA_RETURN_FIXED"].includes(findEnabledFormatPack(runController.acceptedRun.formatId)?.parserKind ?? "")) requiredElement<HTMLElement>("#result-basis").textContent += " Candidate checks only; see the coverage details for scenario limits and exclusions.";
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
     const passCount = runController.acceptedRun.results.filter((result) => result.outcome === "PASS").length;

@@ -129,6 +129,7 @@ h2 { margin: 0; font-size: 1.45rem; }
 .result-banner p { margin: 0; overflow-wrap: anywhere; }
 .result-banner .step-label { margin-bottom: 7px; }
 .result-basis { max-width: 650px; line-height: 1.5; }
+.reported-disposition { overflow-wrap: anywhere; }
 .metrics { display: flex; gap: 12px; }
 .metrics div { min-width: 90px; padding: 12px; border: 1px solid rgb(8 33 35 / 20%); border-radius: 8px; background: rgb(255 255 255 / 65%); text-align: center; }
 .metrics span { display: block; color: var(--ink); font-size: 1.7rem; font-weight: 850; }

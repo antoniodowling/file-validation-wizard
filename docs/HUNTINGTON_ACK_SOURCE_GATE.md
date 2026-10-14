@@ -1,5 +1,7 @@
 # Phase 4 — Huntington File Received ACK source gate
 
+**Current implementation:** The owner selected one uncustomized pipe-delimited sample scenario. That executable candidate supersedes the implementation hold below; source limitations remain qualification exclusions. See [HUNTINGTON_ACK_CANDIDATE](HUNTINGTON_ACK_CANDIDATE.md). The original assessment below is retained as dated source-review history.
+
 Assessment 2026-10-14. [Huntington’s official page](https://developer.huntington.com/enterprisepayments/docs/file-received-ack-flat-file) is accessible. It explicitly identifies its sample as illustrative and implementation dependent, gives several possible delimiter choices and describes common field/status hints. It does not establish a normative wire contract. Connected exact-title documentation search found no additional source. No account registration, purchase or external message was attempted.
 
 No ACK parser, executable profile, placeholder dropdown option or invented conformance fixture is added. The sample’s pipe grammar, `1.0` identifier and status strings are not assumed to be Huntington’s actual versioned contract. This is a source gate for this pack, not a failure of existing validators.

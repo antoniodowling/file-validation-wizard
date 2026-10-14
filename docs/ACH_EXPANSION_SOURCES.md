@@ -23,3 +23,14 @@ Phase 2’s confirmed source gate and unsent specification-owner questions are r
 Phase 3’s transferred layout and unconfirmed wire-contract questions are recorded in [HUNTINGTON_ACH_TOTALS_SOURCE_GATE.md](HUNTINGTON_ACH_TOTALS_SOURCE_GATE.md). No Huntington control-total profile is available.
 
 Phase 4’s normative ACK grammar gate, unsent specification-owner questions and document-validity/disposition distinction are recorded in [HUNTINGTON_ACK_SOURCE_GATE.md](HUNTINGTON_ACK_SOURCE_GATE.md). ACK and its dependent schema-3 work remain unavailable until the contract is confirmed.
+
+## Completion revision: executable source-supported candidates
+
+The subsequent owner instruction selected a single uncustomized pipe ACK scenario and authorized completing all source-supported formats. The prior whole-format implementation holds above are historical. Four executable profiles now exist, with new coverage/exclusions and no release approval:
+
+- Origination r2: supplied 2026 Basic/Supplement excerpts plus the public March 2026 Company Entry Description amendment and CMS 835 TRN structural corroboration. [Implementation](ACH_ORIGINATION_R2.md).
+- Ordinary network Returns/COR: downloadable Nacha-authored [2018 supplement](https://www.neach.org/Portals/0/Supplement%20%232-2018%20converted%20nov%2019%202018.pdf), 2023 Nacha mapping, Treasury transaction families, 2026 EPCOR vocabulary, and public primary implementation corroboration. Specialized layouts remain individually unsupported. [Source/rule matrix](ACH_RETURNS_CANDIDATE.md).
+- Huntington control totals: [live Markdown](https://developer.huntington.com/enterprisepayments/docs/ach-control-total-flat-file.md), updated 2026-09-18, retrieved successfully; exact fields plus explicitly disclosed one-record candidate framing. [Implementation](HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md).
+- Huntington ACK: [live Markdown](https://developer.huntington.com/enterprisepayments/docs/file-received-ack-flat-file.md), updated 2026-08-10, retrieved and byte-compared with the owner's attachment. The public sample plus the owner's scenario decision defines a candidate grammar, without claiming a universal bank format. [Scenario](HUNTINGTON_ACK_CANDIDATE.md).
+
+New profiles use export schema 3, separate bank-reported disposition, and [57 synthetic fixtures](../demo-files/ach-candidates/README.md); all historical coverage/fixture revisions remain unchanged. Unsupported source conditions are explicit and produce no verdict; missing actual-purpose/original-file facts are excluded checks rather than blockers for unrelated syntax. No hosted acceptance, Product/SC/FT/rules/fixture approval, submission or deployment is inferred.

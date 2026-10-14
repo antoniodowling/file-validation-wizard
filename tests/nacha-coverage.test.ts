@@ -75,7 +75,7 @@ it("keeps candidate/public-source provenance and negative claims distinct from l
   expect(EXCLUSIONS[0]).toContain("DEMO checks only");
 });
 it("preserves frozen legacy provenance snapshots verbatim", () => {
-  const legacy = FORMAT_PACKS.filter(profile => profile.parserKind !== "NACHA_FIXED");
+  const legacy = FORMAT_PACKS.filter(profile => profile.mode === "DEMO");
   expect(legacy.map(profile => { const { buildRevision, ...snapshot } = provenanceFor(profile); return snapshot; }))
     .toEqual(snapshots);
 });

@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "validate:core": "npm run test && npm run test:stress-files && npm run build && npm run build:readme && npm run test:readme-package",
     "validate": "npm run validate:core && npm run test:e2e",
-    "check:readme-drift": "node scripts/check-readme-drift.mjs"
+    "check:readme-drift": "node scripts/check-readme-drift.mjs",
+    "generate:ach-candidate-files": "node scripts/generate-ach-candidates.mjs"
   },
   "dependencies": {
     "@codemirror/state": "^6.7.5",
