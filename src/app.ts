@@ -645,7 +645,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         guideLink.href = guideUrl;
         guideLink.target = "_blank";
         guideLink.rel = "noopener noreferrer";
-        guideLink.textContent = "General family guide (version applicability unverified)";
+        guideLink.textContent = "General family guide";
         const sampleLink = document.createElement("a");
         sampleLink.href = `${guideUrl}#sample-file`;
         sampleLink.target = "_blank";

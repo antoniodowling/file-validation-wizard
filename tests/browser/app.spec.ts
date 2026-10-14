@@ -74,13 +74,13 @@ test("supports keyboard search and dependent version selection", async ({ page }
   await expect(page.getByText("Search ISO 20022, SWIFT MT, ASC X12, and Nacha ACH formats.")).toHaveCount(0);
 
   await page.locator("#version-select").selectOption("pain.001.001.13");
-  await expect(page.locator("#format-selection-help")).toHaveText("See General family guide (version applicability unverified) and sample file");
+  await expect(page.locator("#format-selection-help")).toHaveText("See General family guide and sample file");
   await expect(page.locator("#format-selection-help")).not.toContainText("Accepted extensions");
-  await expect(page.getByRole("link", { name: "General family guide (version applicability unverified)" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "General family guide", exact: true })).toHaveAttribute(
     "href",
     "https://developer.huntington.com/enterprisepayments/docs/iso-pain001",
   );
-  await expect(page.getByRole("link", { name: "General family guide (version applicability unverified)" })).toHaveAttribute("target", "_blank");
+  await expect(page.getByRole("link", { name: "General family guide", exact: true })).toHaveAttribute("target", "_blank");
   await expect(page.getByRole("link", { name: "sample file" })).toHaveAttribute(
     "href",
     "https://developer.huntington.com/enterprisepayments/docs/iso-pain001#sample-file",
