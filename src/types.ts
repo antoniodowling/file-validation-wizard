@@ -35,6 +35,12 @@ export type FindingLocation =
   | { readonly kind: "file-wide"; readonly explanation: string }
   | { readonly kind: "unavailable"; readonly explanation: string };
 
+export interface FindingLineEntry {
+  readonly ordinal: number;
+  readonly label: string;
+  readonly description: string;
+}
+
 export interface FindingLocationEntry {
   readonly ordinal: number;
   readonly location: FindingLocation;
@@ -163,6 +169,7 @@ export interface WorkerRequest {
   readonly fileName: string;
   readonly bytes: ArrayBuffer;
   readonly includeExplorer?: boolean;
+  readonly includeFindingLines?: boolean;
   readonly snapshotId?: number;
 }
 
@@ -178,6 +185,7 @@ export type WorkerResponse =
       readonly type: "explorer-ready";
       readonly snapshotId: number;
       readonly locations: readonly FindingLocationEntry[];
+      readonly lines?: readonly FindingLineEntry[];
     }
   | { readonly type: "explorer-error"; readonly snapshotId: number }
   | { readonly type: "error"; readonly code: WorkerFailureCode };

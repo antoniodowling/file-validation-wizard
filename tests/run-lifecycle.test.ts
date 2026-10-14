@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { findingLines } from "../src/finding-lines";
+import { locateFindings } from "../src/finding-locations";
+import { findEnabledFormatPack } from "../src/format-packs";
 import { mountPaymentFileValidator } from "../src/app";
 import { VALIDATION_DEADLINE_MS, type WorkerRequest, type WorkerResponse } from "../src/types";
 import { validateWorkerRequest } from "../src/worker-request";
@@ -64,6 +67,46 @@ beforeEach(() => {
 afterEach(() => { unmount(); root.remove(); vi.clearAllTimers(); vi.useRealTimers(); });
 
 describe("validation lifecycle", () => {
+  it("shows line numbers in a compact mount and clears them when the file is replaced", async () => {
+    const source = validPain001.replace("pain.001.001.99", "pain.001.001.09").replace("<NbOfTxs>1", "<NbOfTxs>bad");
+    chooseFile("same.xml", async () => new TextEncoder().encode(source).buffer);
+    await start();
+    const worker = control.workers[0]!;
+    expect(worker.requests[0]!.includeFindingLines).toBe(true);
+    expect(worker.requests[0]!.includeExplorer).toBe(false);
+    const completion = validateWorkerRequest(worker.requests[0]!);
+    if (completion.type !== "complete") throw new Error("Expected completion");
+    worker.respond(completion);
+    expect(root.querySelector("[data-file-explorer]")).toBeNull();
+    const row = Array.from(root.querySelectorAll("#finding-rows tr")).find(row => row.textContent?.includes("Number of transactions"))!;
+    expect(row.querySelector(".finding-line")!.textContent).toBe("Locating…");
+    const locations = locateFindings(source, findEnabledFormatPack("pain-001-09")!, completion.run);
+    const response: WorkerResponse = { type: "explorer-ready", snapshotId: worker.requests[0]!.snapshotId!, locations: [], lines: findingLines(source, locations) };
+    worker.respond(response);
+    expect(Array.from(root.querySelectorAll("#finding-rows tr")).find(row => row.textContent?.includes("Number of transactions"))!.querySelector(".finding-line")!.textContent).toBe("4");
+    expect(worker.terminated).toBe(true);
+    q<HTMLButtonElement>('[data-open-step="2"].button').click();
+    chooseFile("same.xml"); await start();
+    const next = control.workers[1]!;
+    next.respond(validateWorkerRequest(next.requests[0]!));
+    worker.respond(response);
+    expect(Array.from(root.querySelectorAll(".finding-line")).every(cell => cell.textContent === "—")).toBe(true);
+  });
+
+  it.each(["timeout", "error", "messageerror"])("keeps compact FAIL results when source mapping encounters %s", async (failure) => {
+    chooseFile("bad.xml", async () => new TextEncoder().encode("<Document>").buffer);
+    await start();
+    const worker = control.workers[0]!;
+    worker.respond(validateWorkerRequest(worker.requests[0]!));
+    expect(q("#results-title").textContent).toBe("FAIL");
+    if (failure === "timeout") vi.advanceTimersByTime(10_000);
+    else worker.dispatchEvent(new Event(failure));
+    expect(q("#results-title").textContent).toBe("FAIL");
+    expect(q<HTMLButtonElement>("#export-csv").disabled).toBe(false);
+    expect(Array.from(root.querySelectorAll(".finding-line")).some(cell => cell.textContent === "Unavailable")).toBe(true);
+    expect(worker.terminated).toBe(true);
+  });
+
   it("scopes the explorer to opted-in mounts and keeps its workspace controls coherent", () => {
     expect(root.querySelector("[data-file-explorer]")).toBeNull();
     remountWithExplorer();

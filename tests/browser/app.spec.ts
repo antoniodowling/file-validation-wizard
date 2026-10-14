@@ -287,8 +287,10 @@ test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration"
   expect(new Set(resultLayout.controlHeights).size).toBe(1);
   expect(resultLayout.columnRatios[0]).toBeCloseTo(0.10, 2);
   expect(resultLayout.columnRatios[1]).toBeCloseTo(0.18, 2);
-  expect(resultLayout.columnRatios[2]).toBeCloseTo(0.40, 2);
-  expect(resultLayout.columnRatios[3]).toBeCloseTo(0.32, 2);
+  expect(resultLayout.columnRatios).toHaveLength(5);
+  expect(resultLayout.columnRatios[2]).toBeCloseTo(0.30, 2);
+  expect(resultLayout.columnRatios[3]).toBeCloseTo(0.12, 2);
+  expect(resultLayout.columnRatios[4]).toBeCloseTo(0.30, 2);
 
   const errorsFilter = page.locator('[data-outcome="ERROR"]');
   const warningsFilter = page.locator('[data-outcome="WARNING"]');
