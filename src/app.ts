@@ -183,9 +183,10 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
                   <col class="column-severity" />
                   <col class="column-field" />
                   <col class="column-location" />
+                  <col class="column-line" />
                   <col class="column-message" />
                 </colgroup>
-                <thead><tr><th scope="col">Result</th><th scope="col">Field</th><th scope="col">Path</th><th scope="col">Message</th></tr></thead>
+                <thead><tr><th scope="col">Result</th><th scope="col">Field</th><th scope="col">Path</th><th scope="col">Line</th><th scope="col">Message</th></tr></thead>
                 <tbody id="finding-rows"></tbody>
               </table>
             </div>
@@ -308,6 +309,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
   if (presetVersion?.validationProfileId) activeStep = 2;
   let selectedFile: File | null = null;
   let currentRun: ValidationRun | null = null;
+  let resultLines = new Map<number, { readonly label: string; readonly description: string }>();
+  let linesPending = false;
   let acceptedSnapshotId: number | null = null;
   let resultsPage = 1;
   let activeWorker: Worker | null = null;
@@ -462,6 +465,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
 
   function clearRun(): void {
     currentRun = null;
+    resultLines.clear();
+    linesPending = false;
     acceptedSnapshotId = null;
     resultsPage = 1;
     exportButton.disabled = true;
@@ -847,7 +852,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (rows.length === 0) {
       const row = document.createElement("tr");
       const cell = document.createElement("td");
-      cell.colSpan = 4;
+      cell.colSpan = 5;
       cell.className = "no-findings";
       cell.textContent = findings().length === 0 ? "No validation results are available." : "No results match these filters.";
       row.append(cell);
@@ -870,6 +875,11 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       const code = document.createElement("code");
       code.textContent = finding.locator;
       locator.append(code);
+      const line = document.createElement("td");
+      line.className = "finding-line";
+      const sourceLine = resultLines.get(finding.ordinal);
+      line.textContent = finding.outcome === "PASS" ? "—" : sourceLine?.label ?? (linesPending ? "Locating…" : "Unavailable");
+      line.title = sourceLine?.description ?? (finding.outcome === "PASS" ? "Line locations are shown for errors and warnings." : "A reliable source line is not available.");
       const message = document.createElement("td");
       const messageText = document.createElement("span");
       messageText.textContent = finding.message;
@@ -887,7 +897,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         });
         message.append(action);
       }
-      row.append(severity, field, locator, message);
+      row.append(severity, field, locator, line, message);
       body.append(row);
     }
     explorerController?.reconcileVisibleFindings();
@@ -995,6 +1005,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       if (event.data.type === "complete") {
         completeValidationPhase();
         currentRun = event.data.run;
+        resultLines.clear();
+        linesPending = event.data.explorerPending === true;
         acceptedSnapshotId = event.data.snapshotId ?? generation;
         if (explorerController && event.data.source !== undefined) {
           explorerController.acceptSnapshot({
@@ -1006,9 +1018,11 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           });
         }
         renderResults();
-        if (event.data.explorerPending && explorerController) {
+        if (event.data.explorerPending) {
           explorerDeadline = window.setTimeout(() => {
             if (acceptedSnapshotId !== generation) return;
+            linesPending = false;
+            renderFindingRows();
             explorerController?.setLocationFailure(generation);
             terminateWorker();
           }, explorerPreparationDeadlineMs);
@@ -1017,10 +1031,15 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         }
       } else if (event.data.type === "explorer-ready") {
         if (event.data.snapshotId !== acceptedSnapshotId) return;
+        linesPending = false;
+        resultLines = new Map((event.data.lines ?? []).map((entry) => [entry.ordinal, entry]));
         explorerController?.setLocations(event.data.snapshotId, event.data.locations);
+        renderFindingRows();
         terminateWorker();
       } else if (event.data.type === "explorer-error") {
         if (event.data.snapshotId !== acceptedSnapshotId) return;
+        linesPending = false;
+        renderFindingRows();
         explorerController?.setLocationFailure(event.data.snapshotId);
         terminateWorker();
       } else if (event.data.type === "error") {
@@ -1030,6 +1049,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     const handleWorkerFailure = (): void => {
       if (generation !== runGeneration || worker !== activeWorker) return;
       if (acceptedSnapshotId === generation && currentRun) {
+        linesPending = false;
+        renderFindingRows();
         explorerController?.setLocationFailure(generation);
         terminateWorker();
       } else {
@@ -1045,6 +1066,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         fileName: file.name,
         bytes,
         includeExplorer: explorerEnabled,
+        includeFindingLines: true,
         snapshotId: generation,
       };
       worker.postMessage(request, [bytes]);

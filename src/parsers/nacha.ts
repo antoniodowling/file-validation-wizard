@@ -76,20 +76,37 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       ordinal, sourceLocation: location(c) }) as RuleResult),
   });
   const rows: RecordRow[] = [];
-  const separators = source.match(/\r\n|\r|\n/g);
+  const firstDelimiter = /\r\n|\r|\n/.exec(source);
   let framing = source.length > 0;
-  if (separators) {
-    const delimiter = separators[0]!;
-    framing = framing && separators.every((separator) => separator === delimiter);
-    const chunks = source.split(delimiter);
-    if (chunks.at(-1) === "") chunks.pop();
+  let badWidth: RecordRow | undefined;
+  if (firstDelimiter) {
+    const delimiter = firstDelimiter[0];
+    const separators = /\r\n|\r|\n/g;
     let start = 0;
-    for (const text of chunks) { rows.push({ text, start, number: rows.length + 1 }); start += text.length + delimiter.length; }
+    let match: RegExpExecArray | null;
+    // Validate each boundary before retaining a row. Delimiter-heavy malformed
+    // input must not allocate arrays proportional to every newline in the file.
+    while ((match = separators.exec(source)) !== null) {
+      const row = { text: source.slice(start, match.index), start, number: rows.length + 1 };
+      if (match[0] !== delimiter || row.text.length !== 94) {
+        framing = false;
+        badWidth = row;
+        break;
+      }
+      rows.push(row);
+      start = match.index + match[0].length;
+    }
+    if (framing && start < source.length) {
+      const row = { text: source.slice(start), start, number: rows.length + 1 };
+      if (row.text.length !== 94) { framing = false; badWidth = row; }
+      else rows.push(row);
+    }
   } else {
     framing = framing && source.length % 94 === 0;
-    for (let start = 0; start < source.length; start += 94) rows.push({ text: source.slice(start, start + 94), start, number: rows.length + 1 });
+    if (framing) {
+      for (let start = 0; start < source.length; start += 94) rows.push({ text: source.slice(start, start + 94), start, number: rows.length + 1 });
+    }
   }
-  const badWidth = rows.find((row) => row.text.length !== 94);
   check("framing", framing && !badWidth && rows.length > 0, "Record framing", "Use exactly 94 characters per record with consistent LF, CRLF, or CR separators, or concatenate complete records. Blank records and mixed framing are invalid.", badWidth);
   if (checks.get("framing")?.outcome === "ERROR") return finish(false);
   for (const row of rows) check("ascii", /^[\x20-\x7e]{94}$/.test(row.text), "Record characters", "Every record must contain printable ASCII characters; tabs and non-ASCII characters are invalid.", row);

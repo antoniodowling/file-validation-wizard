@@ -169,6 +169,7 @@ test("validates mixed NACHA files, warnings and errors with exact source navigat
   await upload("routing-check-digit-fail.ach");
   await expect(page.locator("#results-title")).toHaveText("FAIL");
   const errorRow = page.locator("#finding-rows tr").filter({ hasText: "Receiving routing number" });
+  await expect(errorRow.locator(".finding-line")).toHaveText("3");
   await errorRow.getByRole("button", { name: /View/ }).click();
   await expect(page.locator("[data-file-explorer] .cm-content")).toHaveAttribute("contenteditable", "false");
   await expect(page.locator("[data-file-explorer] [data-detail-message]")).toContainText("check digit");
@@ -315,8 +316,10 @@ test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration"
   expect(new Set(resultLayout.controlHeights).size).toBe(1);
   expect(resultLayout.columnRatios[0]).toBeCloseTo(0.10, 2);
   expect(resultLayout.columnRatios[1]).toBeCloseTo(0.18, 2);
-  expect(resultLayout.columnRatios[2]).toBeCloseTo(0.40, 2);
-  expect(resultLayout.columnRatios[3]).toBeCloseTo(0.32, 2);
+  expect(resultLayout.columnRatios).toHaveLength(5);
+  expect(resultLayout.columnRatios[2]).toBeCloseTo(0.30, 2);
+  expect(resultLayout.columnRatios[3]).toBeCloseTo(0.12, 2);
+  expect(resultLayout.columnRatios[4]).toBeCloseTo(0.30, 2);
 
   const errorsFilter = page.locator('[data-outcome="ERROR"]');
   const warningsFilter = page.locator('[data-outcome="WARNING"]');

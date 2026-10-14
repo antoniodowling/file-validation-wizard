@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const packageFile = (name: string): string => resolve(process.cwd(), "readme-package", name);
@@ -222,4 +223,29 @@ test("ReadMe inline NACHA preset validates the mixed public-profile fixture", as
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
   await expect(root.locator('[id$="result-basis"]')).toContainText("public specification profile");
+  await root.getByRole("button", { name: "Back to file" }).click();
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/routing-check-digit-fail.ach"));
+  await root.getByRole("button", { name: "Validate file" }).click();
+  await expect(root.locator('[id$="results-title"]')).toHaveText("FAIL");
+  const routing = root.locator('[id$="finding-rows"] tr').filter({ hasText: "Receiving routing number" });
+  await expect(routing.locator(".finding-line")).toHaveText("3");
+});
+
+test("wizard-only results show source lines for errors and warnings without an explorer", async ({ page }) => {
+  await installPackage(page, `<main><div id="hnb-payment-file-validator" data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.09"></div></main>`);
+  const source = readFileSync(demoFile("pain.001.001.09-multiple-errors.xml"), "utf8")
+    .replaceAll("CstmrCdtTrfInit>", "CstmrCdtTrfInitn>").replaceAll("\n", "\r\n");
+  await page.locator('input[type="file"]').setInputFiles({ name: "bad.xml", mimeType: "application/xml", buffer: Buffer.from(source) });
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("[data-file-explorer]")).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "Line", exact: true })).toBeVisible();
+  const countRow = page.locator("#finding-rows tr").filter({ hasText: "Number of transactions" });
+  await expect(countRow.locator(".finding-line")).toHaveText("6");
+  const warningRow = page.locator("#finding-rows tr").filter({ hasText: "WARNING" });
+  await expect(warningRow.locator(".finding-line")).toHaveText("Context: 1");
+  await page.getByRole("button", { name: "Back to file" }).click();
+  await page.locator('input[type="file"]').setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  await expect(page.locator(".finding-line")).toHaveText(Array(11).fill("—"));
 });

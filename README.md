@@ -64,6 +64,8 @@ Run `npm run build:readme` to generate the copy/paste artifacts in `readme-packa
 - `PaymentFileValidator.mdx` — a reusable inline Guide component with optional format/version presets;
 - `custom-javascript.js` — the site-wide guarded application bundle for Appearance > Custom JavaScript.
 
+Error and warning rows show a one-based **Line** number or range in both dedicated demos and compact mounts. Missing-field findings identify **Context** lines; whole-file and unmappable findings are labeled explicitly. The line refers to the primary source target; the explorer can show additional related targets.
+
 The same shared JavaScript and CSS support both dedicated demos, inline Guide components, and link-triggered modals. The explorer page opts in explicitly; the wizard-only page, inline instances, and modal instances keep the compact workflow. See the installation guide for page creation and linking details.
 
 The JavaScript bundle includes the validation worker and requires no hosted validator assets or backend. Follow `readme-package/INSTALLATION.md` to install and test it in an unpublished ReadMe page.

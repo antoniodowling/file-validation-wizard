@@ -25,6 +25,11 @@ describe("NACHA ordinary origination parser", () => {
       fails(source, "framing"); expect(parse(source).results.some((r) => r.ruleId === "nacha.file-credit")).toBe(false);
     }
   });
+  it("rejects a large delimiter-heavy malformed upload before record validation", () => {
+    const output = parse("\n".repeat(1_000_000));
+    expect(output.context).toBeNull();
+    expect(output.results.map(result => [result.ruleId, result.outcome])).toEqual([["nacha.framing", "ERROR"]]);
+  });
   it("rejects non-ASCII and controls", () => { for (const value of ["é", "\t", "\0"]) fails(bad(buildNacha(), 2, 13, 13, value), "ascii"); });
   it("rejects invalid sequence before totals", () => {
     const rows = buildNacha(); [rows[1], rows[2]] = [rows[2]!, rows[1]!];
