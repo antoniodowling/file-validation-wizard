@@ -65,6 +65,10 @@ describe("CSV Wire guide candidate", () => {
     expect(run(source(8, "1.12345678", true)).overallStatus).toBe("PASS");
     expect(errors(source(8, "1.123456789", true))).toContain("wire.fx");
   });
+  it("enforces the FX N10 cap even when leading fractional zeros hide significant digits", () => {
+    for (const value of ["0.00000001", "12345678.9", "00000000.1"]) expect(run(source(8, value, true)).overallStatus).toBe("PASS");
+    for (const value of ["0.000000001", "012345678.9", "0.00000000000000000000000000000001"]) expect(errors(source(8, value, true))).toContain("wire.fx");
+  });
   it("checks conditions, code pairs and the beneficiary BIC country", () => {
     const f = fields(); f[8] = "SYNTHETIC"; f[10] = "SYNTHETIC CITY"; f[12] = "US";
     expect(run(quote(f)).overallStatus).toBe("PASS");

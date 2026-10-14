@@ -126,7 +126,7 @@ export function parseCsvWire(source: string, pack: FormatPack): ParserOutput {
     }
     if (intl) {
       at("charges", ["BEN", "OUR"].includes(f(25)), 25, "International charges must be BEN or OUR.");
-      if (f(8)) at("fx", decimal(f(8), null, 10, 10), 8, "FX rate requires a decimal point, digits and fewer than 10 significant figures; FX Desk authorization is not verified.");
+      if (f(8)) at("fx", f(8).length <= 10 && decimal(f(8), null, 10, 10), 8, "FX rate requires at most 10 characters including its decimal point, digits and fewer than 10 significant figures; point counting is a conservative candidate N10 interpretation. FX Desk authorization is not verified.");
     }
   }
   const valid = [...checks.values()].every(c => c.ok);

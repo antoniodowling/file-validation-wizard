@@ -150,7 +150,7 @@
       },
       {
         "id": "wire.fx",
-        "description": "Optional rate decimal syntax and fewer than 10 significant digits; contract ID has C16 length check, no external authorization.",
+        "description": "Optional rate decimal syntax, fewer than 10 significant digits and 10 characters including the point (conservative N10 interpretation); contract ID has C16 length check, no external authorization.",
         "ruleClass": "flat-file-structure",
         "severity": "ERROR",
         "applicability": "Selected CSV Wire USD candidate and qualified positional rows.",
@@ -174,7 +174,7 @@
       "Guide-backed positional USWIRE (54 fields) and INT (58 fields). INT is limited to USD, beneficiary country US/CA and account type OTHER. Non-USD timing, IBAN/applicability, other beneficiary countries and intermediary SWIFT (guide says 13 characters) are UNSUPPORTED with no verdict.",
       "Candidate transport: printable ASCII decoded as strict UTF-8, no BOM/tabs, quoted comma-separated fields including empty fields, doubled-quote escapes, LF/CRLF and optional final separator. Mixed LF/CRLF admitted. Embedded field line breaks, headers and custom mappings are unqualified. The guide samples use unquoted empty fields, contradicting its all-fields-quoted rule; candidate follows the explicit rule.",
       "Date checks capture the current UTC date once per run and record it in the date result. At most 30 calendar days ahead for domestic/INT USD. No past-date restriction is supplied by the guide. Bank time zone, holidays, cutoffs, CAD +1/other +2 business days are not qualified.",
-      "Decimals require a point and digits with at most 2 domestic/3 international fractional digits and fewer than 18 significant digits. Leading zeros excluded, trailing fractional zeros included. Zero is admitted; guide gives no positive minimum. FX rate uses fewer than 10 significant digits, a decimal point and no invented fractional scale.",
+      "Decimals require a point and digits with at most 2 domestic/3 international fractional digits and fewer than 18 significant digits. Leading zeros excluded, trailing fractional zeros included. Zero is admitted; guide gives no positive minimum. FX rate uses fewer than 10 significant digits and a 10-character N10 cap including its decimal point as a conservative candidate interpretation; no separate fractional scale is invented.",
       "Routing prefix/checksum and 11-character beneficiary BIC/country syntax are local checks, not live directory, bank/account existence, ownership, sanctions, entitlement, bank-populated address or acceptance checks. ISO country membership uses a frozen IANA 249-code snapshot.",
       "Optional intermediary code/type fields are paired as a disclosed candidate decision; no undocumented dependency is imposed on bank-populated names/addresses. FX Desk contract/rate authorization, exchange-rate calculations, settlement, duplicates and payment execution are excluded. No file data leaves the local worker or is persisted.",
       "Resource limits: existing 25 MB bytes, 8,000,000 decoded units and worker deadline; 100,000 retained row/cell nodes, 64 fields per row and 1,000,000 source units per field. Checks aggregate repeated violations and retain the first failing location without echoing field values."
