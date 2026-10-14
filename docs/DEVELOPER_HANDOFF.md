@@ -1,49 +1,70 @@
-# Developer handoff
+# File Format Validation Wizard: developer handoff
 
-Updated for developer handover on 2026-10-14. This guide describes current local behavior. Historical receipts remain bound to their original checkpoints; hosted, manual, standards, and production acceptance remain separate gates.
+Updated 2026-10-14. This guide covers the current code, profiles, and developer workflow. Historical test results apply to their recorded checkpoints. Actual ReadMe integration, manual accessibility, standards conformance, and production approval still need separate verification.
 
 ## What to use
 
-The source of truth is `src/`. The files in `readme-package/` are generated from it and `scripts/readme-templates/` and committed for developers who only need the ReadMe copy/paste deliverable. The former root-level package has moved into that directory. Do not edit generated artifacts directly.
+Edit application code in `src/` and ReadMe templates in `scripts/readme-templates/`. `npm run build:readme` generates the six checked-in files in `readme-package/` for copy/paste installation in the ReadMe portal. Do not edit generated files directly. The package is separate from the repository's `README.md`.
 
-Use Node.js 22.12 or newer and `npm ci` from the repository root. Run `npm run dev` for the standalone preview. `npm run validate:core` runs the non-browser release checks. `npm run validate` adds Playwright interaction tests; install Chromium, Firefox, and WebKit first with `npx playwright install`. On Linux, browser system dependencies may also be required (`npx playwright install --with-deps`).
+Use Node.js 22.12 or newer and run `npm ci` from the repository root. `npm run dev` starts the standalone preview. `npm run validate:core` runs unit tests, stress-file integrity, TypeScript, both builds, and static package checks. `npm run validate` also runs Playwright tests; install Chromium, Firefox, and WebKit first with `npx playwright install`. On Linux, use `npx playwright install --with-deps` if system dependencies are missing.
 
 ## Code map
 
 - `src/app.ts`: wizard UI and interaction flow.
 - `src/main.ts` and `src/readme-entry.ts`: standalone and ReadMe entry points.
-- `src/validation.worker.ts` and `src/worker-request.ts`: browser-local validation worker and input/failure boundary.
+- `src/validation.worker.ts` and `src/worker-request.ts`: browser-local validation worker, input checks, and failure handling.
 - `src/validation-failure.ts`: user-facing incomplete-run messages.
-- `src/finding-locations.ts`, `src/source-coordinates.ts`, and `src/parsers/edi-source.ts`: run-scoped source mapping and canonical coordinates.
+- `src/finding-locations.ts`, `src/source-coordinates.ts`, and `src/parsers/edi-source.ts`: finding locations and source coordinates for each run.
 - `src/explorer-controller.ts`, `src/source-viewer.ts`, `src/explorer-budget.ts`, and `src/finding-navigation.ts`: dedicated-page explorer, read-only viewer, resource limits, and result synchronization. See [the explorer contract](FILE_EXPLORER.md).
 - `scripts/generate-stress-files.mjs`: reproducible synthetic upload stress kit; see [processing limits](PROCESSING_LIMITS.md).
 - `src/format-catalog.ts`: display catalog.
-- `src/format-packs.ts`, `src/validation.ts`, and `src/parsers/`: executable demo profiles and validation rules.
+- `src/format-packs.ts`, `src/validation.ts`, and `src/parsers/`: executable DEMO and CANDIDATE profiles, parsers, and validation rules.
 - `src/file-policy.ts`, `src/outcome.ts`, `src/pagination.ts`, and `src/csv.ts`: file handling, result classification, paging, and export.
 - `vite.readme.config.ts` and `scripts/finalize-readme-package.mjs`: self-contained bundle and scoped CSS generation.
 
 ## Deliver a change
 
-1. Change source and relevant tests on a task branch.
-2. Run proportionate tests during development and `npm run validate:core` before handoff. Run `npm run validate` as well when the browser environment is stable.
-3. Commit the source changes and regenerated `readme-package/` together. `dist/`, dependencies, and test reports are intentionally excluded.
-4. Follow [ReadMe installation](../readme-package/INSTALLATION.md), using an unpublished draft to verify integration before publication.
+1. Work on a task branch and change the source or documentation relevant to the task.
+2. For application changes, run focused tests during development and `npm run validate:core` before handoff. Run browser tests when interaction or rendering changes. For documentation-only changes, check links, commands, profile names, and examples against the current source and manifests. GitHub Actions runs the full existing checks for every PR.
+3. Regenerate `readme-package/` when source or template changes affect it, and commit those outputs with the change. Keep `dist/`, dependencies, and test reports out of Git.
+4. For portal changes, follow [ReadMe installation](../readme-package/INSTALLATION.md) and verify the package in an unpublished draft before publishing it.
 
 ## Current scope and acceptance
 
-The catalog contains PAIN.001, PAIN.008, EDI 820, and NACHA. Nine ISO/X12 profiles remain DEMO. NACHA offers two executable CANDIDATE revisions: `origination-public-2026` and `origination-expanded-public-2026-r1`. Neither establishes full 2026 Operating Rules compliance or production approval. See [original NACHA scope](NACHA_SOURCE_REVIEW.md) and [expanded entry types and gates](ACH_ORIGINATION_EXPANDED.md).
+The catalog has seven format families and fifteen executable profiles: nine ISO/X12 DEMO profiles and six ACH CANDIDATE profiles. PAIN.001, PAIN.008, and EDI 820 each offer three versions. The ACH profiles are:
+
+| Format | Version ID (for presets) | Scope |
+| --- | --- | --- |
+| NACHA | `origination-public-2026` | [Original public specification profile](NACHA_SOURCE_REVIEW.md), retained for regression comparisons |
+| NACHA | `origination-expanded-public-2026-r1` | [Expanded entry types](ACH_ORIGINATION_EXPANDED.md), retained alongside r2 |
+| NACHA | `origination-expanded-public-2026-r2` | [Latest origination candidate](ACH_ORIGINATION_R2.md), including declared healthcare checks |
+| ACH Returns | `returns-network-public-2026-r1` | [Ordinary network Returns/COR](ACH_RETURNS_CANDIDATE.md); specialized layouts remain gated |
+| ACH Control Totals | `control-total-public-2026-r1` | [One standalone 58-column record](HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md); no companion-file matching |
+| File Received ACK | `pipe-1.0-candidate-r1` | [One pipe-delimited scenario](HUNTINGTON_ACK_CANDIDATE.md); reported disposition is separate from format validity |
+
+The four latest candidates use report/export schema 3; the original NACHA profile, r1, and ISO/X12 profiles retain schema 2. A valid ACK reporting REJECTED can pass format checks. Unsupported inputs receive no format verdict. See [coverage and export semantics](coverage/README.md).
+
+No profile establishes full standards conformance, complete 2026 Operating Rules compliance, or production approval. The profile documents list implemented checks and exclusions.
 
 | Area | Current state | Responsible role / next action |
 | --- | --- | --- |
-| Local engineering baseline | On 2026-10-14, checkpoint `9f52c59b5db66f922bf943a07ca49cc6b66a1015` passed 472 unit tests, stress integrity, TypeScript, both builds, the package contract, and 117 Chromium/Firefox/WebKit cases. All six regenerated ReadMe files matched that checkpoint byte for byte. Runtime: Node 26.5.0 / npm 11.17.0. | Front-end developer: run relevant checks after changes; this baseline does not certify later bundles. |
-| Automated accessibility and layout | The earlier warning-contrast exception and layout expected-failure annotations were removed. Local narrow-pane, reflow, focus, and axe checks pass in that baseline. | Front-end developer: retain strict tests; see [resolved issues and remaining manual checks](ACCESSIBILITY_FOLLOW_UPS.md). |
-| Full-source explorer | Current runs use parser-owned schema-2 locations. The editor and fallback display the full accepted source. Source-window controls were removed. | Front-end developer: preserve canonical UTF-16 coordinates, lifecycle cleanup, and legacy-report compatibility. |
+| Source CI baseline | [Run 38625110377](https://github.com/antoniodowling/file-validation-wizard/actions/runs/38625110377) passed for `d80db8bd65069665b2067d89bdd9f4523c9e6704`, merged in PR #26 as `fc33e67941f0e3ad1eaf75d9cd81fdaa6bc41851`. It ran core validation, generated drift, and all three browser projects. | Front-end developer: check CI for the exact head of each later change. |
+| Automated accessibility and layout | Strict narrow-pane, reflow, focus, and axe checks are in the browser suite. Earlier warning-contrast and layout exceptions were removed. | Front-end developer: retain strict tests; see [resolved issues and remaining manual checks](ACCESSIBILITY_FOLLOW_UPS.md). |
+| Full-source explorer | Schema-2 and schema-3 runs use parser-supplied locations. The editor and fallback display the full accepted source. | Front-end developer: preserve canonical UTF-16 coordinates, lifecycle cleanup, and legacy-report compatibility. |
 | Actual ReadMe integration | Unverified. Local generated-mount tests simulate the portal, including presets and routing; they do not establish actual CSP or customization coexistence. | Portal maintainer: supply an unpublished staging mount and execute the hosted procedure below. |
 | Manual accessibility | Screen-reader, actual 200% zoom, and complete manual workflow acceptance remain unverified. | Accessibility tester: complete the outstanding checks in the follow-up log. |
 | Supported capacity | Byte, decoded-source, structure, and deadline guards exist; representative peak memory and recovery evidence remain deferred. | Performance maintainer: follow [processing limits](PROCESSING_LIMITS.md) before claiming a supported workload. |
-| Standards and production approval | Deep ISO/X12 rules and source-gated Returns, control totals, and ACK work remain excluded or unavailable. No profile has production sign-offs. | API/Product owners: follow the [remaining-work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) and [ACH phase gates](ACH_EXPANSION_SOURCES.md). |
+| Standards and production approval | Deep ISO/X12 rules and the ACH profiles' declared exclusions remain outside the implemented checks. No profile has production sign-offs. | API/Product owners: use the current profile documents above for qualification gaps. The [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) and [ACH phase gates](ACH_EXPANSION_SOURCES.md) retain planning history. |
 
 Roles identify responsibilities, not an assigned successor or approval. Passing local checks does not establish hosted compatibility, bank acceptance, full standards conformance, production approval, or WCAG conformance.
+
+## Demo and test files
+
+Use the [README starter set](../README.md#starter-demos) for a manual walkthrough. It lists exact browser selections and expected results for small XML, EDI, and ACH examples.
+
+The larger kits are regression fixtures: [original NACHA](../demo-files/nacha/README.md) has 69 files, [expanded r1](../demo-files/nacha-expanded/README.md) has 159, and [the latest four ACH candidates](../demo-files/ach-candidates/README.md) have 57. Six PAIN.001 XML files sit directly in `demo-files/`. Their expected results and hashes are preserved in tests and manifests.
+
+The separate [14-file stress kit](../demo-files/hnb-validator-stress-files/README.md) exercises processing limits, encoding errors, and incomplete runs. Follow its instructions before running adversarial cases. Preserve every fixture, including malformed bytes, fixed-width spaces, line endings, and earlier profile expectations.
 
 ## Automated checks
 
@@ -71,17 +92,22 @@ Use synthetic files only in examples, tests, and issues. Never commit customer p
 
 ## Evidence and revision maintenance
 
-Use [IMPLEMENTATION_EVIDENCE.md](IMPLEMENTATION_EVIDENCE.md) for the hardening implementation history, [REVIEW_FOLLOW_UP_HANDOFF.md](REVIEW_FOLLOW_UP_HANDOFF.md) for its outstanding scopes, and [coverage/README.md](coverage/README.md) for report semantics. The [September receipt](evidence/ruleset-2/receipt.json) records its original exact bundle hashes; do not overwrite it to represent later builds. Coverage exporters are revision-preparation tools, not routine build steps. Future semantic changes require new revisions/files; preserve published snapshots and fixture bytes.
+Use [IMPLEMENTATION_EVIDENCE.md](IMPLEMENTATION_EVIDENCE.md) for hardening history and [coverage/README.md](coverage/README.md) for report semantics. Read the [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) alongside the current profile documents; some of its planned ACH work now has executable candidates. The [September receipt](evidence/ruleset-2/receipt.json) records its original bundle hashes; do not overwrite it to represent later builds. Coverage exporters prepare named revisions and are not routine build steps. Rule changes that alter validation behavior require new revisions and snapshots; preserve published snapshots and fixture bytes.
 
-The checked-in ReadMe files are regenerated and remain self-contained. The nine ISO/X12 profiles remain DEMO and the two NACHA revisions remain CANDIDATE, with revision-bound production gates. Do not promote pain.001.001.09 or any X12 profile from these local results. Obtain the specifically listed authoritative artifacts, independent fixtures, bank/workflow decisions, hosted acceptance and sign-offs first.
+The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remain DEMO and the six ACH profiles remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
 
 ## Maintenance tools and conventions
 
 - `npm run typecheck` checks TypeScript without generating a bundle; `npm run build` includes it.
 - `npm run generate:stress-files -- /private/tmp/hnb-stress-review`, `npm run generate:nacha-files -- /private/tmp/nacha-review`, and `npm run generate:nacha-expanded-files -- /private/tmp/nacha-expanded-review` produce disposable comparison kits. Preserve intentionally malformed bytes, fixed-width spaces, line endings, manifests, and historical expectations.
+- `npm run generate:ach-candidate-files` rewrites `demo-files/ach-candidates/` and `docs/coverage/ach-candidates-1.0.0.json`. It has no output-directory argument; use a disposable repository copy for comparisons, and do not overwrite historical coverage during routine maintenance.
 - `npm run export:coverage` and `npm run export:nacha-coverage` invoke the existing revision-preparation exporters. They write the named coverage snapshots; do not run them to silently revise published history.
 - `.editorconfig` supplies basic editor conventions while excluding fixture bytes and generated artifacts from normalization. Markdown hard-break spaces are retained. There is no bulk formatting pass or new lint gate.
-- Keep the legacy mapper in `src/finding-locations.ts` and its dependencies: [report semantics](coverage/README.md) intentionally retain compatibility for runs without schema-2 provenance. Current schema-2 runs use parser-supplied locations.
+- Keep the legacy mapper in `src/finding-locations.ts` and its dependencies for older reports without parser-supplied locations. Current schema-2 and schema-3 runs use parser-supplied locations; see [report semantics](coverage/README.md).
+
+## Earlier local engineering baseline
+
+On 2026-10-14, checkpoint `9f52c59b5db66f922bf943a07ca49cc6b66a1015` passed 472 unit tests, stress integrity, TypeScript, both builds, the package contract, and 117 Chromium/Firefox/WebKit cases. All six regenerated ReadMe files matched that checkpoint byte for byte. Runtime: Node 26.5.0 / npm 11.17.0. Local narrow-pane, reflow, focus, and axe checks passed in that baseline. These results apply to that checkpoint, not later bundles.
 
 ## Superseded handoff checklist
 

@@ -1,4 +1,4 @@
-# Payment File Validator
+# File Format Validation Wizard
 
 A browser-local demo for exploring and validating payment-file formats. The wizard includes:
 
