@@ -113,11 +113,12 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
         throw new UnsupportedInputError("Structured continuations require a complete field boundary (',/' before 88). Splitting a scalar across records is not specified by this candidate.");
       // The guide's 03 sample ends a complete tuple with its empty funds field
       // before an 88 starts a new tuple. That empty field is data, not a spare
-      // delimiter placeholder. At other field boundaries the final empty slot
-      // is replaced by the first continuation field.
+      // delimiter placeholder. An explicit empty first continuation field fills
+      // that slot instead. At other boundaries the placeholder is replaced too.
       const completedSummary = previous!.code === "03" && previous!.fields.length >= 3 && (previous!.fields.length - 3) % 4 === 0;
       const carriedCurrency = previous!.code === "03" && previous!.fields.length === 3 && /^[A-Z]{3}$/.test(fields[0]?.value.trim() ?? "");
-      if (!completedSummary || carriedCurrency) previous!.fields.pop();
+      const explicitEmpty = !fields[0]?.value.trim();
+      if (!completedSummary || carriedCurrency || explicitEmpty) previous!.fields.pop();
       for (const field of fields) previous!.fields.push(field);
       previous!.rows.push(row);
     } else logical.push({ ...context, fields });

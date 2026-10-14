@@ -79,6 +79,18 @@ describe("Huntington BAI2 candidate", () => {
     expect(run(source).overallStatus).toBe("PASS");
   });
 
+  it("fills a carried empty funds field without shifting the following summary tuple", () => {
+    const source = pass().replace("03,123456789,USD,010,100,0,,015,150,0,/", "03,123456789,USD,010,100,0,/\n88,,015,150,0,/")
+      .replace("49,370,5/", "49,370,6/").replace("98,370,1,7/", "98,370,1,8/").replace("99,370,1,9/", "99,370,1,10/");
+    expect(run(source).overallStatus).toBe("PASS");
+    const broken = source.replace("88,,015,150,0,/", "88,,015,15.0,0,/");
+    const report = fails(broken, "amount");
+    const location = report.results.find(result => result.ruleId === "bai2.amount" && result.outcome === "ERROR")?.location;
+    expect(location?.kind).toBe("located");
+    if (location?.kind === "located") expect(broken.slice(location.primary.span.start, location.primary.span.end)).toBe("15.0");
+    expect(report.checks?.find(check => check.ruleId === "bai2.account-total")?.state).toBe("not-evaluated");
+  });
+
   it("supports a 16 prefix carried into 88 before its text field", () => {
     const source = pass().replace("16,206,50,,", "16,206,50,/\n88,,").replace("49,370,5/", "49,370,6/")
       .replace("98,370,1,7/", "98,370,1,8/").replace("99,370,1,9/", "99,370,1,10/");
