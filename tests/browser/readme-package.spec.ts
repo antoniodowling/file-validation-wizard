@@ -270,15 +270,15 @@ test("ReadMe expanded NACHA inline and modal presets use the new candidate indep
   await installPackage(page, `<main><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r1" data-lock-selection="true"></div>
     <a id="expanded-launch" href="/page/payment-file-validator#payment-file-validator?format=NACHA&amp;version=origination-expanded-public-2026-r1">Validate expanded ACH</a></main>`);
   const root = page.locator("main > [data-payment-file-validator]");
-  await root.getByRole("button", { name: "Load PASS sample" }).click();
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="result-basis"]')).toContainText("nacha-expanded-public-1.0.0");
+  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-expanded-public-1.0.0");
   await page.locator("#expanded-launch").click();
   const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('[id$="version-select"]')).toHaveValue("origination-expanded-public-2026-r1");
-  await dialog.getByRole("button", { name: "Load FAIL sample" }).click();
+  await dialog.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/prenote-amount-fail.ach"));
   await dialog.getByRole("button", { name: "Validate file" }).click();
   await expect(dialog.locator('[id$="results-title"]')).toHaveText("FAIL");
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");

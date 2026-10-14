@@ -567,7 +567,7 @@ test("expanded NACHA candidate runs locally, exports its coverage, navigates a f
   await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r1");
   await expect(page.locator("#format-selection-help")).toContainText("monetary, prenote, zero-dollar remittance and reversal");
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "Load PASS sample" }).click();
+  await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#result-basis")).toContainText("Expanded public-source candidate");
