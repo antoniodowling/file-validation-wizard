@@ -1,38 +1,38 @@
-# NACHA authoritative-source review
+# NACHA public-source validation profile
 
-Research date: 2026-10-14. NACHA validation has not been implemented or approved.
+Source review: 2026-10-14. Profile: `origination-public-2026`. Release mode: `CANDIDATE`; Product, SC, FT, rules, and fixture approvals remain false. The profile is enabled for local evaluation and testing. It does not claim full 2026 Operating Rules compliance, bank acceptance, payment authorization, or readiness for submission.
 
-## Agreed implementation scope
+## Sources used
 
-One main NACHA / ACH selection, supporting any subset or mix of CCD, PPD, CTX, WEB, and TEL batches for ordinary debit/credit originations. The intended checks cover record structure, required fields and codes, routing check digits, addenda relationships, trace sequencing, counts, hashes, and amount totals. Balanced and unbalanced files and newline-separated or concatenated records are intended inputs. Returns, notifications of change, prenotes, and reversals are outside the initial scope. These intentions do not establish current support.
+| Source | Use and boundary |
+| --- | --- |
+| [Nacha ACH File Overview](https://achdevguide.nacha.org/ach-file-overview) | General record ordering, 94-character records, blocking/padding, field formatting, trace sequencing, service classes, balanced/unbalanced files. |
+| [Nacha ACH File Details](https://achdevguide.nacha.org/ach-file-details) | Shared file/batch controls, common entries, addenda and linkage, conditional WEB credit identification, TEL addenda prohibition. The public guide points to the full Operating Rules for further detail. |
+| Owner-provided 2026 Basic Edition Appendix Three screenshots | Shared layouts 3.1.1/3.1.2, CCD 3.1.7 (Basic-92), CTX 3.1.9 (Basic-94), PPD 3.1.16 (Basic-105), TEL 3.1.19 (Basic-108), WEB 3.1.22 (Basic-111). Reviewed visually; no copyrighted page images are committed. |
+| [First Citizens NACHA File Specifications](https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf), revision 02/2024 | CTX layout and addenda count/sequence, control and routing arithmetic. Bank-assigned IDs, routing constants, blank discretionary fields, and consecutive batch policy are not imposed. |
+| [Goldman Sachs ACH Payment File Structure](https://developer.gs.com/docs/services/transaction-banking/ach-file/) | Cross-check layouts, direction/account transaction codes including loan credit 52. GS-specific routing, identifiers, WEB debit-only support, date windows, and required optional fields are not general rules. |
+| [US Treasury routing attribute definitions](https://www.fiscal.treasury.gov/data/FSv49/IAIv10/Library/AttributeDataDictionary.html) | ABA routing prefix ranges. Checks validate syntax/prefix/checksum, not actual bank directory membership. |
+| [Nacha Company Entry Description amendment](https://www.nacha.org/rules/risk-management-topics-company-entry-descriptions) | 2026 PAYROLL/PURCHASE purpose-dependent requirements. Actual transaction purpose cannot be established from this file alone, so those semantics are outside this candidate's proof. |
 
-The catalog retains the existing PAIN.001, PAIN.008, and EDI 820 validators and versions. Their limited validation and demo approval status are unchanged. Other reference-only catalog placeholders were removed; NACHA is the sole pending selection, with no executable profile. Its 2026 label is an intended rules baseline, not a detected file version or a support claim.
+Operating knowledge guides interpretation and test design. Implemented acceptance requirements are grounded in these public sources and the supplied layouts. Full licensed-rulebook comparison is deferred to production qualification, not a prerequisite for this public-source implementation.
 
-## Authoritative publisher and available access
+## Implemented coverage
 
-The authoritative source is Nacha's **2026 Nacha Operating Rules & Guidelines**, including applicable supplements and effective dates. The public developer guide points to Appendix Three for the full record-format specifications; the guide alone does not establish complete production coverage.
+- Ordinary monetary debit/credit originations in any subset or mix of CCD, PPD, CTX, WEB, and TEL batches. Direction must match service class 200/220/225; TEL is debit-only. Transaction codes 22/27/32/37 and loan credit 52 are supported. WEB credits require originator identification. Other account codes, prenotes, zero-dollar remittance entries, returns/NOCs, reversals, and other SEC codes are rejected as outside this profile.
+- Exactly 94 printable ASCII characters per record, preserving spaces. Consistent LF, CRLF, CR, or complete concatenated records; optional one terminal delimiter. Blank records, mixed framing, tabs, non-ASCII text, and a BOM are rejected. All-9 padding must follow file control and complete a ten-record block.
+- File/batch/entry/addenda/control order, nonempty complete batches, header constants and populated required fields, true YYMMDD dates (interpreted as 2000–2099), and optional HHMM time. Effective dates on weekends generate a warning; holidays, live dates, receipt times, and bank windows are not consulted.
+- Routing digits, supported ABA prefixes and checksum, batch/trace identification and ascending sequencing, file trace uniqueness, addenda indicator and linkage. TEL has no addenda; CCD/PPD/WEB permit one; CTX permits up to 9,999 with a matching entry count.
+- Batch/file entry-plus-addenda counts, hash truncated modulo ten billion, debit/credit totals in exact integer cents, block/batch counts, mirrored batch controls, and reserved spaces. Debit and credit totals are not required to be equal. Dependent amount controls are withheld when amounts or transaction directions cannot be interpreted.
+- Operator-populated settlement date generates a warning if valid; invalid Julian syntax/range fails. The value is not proof of actual settlement.
 
-- [Official rules resource](https://nachaoperatingrulesonline.org/).
-- [Official access/support description](https://nachaoperatingrulesonline.org/support): Basic Access is a read-only PDF and excludes the Guidelines and enhanced features. This description was available through the search index; live pages returned a JavaScript application shell to the research tool.
-- [Official full-access content listing](https://nachaoperatingrulesonline.org/pubchange): the indexed listing identifies the 2026 Rules, Guidelines, and Supplements #1, #2, and #3. Current authenticated content and the applicability of individual amendments still need verification.
-- [Nacha's 2026 user instructions](https://www.nacha.org/system/files/2025-12/2026_NORO_User_Instructions.pdf) describe individual-account subscription access. Do not share accounts or copy the licensed rulebook into this repository.
+## Findings and limits
 
-## Free Basic Access route
+Each parser rule emits one aggregated result. Repeated violations contribute an occurrence count, and navigation highlights the first offending record/field. Grouped checks use context highlights. This bounds output growth for large inputs and avoids disclosing account or company values in messages. The existing CSV format, worker deadline, and upload limit remain in effect. Direct parser offsets supply NACHA locations without a second location index; viewer budgets still apply.
 
-[Dieterich Bank's explicitly dated 2026 Basic Access instructions](https://www.dieterichbank.com/wp-content/uploads/2026/01/Obtain-Nacha-Operating-Rules-Online-Resource-2026.pdf) document a route requiring no subscription code:
+See the [69-file synthetic kit and rule matrix](../demo-files/nacha/README.md). The fixture manifest and tests bind every parser rule to a named error/warning example; targeted parser tests cover additional boundaries.
 
-1. Visit the official rules resource and log in or create an individual account.
-2. Choose the option indicating no Full Access subscription code, provide the required information, and review the terms.
-3. Open Resources and view the Introductory Pages, Articles, and Appendices PDFs.
+The profile does not verify bank routing-directory membership, account existence or eligibility, customer authorization, consent, fraud controls, real transaction purpose, cross-file duplicate identifiers, federal holidays, transmission cutoffs, MAC authentication, or embedded EDI/UN-EDIFACT/tax/healthcare remittance semantics. Field padding checks are limited to numeric syntax, reserved spaces, constants, and required values; full alphabetic-field semantic validation is deferred. These are coverage limits, not evidence of compliance. Approval gates must remain unmet until the responsible reviewers actually approve the rules/fixtures and Product/SC/FT release.
 
-This bank document explains access; it is not the specification. The authenticated 2026 Appendix Three was not inspected. Availability of all current supplements through Basic Access was not established. An indexed public Basic appendices PDF identifies itself as **2025** and must not be treated as the 2026 source. No account was created and no terms were accepted during this research.
+## Production qualification
 
-## Full Access alternative
-
-[The Clearing House's 2026 Online Access listing](https://www.theclearinghouse.org/payments-services/Store/detail/2026-ACH-Rules-Online-Acces) lists $85 nonmember / $50 member and describes access to the full Rules, Guidelines, and supplement details through December 31, 2026. [Nacha's store](https://www.nacha.org/store) lists the online resource at $110 nonmember / $75 member. These are observed listings, not a purchase or a guaranteed checkout price. No purchase was made.
-
-## Source verification before NACHA implementation
-
-The owner needs to establish usable access to the official 2026 source. Verify the edition, Appendix Three coverage for all five SEC codes, applicable data specifications, and amendments effective at the chosen release date. Basic Access may suffice if those requirements are available; otherwise use Full Access or an appropriately licensed organizational copy. Preserve section references and review dates in the eventual rule-to-fixture matrix rather than reproducing the copyrighted specification.
-
-Only after that verification should the parser and rule implementation begin. Production release remains subject to approved rules/fixtures, Product/SC/FT sign-offs, browser and ReadMe acceptance, and the existing release gates. The present catalog cleanup does not supply any of those approvals.
+Required acceptance includes comparison with the governing current Operating Rules and relevant amendments, independent business/rule review, approved fixtures, representative browser performance and recovery, actual ReadMe integration, existing accessibility checks, and required sign-offs. Local tests do not establish those outcomes. No account registration, rulebook purchase, public hosting change, or deployment is part of this implementation.

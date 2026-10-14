@@ -1,4 +1,4 @@
-import type { FindingLocation, FormatPack, RuleOutcome, RuleResult, ValidationContext } from "../types";
+import type { FindingLocation, FormatPack, RuleOutcome, RuleResult } from "../types";
 import type { ParserOutput } from "./iso";
 
 // Public origination subset, not bank acceptance or the complete Operating Rules.
@@ -68,7 +68,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     checks.set(id, { outcome: warning ? "WARNING" : "ERROR", count: 1, field, message, row, from, to });
   };
   const finish = (parseable: boolean): ParserOutput => ({
-    context: parseable ? ({ source, parserKind: "NACHA_FIXED" } as unknown as ValidationContext) : null,
+    context: parseable ? ({ source, parserKind: "NACHA_FIXED" }) : null,
     results: [...checks].map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
       severity: c.outcome === "PASS" ? null : c.outcome, field: c.field,
       locator: c.row ? `Record ${c.row.number} / Columns ${c.from}-${c.to}` : "file",
@@ -143,7 +143,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   let fileAmountsKnown = true;
   const traces = new Set<string>();
   let previousBatch = 0n;
-  const supported = (pack.identifiers as unknown as { secCodes?: readonly string[] } | null)?.secCodes ?? ["CCD", "PPD", "CTX", "WEB", "TEL"];
+  const supported = pack.identifiers?.kind === "NACHA_FIXED" ? pack.identifiers.secCodes : [];
   for (const batch of batches) {
     const bh = batch.header;
     const bc = batch.control;

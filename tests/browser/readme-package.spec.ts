@@ -212,3 +212,14 @@ test("closing during a pending file read prevents later worker creation", async 
   expect(workersCreated).toBe(0);
   await expect(dialog).toHaveCount(0);
 });
+
+
+test("ReadMe inline NACHA preset validates the mixed public-profile fixture", async ({ page }) => {
+  await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-public-2026" data-lock-selection="true"></div></main>');
+  const root = page.locator("[data-payment-file-validator]");
+  await expect(root.getByRole("heading", { name: "Upload your NACHA / ACH file" })).toBeVisible();
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/mixed-five-sec-pass.ach"));
+  await root.getByRole("button", { name: "Validate file" }).click();
+  await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
+  await expect(root.locator('[id$="result-basis"]')).toContainText("public specification profile");
+});

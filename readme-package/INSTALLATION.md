@@ -1,6 +1,6 @@
 # ReadMe installation
 
-This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus one pending NACHA selection. Other catalog placeholders have been removed. Existing profiles remain unapproved for production, and NACHA cannot validate files yet; embedding does not change that status.
+This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus one executable NACHA public-specification candidate. Other catalog placeholders have been removed. Profiles remain unapproved for production; embedding does not change that status. NACHA validates ordinary CCD, PPD, CTX, WEB, and TEL batches, including mixed files. Its public profile is not a complete 2026 Operating Rules implementation.
 
 ## Shared installation
 
@@ -47,7 +47,7 @@ Create a component in **Settings → Custom Components**, using `PaymentFileVali
 />
 ```
 
-The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. The pending NACHA selection remains unavailable even when supplied as a preset. Multiple inline instances keep independent file state and unique control IDs.
+The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. Use `format="NACHA"` and `version="origination-public-2026"` for the public NACHA candidate. Multiple inline instances keep independent file state and unique control IDs.
 
 For an HTML mount instead of MDX, use:
 
@@ -73,6 +73,6 @@ Close or Escape stops active validation and clears selected files/results. Reope
 
 ## Verification before publication
 
-Check both actual ReadMe drafts independently: the wizard-only page must not render a File Explorer, while the explorer page must render the two-pane workspace and finding-to-source navigation. Also check narrow/mobile layouts, multiple inline instances, modal keyboard focus and Escape, page navigation/back/forward, presets, the unavailable NACHA selection, file replacement, validation, and CSV downloads. Confirm synthetic PASS/FAIL results, Blob-worker compatibility, coexistence with existing Custom JavaScript, and no selected-file network upload. Local tests do not establish ReadMe-hosted compatibility. Existing accessibility follow-ups in `docs/ACCESSIBILITY_FOLLOW_UPS.md` remain applicable.
+Check both actual ReadMe drafts independently: the wizard-only page must not render a File Explorer, while the explorer page must render the two-pane workspace and finding-to-source navigation. Also check narrow/mobile layouts, multiple inline instances, modal keyboard focus and Escape, page navigation/back/forward, presets, NACHA mixed-file and source-location behavior, file replacement, validation, and CSV downloads. Confirm synthetic PASS/FAIL results, Blob-worker compatibility, coexistence with existing Custom JavaScript, and no selected-file network upload. Local tests do not establish ReadMe-hosted compatibility. Existing accessibility follow-ups in `docs/ACCESSIBILITY_FOLLOW_UPS.md` remain applicable.
 
 Generated files: edit `src/`, `scripts/finalize-readme-package.mjs`, or `scripts/readme-templates/`, then run `npm run build:readme`. Do not edit generated copies directly.

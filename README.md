@@ -3,8 +3,8 @@
 A browser-local demo for exploring and validating common payment-file formats. Its format-first wizard provides:
 
 - a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, and NACHA / ACH;
-- nine existing executable profiles across the three ISO/X12 formats, with three versions each;
-- one pending NACHA selection for the planned CCD, PPD, CTX, WEB, and TEL scope; and
+- nine existing ISO/X12 profiles, with three versions per format;
+- a NACHA public-specification candidate for ordinary CCD, PPD, CTX, WEB, and TEL originations, including mixed files; and
 - a dedicated-page, read-only file explorer that links current findings to exact source, honest context, or an explicit unavailable state.
 
 Demo results check a limited set of syntax and structure rules. They do not represent Product, SC, or FT approval and do not guarantee ABC Bank acceptance or payment readiness.
@@ -46,7 +46,9 @@ Select **PAIN.001**, choose version **pain.001.001.09**, and upload one of the s
 
 ## Catalog and validation profiles
 
-Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The current nine ISO/X12 packs are explicitly marked `DEMO` and cannot claim release approvals. Their parser and rule behavior is retained. The former reference-only catalog placeholders have been removed; NACHA is the sole pending entry and cannot advance to Upload or validate files. Its 2026 label identifies the intended rules baseline, not implemented coverage. See [the NACHA source review](docs/NACHA_SOURCE_REVIEW.md) for authoritative-source access and remaining verification.
+Visual catalog metadata is defined in `src/format-catalog.ts`. Executable parser and rule metadata is defined separately in `src/format-packs.ts`. The nine ISO/X12 packs retain their existing `DEMO` approval status and validation behavior. NACHA is an enabled `CANDIDATE` profile based on public Nacha and bank specifications, not an approved production pack or a complete 2026 Operating Rules implementation. Other catalog placeholders have been removed.
+
+Select **NACHA**, then **Public specification profile (2026 review)**. Supported ordinary monetary transaction codes are 22, 27, 32, 37, and 52. Files may combine the five supported SEC codes in separate batches. Both balanced and unbalanced files are accepted when their controls reconcile. LF, CRLF, CR, and concatenated 94-character records are supported. See [NACHA sources and validation scope](docs/NACHA_SOURCE_REVIEW.md) and the [synthetic NACHA fixture kit](demo-files/nacha/README.md).
 
 To enable a production pack, provide its exact version identifiers, approved guide URL, approved rules and fixtures, and Product/SC/FT sign-offs. The registry fails closed when any of those production release gates are missing.
 

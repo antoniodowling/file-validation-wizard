@@ -613,6 +613,57 @@
       ],
       "sha256": "ebd0f24d163ddff0cd8c76c98c124ead519e4bcbafc4d357482d6841436b0cc0",
       "bytes": 950
+    },
+    {
+      "file": "settlement-date-invalid-fail.ach",
+      "description": "Invalid Julian settlement date is an error",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.settlement-date"
+      ],
+      "sha256": "cc54461fcf39e4b27c5041fad94379886e8346c5ca42aa5dd750539ebbc137ba",
+      "bytes": 950
+    },
+    {
+      "file": "empty-fail.ach",
+      "description": "Empty file has no records",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.framing"
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "bom-fail.ach",
+      "description": "UTF-8 BOM is outside the ASCII fixed-width profile",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.framing"
+      ],
+      "sha256": "230ed17dfd41e0f4da7a46dac8f30875513e77d73cb287a66798ea4b89c658fd",
+      "bytes": 953
+    },
+    {
+      "file": "multiple-errors-fail.ach",
+      "description": "Independent date, service class, account, and routing errors",
+      "expectedStatus": "FAIL",
+      "expectedRuleIds": [
+        "nacha.creation-date",
+        "nacha.service-class",
+        "nacha.entry-required",
+        "nacha.routing"
+      ],
+      "sha256": "17d0bc7acb12a488bc4d22f65af044beea511806fb917201ee4f1f87b1639b5c",
+      "bytes": 950
+    },
+    {
+      "file": "multiple-errors-resolved-pass.ach",
+      "description": "Corrected companion for the multi-error example",
+      "expectedStatus": "PASS",
+      "expectedRuleIds": [],
+      "sha256": "632204351138e9b685eea6a02640d26139d8af81b18e90db76530ca1f9e640ad",
+      "bytes": 950
     }
   ]
 }

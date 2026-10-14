@@ -121,6 +121,15 @@ const extra = [
 for (const [name, description, mutate] of extra) add(`${name}-isolated-fail.ach`, description, mutate(base), 'FAIL', [`nacha.${name}`]);
 add('effective-weekend-warning.ach', 'Weekend effective entry date requires ODFI confirmation', replaceField(base, 1, 70, 6, '261017'), 'PASS_WITH_WARNINGS', ['nacha.effective-weekend']);
 add('settlement-date-warning.ach', 'Operator settlement date populated in an origination', replaceField(base, 1, 76, 3, '288'), 'PASS_WITH_WARNINGS', ['nacha.settlement-date']);
+add('settlement-date-invalid-fail.ach', 'Invalid Julian settlement date is an error', replaceField(base, 1, 76, 3, 'ABC'), 'FAIL', ['nacha.settlement-date']);
+add('empty-fail.ach', 'Empty file has no records', '', 'FAIL', ['nacha.framing']);
+add('bom-fail.ach', 'UTF-8 BOM is outside the ASCII fixed-width profile', '\uFEFF' + base, 'FAIL', ['nacha.framing']);
+let combined = replaceField(base, 0, 24, 6, '260230');
+combined = replaceField(combined, 1, 2, 3, '999');
+combined = replaceField(combined, 2, 13, 17, '');
+combined = replaceField(combined, 2, 4, 9, '010000004');
+add('multiple-errors-fail.ach', 'Independent date, service class, account, and routing errors', combined, 'FAIL', ['nacha.creation-date', 'nacha.service-class', 'nacha.entry-required', 'nacha.routing']);
+add('multiple-errors-resolved-pass.ach', 'Corrected companion for the multi-error example', base);
 mkdirSync(destination, { recursive: true });
 for (const fixture of fixtures) writeFileSync(resolve(destination, fixture.file), fixture.source);
 writeFileSync(resolve(destination, 'manifest.json'), JSON.stringify({ synthetic: true, description: 'Synthetic test data only. Format-valid routing values prove checksum arithmetic, not bank membership or deliverability.', fixtures: fixtures.map(({ source, ...fixture }) => ({ ...fixture, sha256: createHash('sha256').update(source).digest('hex'), bytes: Buffer.byteLength(source) })) }, null, 2) + '\n');

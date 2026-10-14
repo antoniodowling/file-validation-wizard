@@ -137,15 +137,41 @@ test("known layout defect: format controls align in the explorer pane", async ({
   expect(Math.max(...positions) - Math.min(...positions)).toBeLessThan(1);
 });
 
-test("keeps pending NACHA unavailable and removes unsupported catalog formats", async ({ page }) => {
+test("opens the NACHA public profile and removes unsupported catalog formats", async ({ page }) => {
   await page.goto("/");
   await page.locator("#format-search").fill("MT940");
   await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(0);
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "2026 nacha rules");
-  await expect(page.getByText("File extensions: ACH, TXT", { exact: false })).toBeVisible();
-  await expect(page.getByText("Validation is not yet available for this selection.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-  await expect(page.locator('[data-open-step="2"]').first()).toBeDisabled();
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await expect(page.getByText("Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.locator("#upload-title")).toHaveText("Upload your NACHA / ACH file");
+  await expect(page.locator("#file-input")).toHaveAttribute("accept", ".ach,.txt");
+});
+
+test("validates mixed NACHA files, warnings and errors with exact source navigation and CSV", async ({ page }) => {
+  await page.goto("/");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await page.getByRole("button", { name: "Continue" }).click();
+  const upload = async (file: string) => {
+    await page.locator("#file-input").setInputFiles(demoFile(`nacha/${file}`));
+    await page.getByRole("button", { name: "Validate file" }).click();
+  };
+  await upload("mixed-five-sec-pass.ach");
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  await expect(page.locator("#result-basis")).toContainText("Passing does not establish full Nacha Rules compliance or bank acceptance.");
+  const download = page.waitForEvent("download");
+  await page.locator("#export-csv").click();
+  expect((await download).suggestedFilename()).toContain("nacha-origination-public-2026");
+  await page.locator('[data-open-step="2"].button').click();
+  await upload("effective-weekend-warning.ach");
+  await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
+  await page.locator('[data-open-step="2"].button').click();
+  await upload("routing-check-digit-fail.ach");
+  await expect(page.locator("#results-title")).toHaveText("FAIL");
+  const errorRow = page.locator("#finding-rows tr").filter({ hasText: "Receiving routing number" });
+  await errorRow.getByRole("button", { name: /View/ }).click();
+  await expect(page.locator("[data-file-explorer] .cm-content")).toHaveAttribute("contenteditable", "false");
+  await expect(page.locator("[data-file-explorer] [data-detail-message]")).toContainText("check digit");
 });
 
 test("enforces extensions dynamically and preserves a valid file after an invalid replacement", async ({ page }) => {

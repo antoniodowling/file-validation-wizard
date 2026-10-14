@@ -1,6 +1,6 @@
 # Processing safeguards and upload stress kit
 
-The current demo still has nine executable profiles. These safeguards do not expand validation coverage or introduce a Cancel button.
+The current registry has nine legacy ISO/X12 profiles and one NACHA public-specification candidate. These safeguards apply to every profile and do not themselves establish production approval or introduce a Cancel button. See [NACHA scope](NACHA_SOURCE_REVIEW.md).
 
 ## Run policy
 
