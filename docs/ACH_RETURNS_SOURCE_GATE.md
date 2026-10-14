@@ -24,7 +24,7 @@ Assessment 2026-10-14. No Returns profile is registered, no placeholder dropdown
 
 ## Specification-owner questions (prepared, not sent)
 
-1. Provide the identifier, revision/effective date and authoritative machine-readable source or current rule extracts for the network layouts covering the six named variants. Which current tables resolve the trace/count contradictions identified above?
+1. Provide the identifier, revision/effective date and authoritative machine-readable source or current rule extracts for the network layouts covering all requested variants. Which current tables resolve the trace/count contradictions identified above?
 2. Confirm the complete active reason/change/refusal codes and each conditional field grammar, including R69, R73, C13 and refused-NOC original change/trace references. Confirm the service class, status, transaction-family and amount/control rules per variant.
 3. Identify the approved standalone conformance fixtures for independent qualification, with mandatory/optional/suppressed states and expected findings. This is source/fixture evidence, not authorization for original matching or external bank checks.
 
