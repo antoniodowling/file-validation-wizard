@@ -21,3 +21,5 @@ The fixed-record helper stops at the first malformed boundary, preserves spaces 
 Phase 2’s confirmed source gate and unsent specification-owner questions are recorded in [ACH_RETURNS_SOURCE_GATE.md](ACH_RETURNS_SOURCE_GATE.md). No Returns executable profile is available.
 
 Phase 3’s transferred layout and unconfirmed wire-contract questions are recorded in [HUNTINGTON_ACH_TOTALS_SOURCE_GATE.md](HUNTINGTON_ACH_TOTALS_SOURCE_GATE.md). No Huntington control-total profile is available.
+
+Phase 4’s normative ACK grammar gate, unsent specification-owner questions and document-validity/disposition distinction are recorded in [HUNTINGTON_ACK_SOURCE_GATE.md](HUNTINGTON_ACK_SOURCE_GATE.md). ACK and its dependent schema-3 work remain unavailable until the contract is confirmed.
