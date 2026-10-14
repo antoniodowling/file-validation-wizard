@@ -1,3 +1,4 @@
+import { frameFixedRecords, totals, slice, digits, number, HASH_MOD, date, routingPrefix, routing, type RecordRow } from "./fixed-record";
 import type { FindingLocation, FormatPack, RuleOutcome, RuleResult } from "../types";
 import type { ParserOutput } from "./iso";
 
@@ -19,31 +20,7 @@ const IDS = [
 ] as const;
 export const NACHA_RULE_IDS: readonly string[] = Object.freeze(IDS.map((id) => `nacha.${id}`));
 type Id = typeof IDS[number];
-interface RecordRow { text: string; start: number; number: number }
 interface Check { outcome: RuleOutcome; count: number; field: string; message: string; row: RecordRow | undefined; from: number; to: number }
-interface Totals { count: bigint; hash: bigint; debit: bigint; credit: bigint }
-const totals = (): Totals => ({ count: 0n, hash: 0n, debit: 0n, credit: 0n });
-const slice = (row: RecordRow, from: number, to: number): string => row.text.slice(from - 1, to);
-const digits = (value: string): boolean => /^\d+$/.test(value);
-const number = (value: string): bigint | null => digits(value) ? BigInt(value) : null;
-const HASH_MOD = 10_000_000_000n;
-function date(value: string): Date | null {
-  if (!/^\d{6}$/.test(value)) return null;
-  const yy = Number(value.slice(0, 2));
-  const mm = Number(value.slice(2, 4));
-  const dd = Number(value.slice(4, 6));
-  const parsed = new Date(Date.UTC(2000 + yy, mm - 1, dd));
-  return parsed.getUTCFullYear() === 2000 + yy && parsed.getUTCMonth() === mm - 1 && parsed.getUTCDate() === dd ? parsed : null;
-}
-function routingPrefix(value: string): boolean {
-  const prefix = Number(value.slice(0, 2));
-  return /^\d{8}$/.test(value) && value !== "00000000" &&
-    ((prefix >= 0 && prefix <= 12) || (prefix >= 21 && prefix <= 32) || (prefix >= 61 && prefix <= 72) || prefix === 80);
-}
-function routing(value: string): boolean {
-  if (!/^\d{9}$/.test(value) || !routingPrefix(value.slice(0, 8))) return false;
-  return [...value].reduce((sum, digit, index) => sum + Number(digit) * ([3, 7, 1][index % 3] ?? 0), 0) % 10 === 0;
-}
 function location(check: Check): FindingLocation {
   if (!check.row) return { kind: "file-wide", explanation: "This check applies to the entire ACH file." };
   return { kind: "located", primary: { kind: check.from === 1 && check.to === 94 || check.field === "Batch control identifiers" || check.field === "File header constants" ? "context" : "exact", label: `Record ${check.row.number}, columns ${check.from}-${check.to}`,
@@ -68,6 +45,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     checks.set(id, { outcome: warning ? "WARNING" : "ERROR", count: 1, field, message, row, from, to });
   };
   const finish = (parseable: boolean): ParserOutput => ({
+    notApplicable: parseable ? ["addenda-type", "addenda-sequence", "addenda-link", ...(checks.get("transaction-code")?.outcome === "ERROR" ? [] : ["web-credit-originator"])].filter(id => !checks.has(id as Id)).map(id => `nacha.${id}`) : [],
     context: parseable ? ({ source, parserKind: "NACHA_FIXED" }) : null,
     results: [...checks].map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
       severity: c.outcome === "PASS" ? null : c.outcome, field: c.field,
@@ -75,38 +53,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       message: c.message + (c.count > 1 ? ` (${c.count} violations; first location shown.)` : ""),
       ordinal, location: location(c) }) as RuleResult),
   });
-  const rows: RecordRow[] = [];
-  const firstDelimiter = /\r\n|\r|\n/.exec(source);
-  let framing = source.length > 0;
-  let badWidth: RecordRow | undefined;
-  if (firstDelimiter) {
-    const delimiter = firstDelimiter[0];
-    const separators = /\r\n|\r|\n/g;
-    let start = 0;
-    let match: RegExpExecArray | null;
-    // Validate each boundary before retaining a row. Delimiter-heavy malformed
-    // input must not allocate arrays proportional to every newline in the file.
-    while ((match = separators.exec(source)) !== null) {
-      const row = { text: source.slice(start, match.index), start, number: rows.length + 1 };
-      if (match[0] !== delimiter || row.text.length !== 94) {
-        framing = false;
-        badWidth = row;
-        break;
-      }
-      rows.push(row);
-      start = match.index + match[0].length;
-    }
-    if (framing && start < source.length) {
-      const row = { text: source.slice(start), start, number: rows.length + 1 };
-      if (row.text.length !== 94) { framing = false; badWidth = row; }
-      else rows.push(row);
-    }
-  } else {
-    framing = framing && source.length % 94 === 0;
-    if (framing) {
-      for (let start = 0; start < source.length; start += 94) rows.push({ text: source.slice(start, start + 94), start, number: rows.length + 1 });
-    }
-  }
+  const { rows, framing, badWidth } = frameFixedRecords(source, 94);
   check("framing", framing && !badWidth && rows.length > 0, "Record framing", "Use exactly 94 characters per record with consistent LF, CRLF, or CR separators, or concatenate complete records. Blank records and mixed framing are invalid.", badWidth);
   if (checks.get("framing")?.outcome === "ERROR") return finish(false);
   for (const row of rows) check("ascii", /^[\x20-\x7e]{94}$/.test(row.text), "Record characters", "Every record must contain printable ASCII characters; tabs and non-ASCII characters are invalid.", row);

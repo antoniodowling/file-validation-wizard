@@ -54,10 +54,7 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
     checks: provenance.coverage.map(rule => {
       const evaluated = frozenResults.filter(r => r.ruleId === rule.id);
       return { ruleId: rule.id, state: evaluated.length === 0
-        ? pack.parserKind === "NACHA_FIXED" && parsed.context && (
-          ["nacha.addenda-type", "nacha.addenda-sequence", "nacha.addenda-link"].includes(rule.id)
-          || (rule.id === "nacha.web-credit-originator" && !frozenResults.some(r => r.ruleId === "nacha.transaction-code" && r.outcome === "ERROR"))
-        ) ? "not-applicable" as const : "not-evaluated" as const
+        ? parsed.notApplicable?.includes(rule.id) ? "not-applicable" as const : "not-evaluated" as const
         : evaluated.some(r => r.outcome !== "PASS") ? "failed" as const : "passed" as const,
         findingOrdinals: evaluated.filter(r => r.outcome !== "PASS").map(r => r.ordinal) };
     }),

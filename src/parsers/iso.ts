@@ -4,6 +4,7 @@ import { result } from "./shared";
 import { children, parseXml, XmlSyntaxError, type XmlNode } from "./xml-adapter";
 
 export interface ParserOutput {
+  readonly notApplicable?: readonly string[];
   readonly context: ValidationContext | null;
   readonly results: readonly RuleResult[];
 }
