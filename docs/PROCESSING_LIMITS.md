@@ -2,10 +2,10 @@
 
 > Explorer display update (2026-10-14): full-source browsing replaces the earlier clipped source windows. The editor and fallback have no separate character or long-line cutoff, and source-window buttons are removed.
 
-> Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
+> Current guards are documented below. Initial safeguard measurements and earlier validation counts are retained as historical evidence; they predate ruleset-2 admission limits and later full-source browsing.
 
 
-The registry has nine ISO/X12 DEMO profiles and one public-source NACHA candidate. The upload ceiling remains 25 MB; the current engine separately admits at most 8,000,000 decoded UTF-16 units and reports excess as an incomplete resource-limited run. These guards do not establish production approval. See [NACHA scope](NACHA_SOURCE_REVIEW.md).
+The registry has nine ISO/X12 DEMO profiles and two public-source NACHA candidates. The upload ceiling remains 25 MB; the current engine separately admits at most 8,000,000 decoded UTF-16 units and reports excess as an incomplete resource-limited run. These guards do not establish production approval. See [original NACHA scope](NACHA_SOURCE_REVIEW.md) and [expanded entry types](ACH_ORIGINATION_EXPANDED.md).
 
 ## Run policy
 
@@ -25,7 +25,7 @@ The worker returns typed failure codes. Unexpected engine exceptions do not forw
 
 Explorer work is optional enrichment after validation completes. If it fails or exceeds its separate 10-second preparation window, completed results and CSV export remain available.
 
-The explorer displays the full accepted source without a separate character or long-line cutoff, including in its read-only fallback. The companion location index retains its 5,000,000-character guard, with 32 related targets per finding. Findings outside the index budget use an explicit unavailable location instead of a guessed highlight. These values are implementation guards, not measured browser support claims; see [FILE_EXPLORER.md](FILE_EXPLORER.md).
+The explorer displays the full accepted source without a separate character or long-line cutoff, including in its read-only fallback. Current schema-2 locations come from the parser and bypass the legacy companion index. The legacy mapper for runs without schema-2 provenance retains its 5,000,000-character guard; unmappable legacy findings are explicitly unavailable. Related metadata is limited to 32 targets per finding. These values are implementation guards, not measured browser support claims; see [FILE_EXPLORER.md](FILE_EXPLORER.md).
 
 ## Generate the upload kit
 
@@ -38,7 +38,7 @@ cd /absolute/path/to/HNB-File-Validation-Wizard
 npm run generate:stress-files -- /private/tmp/hnb-validator-stress-files
 ```
 
-Use a dedicated output directory: regeneration replaces the known generated files there. Large generated payloads stay outside Git; the committed generator and its tests reproduce all 14 cases. `README.md` and `manifest.json` in the output identify each file's format/version, purpose, expected behavior, exact bytes, and checksum.
+Use a dedicated output directory: regeneration replaces the known generated files there. The ready-to-use payloads are also tracked in Git; use disposable output for comparisons and preserve their original bytes. The committed generator and its tests reproduce all 14 cases. `README.md` and `manifest.json` in the output identify each file's format/version, purpose, expected behavior, exact bytes, and checksum.
 
 The kit covers small XML/EDI baselines, empty XML, invalid UTF-8, prohibited declarations, late malformed XML, 24,999,999/25,000,000/25,000,001-byte boundaries, 50,000 XML payment blocks, 5,000 nested XML levels, 50,000 EDI transactions, a 5 MB EDI element, and 250,000 additional short EDI segments.
 
@@ -50,17 +50,19 @@ All data is synthetic. These are stress inputs for limited demo checks, not stan
 
 For each manual upload, record browser/version, local versus ReadMe environment, elapsed time, result or failure message, responsiveness, and successful recovery using the small baseline. Actual browser and ReadMe results are required before claiming a supported performance envelope. Node worker measurements can guide investigation but do not establish browser memory usage or hosted acceptance.
 
-## Initial local measurements
+## Historical initial local measurements
+
+These observations predate the current ruleset-2 resource limits. The kit's [LOCAL-RESULTS.md](../demo-files/hnb-validator-stress-files/LOCAL-RESULTS.md) and JSON measurements are preserved unchanged; they are not current expected outcomes or browser acceptance.
 
 Single-run diagnostic measurements on Node v26.5.0/macOS used the bundled worker in fresh Node worker threads, a 10-second parent watchdog, and a deliberately restricted 256 MB old-generation heap. Small baselines took 17–42 ms; 50,000 XML blocks took 175 ms, 50,000 EDI transactions 99 ms, a 5 MB EDI element 18 ms, and 250,000 extra EDI segments 92 ms. These are local observations including startup, not browser budgets.
 
 The 24,999,999-byte and 25,000,000-byte XML text-node cases exhausted that artificial heap cap after approximately 1.2–1.4 seconds. The 5,000-level XML returned ENGINE_ERROR in 23 ms. The 25,000,001-byte input returned FILE_TOO_LARGE before parsing. Empty and malformed XML and prohibited declarations returned completed FAIL; invalid UTF-8 returned INVALID_ENCODING. No case reached the deadline. Retain the 25 MB limit provisionally; actual browser memory and responsiveness remain unverified.
 
-## Safeguard validation
+## Historical safeguard validation
 
 All 50 Vitest tests and the generated-kit integrity test passed. TypeScript checking, the standalone production build, and ReadMe package generation passed. The tests reused installed dependencies through a temporary worktree dependency link and a temporary Vite filesystem allow-list for that link; neither changes production configuration. Browser/Playwright and hosted ReadMe testing were not run; they remain acceptance work.
 
-## File explorer safeguard validation (2026-09-18)
+## Historical file explorer safeguard validation (2026-09-18)
 
 The non-browser `npm run validate:core` path passed 102 Vitest tests across 18 files, the generated-kit integrity test, TypeScript/standalone build, ReadMe package generation, and a static package-contract test. Coverage includes canonical line-ending/Unicode/EOF mappings, UTF-8 BOM handling, ReadMe-safe XML declaration detection, legacy-equivalent EDI tokenization, XML/EDI rule locations, duplicate EDI occurrences, related-target truncation, index-budget degradation, filtered finding navigation, severity-specific source highlights, the simplified finding-details interface, pagination, accepted-run lifecycle, enrichment failure, stale messages, focus preservation, the six-location multi-finding PAIN demo, and its clean resolved companion. Browser performance and hosted ReadMe acceptance were not run and remain unverified.
 

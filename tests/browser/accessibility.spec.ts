@@ -3,8 +3,8 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { resolve } from "node:path";
 
 async function scan(page: Page, info: TestInfo): Promise<void> {
-  // The embedding page owns the h1. Do not disable contrast: record the full
-  // report and permit only A11Y-001's existing warning controls/chips.
+  // The embedding page owns the h1. All remaining rules, including contrast,
+  // must report zero violations; retain the full report for inspection.
   const report = await new AxeBuilder({ page }).disableRules(["page-has-heading-one"]).analyze();
   await info.attach("accessibility.json", {
     body: JSON.stringify(report, null, 2), contentType: "application/json",

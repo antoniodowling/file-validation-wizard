@@ -5,16 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build",
     "build:readme": "vite build --config vite.readme.config.ts && node scripts/finalize-readme-package.mjs",
     "test": "vitest run",
     "test:stress-files": "node --test tests/stress-files.test.mjs",
     "test:readme-package": "node --test tests/readme-package-contract.test.mjs",
     "generate:stress-files": "node scripts/generate-stress-files.mjs",
+    "generate:nacha-files": "node scripts/generate-nacha-files.mjs",
+    "generate:nacha-expanded-files": "node scripts/generate-nacha-expanded-files.mjs",
+    "export:coverage": "node scripts/export-coverage.mjs",
+    "export:nacha-coverage": "node scripts/export-nacha-coverage.mjs",
     "test:e2e": "playwright test",
     "validate:core": "npm run test && npm run test:stress-files && npm run build && npm run build:readme && npm run test:readme-package",
     "validate": "npm run validate:core && npm run test:e2e",
-    "check:readme-drift": "node scripts/check-readme-drift.mjs"
+    "check:readme-drift": "node scripts/check-readme-drift.mjs",
+    "generate:ach-candidate-files": "node scripts/generate-ach-candidates.mjs"
   },
   "dependencies": {
     "@codemirror/state": "^6.7.5",
@@ -31,6 +37,7 @@
     "@types/node": "^24.3.1",
     "jsdom": "^26.1.0",
     "postcss": "^8.5.28",
+    "rolldown": "1.2.9",
     "typescript": "^5.9.2",
     "vite": "^8.2.2",
     "vitest": "^4.1.10"

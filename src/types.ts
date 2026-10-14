@@ -100,17 +100,9 @@ export interface RuleEvaluation {
   readonly message?: string;
 }
 
-export interface IsoDocument {
-  readonly rootName: string;
-  readonly namespace: string;
-  readonly containerName: string | null;
-  readonly container: Readonly<Record<string, unknown>> | null;
-}
-
 export interface ValidationContext {
   readonly source: string;
   readonly parserKind: ParserKind;
-  readonly iso?: IsoDocument;
   readonly edi?: EdiDocument;
 }
 
