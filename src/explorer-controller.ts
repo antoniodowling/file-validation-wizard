@@ -44,10 +44,6 @@ export function explorerMarkup(): string {
         <button class="button secondary compact" type="button" data-finding-previous disabled>← Previous finding</button>
         <button class="button secondary compact" type="button" data-finding-next disabled>Next finding →</button>
       </div>
-      <div class="explorer-toolbar">
-        <button class="button secondary compact" type="button" data-target-previous disabled>Previous occurrence</button>
-        <button class="button secondary compact" type="button" data-target-next disabled>Next occurrence</button>
-      </div>
       <div class="explorer-details" data-explorer-details hidden>
         <div class="explorer-details-heading">
           <div><span class="severity" data-detail-outcome></span> <strong data-detail-rule></strong></div>
@@ -74,16 +70,10 @@ export class FileExplorerController {
   private locations = new Map<number, FindingLocation>();
   private selectedOrdinal: number | null = null;
   private viewer: ReadOnlySourceViewer | null = null;
-  private targetIndex = 0;
 
   constructor(options: ExplorerControllerOptions) {
     this.options = options;
     this.root = options.root;
-    for (const [selector, delta] of [["[data-target-previous]", -1], ["[data-target-next]", 1]] as const) {
-      this.q<HTMLButtonElement>(selector).addEventListener("click", () => {
-        this.targetIndex += delta; this.renderSelection();
-      });
-    }
     this.q<HTMLButtonElement>("[data-explorer-hide]").addEventListener("click", options.onHide);
     this.q<HTMLButtonElement>("[data-explorer-expand]").addEventListener("click", () => {
       const expanded = options.onExpand();
@@ -162,7 +152,6 @@ export class FileExplorerController {
   selectFinding(finding: RuleResult): void {
     if (!this.snapshot || finding.outcome === "PASS") return;
     this.selectedOrdinal = finding.ordinal;
-    this.targetIndex = 0;
     this.renderSelection();
     this.updateFindingButtons();
     this.options.showFindingInResults(finding.ordinal, false);
@@ -185,8 +174,7 @@ export class FileExplorerController {
     this.snapshot = null;
     this.locations.clear();
     this.selectedOrdinal = null;
-    this.targetIndex = 0;
-    for (const button of this.root.querySelectorAll<HTMLButtonElement>("[data-target-previous], [data-target-next], [data-finding-previous], [data-finding-next]")) button.disabled = true;
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>("[data-finding-previous], [data-finding-next]")) button.disabled = true;
     for (const field of this.root.querySelectorAll<HTMLElement>("[data-detail-field], [data-detail-locator], [data-detail-message], [data-detail-rule], [data-detail-confidence]")) field.textContent = "";
     this.q<HTMLElement>("[data-explorer-details]").hidden = true;
     this.q<HTMLElement>("[data-source-viewer]").hidden = true;
@@ -226,7 +214,7 @@ export class FileExplorerController {
   private selectedTarget(): SourceTarget | null {
     if (this.selectedOrdinal === null) return null;
     const location = this.locations.get(this.selectedOrdinal);
-    return location?.kind === "located" ? [location.primary, ...location.related][this.targetIndex] ?? location.primary : null;
+    return location?.kind === "located" ? location.primary : null;
   }
 
   private renderSelection(): void {
@@ -246,9 +234,6 @@ export class FileExplorerController {
     this.q<HTMLElement>("[data-detail-confidence]").textContent = location?.kind === "located"
       ? `${location.primary.kind}: ${location.primary.label}. ${location.related.length} related targets${location.relatedTruncated ? " (additional targets omitted)" : ""}.`
       : location ? `${location.kind}: ${location.explanation}` : "Locations are preparing.";
-    this.q<HTMLButtonElement>("[data-target-previous]").disabled = this.targetIndex <= 0;
-    this.q<HTMLButtonElement>("[data-target-next]").disabled = location?.kind !== "located" || this.targetIndex >= location.related.length;
-    if (location?.kind === "located") this.q<HTMLElement>("[data-detail-confidence]").textContent += ` Showing occurrence ${this.targetIndex + 1} of ${location.related.length + 1}.`;
     this.showSelectedTarget();
     this.options.announce(`${finding.outcome}: ${finding.field}. ${finding.message}. ${this.q<HTMLElement>("[data-detail-confidence]").textContent}`);
   }

@@ -59,7 +59,7 @@ describe("file explorer finding view", () => {
     expect(root.querySelector("[data-detail-message]")).toBeTruthy();
     expect(root.querySelector("[data-finding-previous]")).toBeTruthy();
     expect(root.querySelector("[data-finding-next]")).toBeTruthy();
-    expect(root.querySelector("[data-window-previous], [data-window-next], [data-explorer-scope]")).toBeNull();
+    expect(root.querySelector("[data-target-previous], [data-target-next], [data-window-previous], [data-window-next], [data-explorer-scope]")).toBeNull();
     expect(root.querySelector("[data-source-search], [data-go-line], [data-related-status], [data-location-explanation], [data-focus-source], [data-return-finding], [data-return-location]")).toBeNull();
   });
 
@@ -99,6 +99,7 @@ describe("file explorer finding view", () => {
 
     expect(viewerControl.targets.at(-1)).toEqual([primary, "ERROR"]);
     expect(viewerControl.targets.some(([target]) => target === related)).toBe(false);
+    expect(root.querySelector("[data-detail-confidence]")?.textContent).not.toContain("Showing occurrence");
     controller.destroy();
   });
 });
