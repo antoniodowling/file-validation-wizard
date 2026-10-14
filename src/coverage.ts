@@ -1,4 +1,5 @@
 import type { CoverageRule, FormatPack, RunProvenance } from "./types";
+import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
 export const EXCLUSIONS = Object.freeze([
   "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
@@ -37,6 +38,7 @@ const descriptions: Record<string, readonly [string, string]> = {
 };
 
 export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
+  if (pack.parserKind === "NACHA_FIXED") return nachaCoverageFor(pack);
   const xml = pack.parserKind === "ISO_XML";
   return [...(xml ? xmlRules.map(id => `iso.${id}`) : ediRules.map(id => `edi.${id}`)), ...pack.rules.map(r => r.id)].map(id => ({
     id, description: descriptions[id]?.[0] ?? pack.rules.find(r => r.id === id)?.description ?? id,
@@ -49,10 +51,12 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
   }));
 }
 export function provenanceFor(pack: FormatPack): RunProvenance {
+  const nacha = pack.parserKind === "NACHA_FIXED";
+  const revision = nacha ? NACHA_RULESET_REVISION : RULESET_REVISION;
   return Object.freeze({ schemaVersion: "2", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
-    implementationGuideRevision: "not supplied / not evaluated", mode: pack.mode,
-    rulesetRevision: RULESET_REVISION, coverageRevision: `${pack.id}@${RULESET_REVISION}`,
+    implementationGuideRevision: nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated", mode: pack.mode,
+    rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}`,
     buildRevision: typeof __BUILD_REVISION__ === "string" ? __BUILD_REVISION__ : "source-development",
-    coverage: coverageFor(pack), exclusions: EXCLUSIONS });
+    coverage: coverageFor(pack), exclusions: nacha ? NACHA_EXCLUSIONS : EXCLUSIONS });
 }
 declare const __BUILD_REVISION__: string;

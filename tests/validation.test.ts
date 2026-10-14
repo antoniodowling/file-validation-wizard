@@ -123,8 +123,9 @@ describe("EDI 820 validation", () => {
 
 describe("demo validation profiles", () => {
   it("passes a matching synthetic fixture for all nine profiles", () => {
-    expect(FORMAT_PACKS).toHaveLength(9);
-    for (const pack of FORMAT_PACKS) {
+    const legacyPacks = FORMAT_PACKS.filter((pack) => pack.mode === "DEMO");
+    expect(legacyPacks).toHaveLength(9);
+    for (const pack of legacyPacks) {
       const source = pack.parserKind === "ISO_XML" ? validIsoFor(pack) : validEdiFor(pack);
       expect(validateSource(`fixture${pack.extensions[0]}`, source, pack).overallStatus, pack.id).toBe("PASS");
     }
@@ -139,6 +140,6 @@ describe("demo validation profiles", () => {
 
     expect(validateSource("wrong-version.xml", validIsoFor(pain001), pain008).overallStatus).toBe("FAIL");
     expect(validateSource("wrong-family.xml", validIsoFor(pain008), pain001).overallStatus).toBe("FAIL");
-    expect(validateSource("wrong-version.edi", validEdiFor(edi), FORMAT_PACKS.at(-2)!).overallStatus).toBe("FAIL");
+    expect(validateSource("wrong-version.edi", validEdiFor(edi), FORMAT_PACKS.find((pack) => pack.id === "edi-820-005010")!).overallStatus).toBe("FAIL");
   });
 });

@@ -1,6 +1,9 @@
+import nachaPass from "../demo-files/nacha/ccd-pass.ach?raw";
+import nachaFail from "../demo-files/nacha/routing-check-digit-fail.ach?raw";
 import type { FormatPack, IsoVersionIdentifiers, EdiVersionIdentifiers } from "./types";
 /** Synthetic wiring samples, intentionally not represented as conformant payment messages. */
 export function syntheticSample(pack: FormatPack, fail: boolean): string {
+  if (pack.parserKind === "NACHA_FIXED") return fail ? nachaFail : nachaPass;
   if (pack.parserKind === "ISO_XML") {
     const ids = pack.identifiers as IsoVersionIdentifiers;
     return `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Synthetic DEMO structural sample; not a payment instruction -->\n<Document xmlns="${ids.namespace}"><${ids.messageContainer}><GrpHdr><MsgId>${fail ? "" : "SYNTHETIC-DEMO"}</MsgId><NbOfTxs>1</NbOfTxs></GrpHdr><PmtInf><PmtInfId>SAMPLE-1</PmtInfId></PmtInf></${ids.messageContainer}></Document>`;

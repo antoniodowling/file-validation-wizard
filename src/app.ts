@@ -209,7 +209,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           <!-- Development-only disclosures; remove before public release. -->
           <div class="results-technical-details">
             <details id="local-diagnostics"><summary>Local processing diagnostics (no file values)</summary><pre id="diagnostics-output"></pre></details>
-            <details><summary>Versioned DEMO coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
+            <details><summary>Versioned coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
           </div>
         </div>
       </section>
@@ -576,7 +576,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       option.setAttribute("role", "option");
       option.setAttribute("aria-selected", String(item.id === selectedFormatId));
       if (index === activeOptionIndex) option.classList.add("active");
-      for (const value of [item.standard, item.code, `${item.name} · ${item.status === "DEMO_SUPPORTED" ? "DEMO validator" : "Reference only"}`]) {
+      for (const value of [item.standard, item.code, `${item.name} · ${item.status === "CANDIDATE_SUPPORTED" ? "CANDIDATE validator" : item.status === "DEMO_SUPPORTED" ? "DEMO validator" : "Reference only"}`]) {
         const cell = document.createElement("span");
         cell.textContent = value;
         option.append(cell);
@@ -632,7 +632,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     if (!format) {
       helper.hidden = true;
     } else if (!version) {
-      helper.textContent = format.status === "DEMO_SUPPORTED" ? "DEMO validator available. Choose an exact version to inspect its limited coverage." : "Reference browsing only — no executable validator is available.";
+      helper.textContent = format.status === "CANDIDATE_SUPPORTED" ? "Public-source NACHA candidate available. Choose its profile to inspect coverage." : format.status === "DEMO_SUPPORTED" ? "DEMO validator available. Choose an exact version to inspect its limited coverage." : "Reference browsing only — no executable validator is available.";
     } else if (!version.validationProfileId) {
       helper.textContent = `Accepted extensions: ${extensionList(version.extensions)} · Reference only — validation is unavailable in this demo.`;
     } else {
@@ -648,7 +648,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         sampleLink.target = "_blank";
         sampleLink.rel = "noopener noreferrer";
         sampleLink.textContent = "sample file";
-        helper.append("See ", guideLink, " and ", sampleLink);
+        if (format.id === "nacha") helper.append("See ", guideLink, ". Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.");
+        else helper.append("See ", guideLink, " and ", sampleLink);
       } else {
         helper.textContent = "File Format Guide unavailable.";
       }
@@ -660,7 +661,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     const version = selectedVersion();
     const extensions = version?.extensions ?? [];
     requiredElement<HTMLElement>("#upload-title").textContent = version
-      ? `Upload your ${version.label} file`
+      ? selectedFormat()?.id === "nacha" ? "Upload your NACHA / ACH file" : `Upload your ${version.label} file`
       : "Upload your payment file";
     fileInput.accept = extensions.join(",");
     requiredElement<HTMLElement>("#accepted-extensions").textContent = extensions.length
@@ -1007,6 +1008,9 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     requiredElement<HTMLElement>("#result-basis").textContent = executionStatus === "COMPLETED"
       ? `${completedSummary} Passing these checks does not guarantee payment acceptance or processing.`
       : `${executionStatus === "UNSUPPORTED" ? "This file is not supported." : "Validation could not be completed."} ${runController.acceptedRun.executionReason ?? ""}`.trim();
+    if (runController.acceptedRun.formatId === "nacha-origination-public-2026") {
+      requiredElement<HTMLElement>("#result-basis").textContent += " Public specification profile: file fields, addenda relationships, counts, hashes, and amounts. Holidays, cutoffs, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance.";
+    }
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
     const passCount = runController.acceptedRun.results.filter((result) => result.outcome === "PASS").length;

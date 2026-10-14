@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { findingLines } from "../src/finding-lines";
 import { locateFindings } from "../src/finding-locations";
@@ -45,4 +47,9 @@ describe("finding line summaries", () => {
     expect(mapped(source, "edi-820-005010", "edi.segment-count").label).toBe("1");
     expect(mapped(source.replaceAll("~", "~\r\n"), "edi-820-005010", "edi.segment-count").label).toBe("5");
   });
+  it.each(["\n", "\r\n", "\r", ""])("maps NACHA record fields to physical lines for %j framing", (delimiter) => {
+    const source = readFileSync(resolve(process.cwd(), "demo-files/nacha/routing-check-digit-fail.ach"), "utf8").replaceAll("\n", delimiter);
+    expect(mapped(source, "nacha-origination-public-2026", "nacha.routing").label).toBe(delimiter ? "3" : "1");
+  });
+
 });

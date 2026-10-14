@@ -1,8 +1,9 @@
 import { writeFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import { resolve } from "node:path";
-import { syntheticSample } from "../../src/samples";
-import { findEnabledFormatPack } from "../../src/format-packs";
+import { readFileSync } from "node:fs";
+
+const failingXmlSample = readFileSync(resolve("demo-files/pain.001.001.09-pass.xml"), "utf8").replace("DEMO-PASS-001", "");
 
 test("generated pane reflow, sample upload, full source, focus and portable provenance", async ({ page }, info) => {
   await page.goto("/");
@@ -26,11 +27,10 @@ test("generated pane reflow, sample upload, full source, focus and portable prov
   await page.getByRole("button",{name:"Continue"}).focus(); await page.keyboard.press("Enter");
   expect(await page.evaluate(()=>document.activeElement?.id.endsWith("step-2-panel"))).toBe(true);
   await expect(page.getByRole("button", { name: /Load (PASS|FAIL) sample/i })).toHaveCount(0);
-  const pack = findEnabledFormatPack("pain-001-09")!;
   await page.locator('[id$="file-input"]').setInputFiles({
     name: "synthetic-fail.xml",
     mimeType: "application/xml",
-    buffer: Buffer.from(syntheticSample(pack, true)),
+    buffer: Buffer.from(failingXmlSample),
   });
   await page.getByRole("button",{name:"Validate file"}).click();
   await expect(page.locator('[id$="results-title"]')).toHaveText("FAIL");
@@ -56,9 +56,9 @@ test("generated pane reflow, sample upload, full source, focus and portable prov
   await divider.press("Home");
   await page.locator(".validator-primary").evaluate(e => { e.scrollTop = 0; });
   await page.screenshot({path:info.outputPath("split-30-percent.png"),fullPage:true});
-  await page.getByText("Versioned DEMO coverage and check evaluations", {exact:true}).click();
+  await page.getByText("Versioned coverage and check evaluations", {exact:true}).click();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByText("Versioned DEMO coverage and check evaluations", {exact:true}).click();
+  await page.getByText("Versioned coverage and check evaluations", {exact:true}).click();
   await page.getByRole("button",{name:"Hide explorer"}).focus(); await page.keyboard.press("Enter");
   await expect(page.getByRole("button",{name:"Show file explorer"})).toBeFocused();
   const download = page.waitForEvent("download"); await page.getByRole("button",{name:"Export JSON report"}).click();
@@ -112,8 +112,7 @@ test("full-source explorer reaches findings and file end beyond 12000 characters
   await page.getByRole("option", { name: /pain\.001/i }).click();
   await page.locator("#version-select").selectOption("pain.001.001.09");
   await page.getByRole("button", { name: "Continue" }).click();
-  const pack = findEnabledFormatPack("pain-001-09")!;
-  const source = syntheticSample(pack, true).replace("<Document", `<!--${"source context\n".repeat(2000)}-->\n<Document`);
+  const source = failingXmlSample.replace("<Document", `<!--${"source context\n".repeat(2000)}-->\n<Document`);
   await page.locator("#file-input").setInputFiles({ name: "large.xml", mimeType: "application/xml", buffer: Buffer.from(source) });
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("FAIL");
