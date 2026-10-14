@@ -216,11 +216,11 @@ test("validates a matching PAIN profile and opens Results", async ({ page }) => 
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#result-meta")).toHaveCount(0);
   await expect(page.locator("#result-basis")).toHaveText(
-    "Validation complete. Passing these checks does not guarantee payment acceptance or processing.",
+    "No errors or warnings were found. Passing these checks does not guarantee payment acceptance or processing.",
   );
   await expect(page.locator(".metrics strong")).toHaveText(["Errors", "Warnings", "Pass"]);
   await expect(page.locator("#pass-count")).toHaveText("11");
-  await expect(page.locator("#check-summary")).toHaveText("11 checks completed. 11 results.");
+  await expect(page.locator("#check-summary")).toHaveCount(0);
   await expect(page.locator(".findings-heading")).toHaveCount(0);
   await expect(page.getByText("Validation findings", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Details", { exact: true })).toHaveCount(0);
@@ -293,9 +293,9 @@ test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration"
   await page.locator("#file-input").setInputFiles(demoFile("pain.001.001.09-pass-with-warnings.xml"));
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
-  await expect(page.locator("#result-basis")).toContainText("does not guarantee payment acceptance or processing");
+  await expect(page.locator("#result-basis")).toHaveText("Warnings were found. Review them below. Passing these checks does not guarantee payment acceptance or processing.");
   await expect(page.locator("#warning-count")).toHaveText("1");
-  await expect(page.locator("#check-summary")).toHaveText("11 checks completed. 11 results.");
+  await expect(page.locator("#check-summary")).toHaveCount(0);
   await expect(page.getByText("Add an XML declaration to make the document encoding explicit.")).toBeVisible();
   const resultLayout = await page.evaluate(() => {
     const height = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().height;
@@ -424,14 +424,14 @@ test("shows the intended PASS and FAIL presentations for the PAIN.001.001.09 dem
   await expect(page.locator("#error-count")).toHaveText("1");
   await expect(page.locator("#warning-count")).toHaveText("0");
   await expect(page.locator("#pass-count")).toHaveText("0");
-  await expect(page.locator("#check-summary")).toHaveText("1 of 11 checks completed. 1 result. 10 checks not evaluated.");
+  await expect(page.locator("#check-summary")).toHaveCount(0);
   await expect(page.locator("#finding-rows .severity.error").first()).toHaveCSS("background-color", "rgb(255, 241, 241)");
   await expect(page.locator("#finding-rows .severity.error").first()).toHaveCSS("color", "rgb(193, 0, 0)");
   await expect(page.getByText(
     "The XML namespace does not match the selected format version. Ensure the file format type/version you selected matches the file you uploaded.",
   )).toBeVisible();
   await expect(page.locator("#result-basis")).toHaveText(
-    "Validation complete. Passing these checks does not guarantee payment acceptance or processing.",
+    "Errors were found. Correct them and validate the file again. Passing these checks does not guarantee payment acceptance or processing.",
   );
 });
 
