@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { syntheticSample } from "../../src/samples";
 import { findEnabledFormatPack } from "../../src/format-packs";
 
-test("generated pane reflow, sample upload, bounded source, focus and portable provenance", async ({ page }, info) => {
+test("generated pane reflow, sample upload, full source, focus and portable provenance", async ({ page }, info) => {
   await page.goto("/");
   await page.setContent('<main><h1>Synthetic acceptance</h1><div data-payment-file-validator data-file-explorer="true"></div></main>');
   await page.addStyleTag({path:resolve("readme-package/custom-css.css")});
@@ -81,7 +81,8 @@ test("browser measurements: pathological target, repeated runs and DOM release",
     const started = Date.now(); await page.getByRole("button",{name:"Validate file"}).click();
     await expect(page.locator("#results-title")).toHaveText("FAIL");
     await page.getByRole("button",{name:"View in file"}).click();
-    const rendered = await page.locator(".cm-content").innerText(); expect(rendered.length).toBeLessThanOrEqual(12_000);
+    const rendered = await page.locator(".cm-content").innerText();
+    await expect(page.getByRole("button", { name: /source window/i })).toHaveCount(0);
     const runtime = await page.evaluate(() => {
       const state = (window as unknown as { benchmark: { maxGapMs: number; timer: number } }).benchmark;
       window.clearInterval(state.timer);
@@ -95,4 +96,27 @@ test("browser measurements: pathological target, repeated runs and DOM release",
   const measurementPath = info.outputPath("measurements.json");
   await writeFile(measurementPath, measurements);
   await info.attach("local-browser-measurements.json", { path: measurementPath, contentType: "application/json" });
+});
+
+
+test("full-source explorer reaches findings and file end beyond 12000 characters", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#format-search").fill("pain.001");
+  await page.getByRole("option", { name: /pain\.001/i }).click();
+  await page.locator("#version-select").selectOption("pain.001.001.09");
+  await page.getByRole("button", { name: "Continue" }).click();
+  const pack = findEnabledFormatPack("pain-001-09")!;
+  const source = syntheticSample(pack, true).replace("<Document", `<!--${"source context\n".repeat(2000)}-->\n<Document`);
+  await page.locator("#file-input").setInputFiles({ name: "large.xml", mimeType: "application/xml", buffer: Buffer.from(source) });
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("#results-title")).toHaveText("FAIL");
+  await page.getByRole("button", { name: "View in file" }).click();
+  await expect(page.locator(".cm-content")).toContainText("</Document>");
+  await expect(page.locator(".cm-finding-error")).toBeVisible();
+  await expect(page.getByRole("button", { name: /source window/i })).toHaveCount(0);
+  const scroller = page.locator(".cm-scroller");
+  await scroller.evaluate(element => { element.scrollTop = 0; });
+  await expect(page.locator(".cm-content")).toContainText('<?xml version="1.0"');
+  await scroller.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  await expect(page.locator(".cm-content")).toContainText("</Document>");
 });

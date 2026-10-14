@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateSource } from "../src/validation";
 import { parseXml } from "../src/parsers/xml-adapter";
-import { sourceExcerpt } from "../src/explorer-budget";
 import { isoPack, ediPack, validPain001, validEdi820 } from "./helpers";
 import { validateWorkerRequest } from "../src/worker-request";
 import { validationRunToCsv, validationRunToJson } from "../src/csv";
@@ -55,9 +54,7 @@ describe("review regression boundaries", () => {
     const run = validateSource("x.xml", validPain001.replace("UTF-8", "UTF-16"), isoPack());
     expect(run.executionStatus).toBe("UNSUPPORTED"); expect(run.verdict).toBeNull();
   });
-  it("bounds the huge target and source complexity", () => {
-    const source = "x".repeat(300_000);
-    expect(sourceExcerpt(source, {start:0,end:source.length}).text.length).toBeLessThanOrEqual(12_000);
+  it("bounds validation source complexity", () => {
     const bytes = new TextEncoder().encode("<x>".repeat(140) + "</x>".repeat(140)).buffer;
     expect(validateWorkerRequest({type:"validate",packId:"pain-001-09",fileName:"x.xml",bytes})).toEqual({type:"error",code:"RESOURCE_LIMIT"});
   });

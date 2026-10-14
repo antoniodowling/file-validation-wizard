@@ -1,5 +1,7 @@
 # Processing safeguards and upload stress kit
 
+> Explorer display update (2026-10-14): full-source browsing replaces the earlier clipped source windows. The editor and fallback have no separate character or long-line cutoff, and source-window buttons are removed.
+
 > Ruleset 2 update (2026-09-19): see [implementation evidence](IMPLEMENTATION_EVIDENCE.md) and [versioned coverage](coverage/README.md). Earlier measurements and open-issue tables below are historical unless reconfirmed there. Strict namespace-aware XML, scoped EDI ownership, prerequisite suppression, report schema 2 and bounded source windows supersede earlier parser/report behavior.
 
 
@@ -23,7 +25,7 @@ The worker returns typed failure codes. Unexpected engine exceptions do not forw
 
 Explorer work is optional enrichment after validation completes. If it fails or exceeds its separate 10-second preparation window, completed results and CSV export remain available.
 
-The current provisional limits are 5,000,000 decoded characters for a full viewer document and the companion location index, 250,000 characters for the longest line in full-view mode, 12,000 characters for an excerpt, and 32 related targets per finding. Files outside the viewer or long-line budget use an explicitly scoped original-source excerpt. Findings outside the index budget use an explicit unavailable location instead of a guessed highlight. These values are implementation guards, not measured browser support claims; see [FILE_EXPLORER.md](FILE_EXPLORER.md).
+The explorer displays the full accepted source without a separate character or long-line cutoff, including in its read-only fallback. The companion location index retains its 5,000,000-character guard, with 32 related targets per finding. Findings outside the index budget use an explicit unavailable location instead of a guessed highlight. These values are implementation guards, not measured browser support claims; see [FILE_EXPLORER.md](FILE_EXPLORER.md).
 
 ## Generate the upload kit
 
@@ -66,6 +68,6 @@ The non-browser `npm run validate:core` path passed 102 Vitest tests across 18 f
 
 The 25,000,000-byte cap remains an admission ceiling, not a promise that every smaller file can be assessed. Additional provisional limits are 8,000,000 decoded UTF-16 units, 100,000 XML nodes/EDI segments, XML depth 128, 1,000,000 units per XML scalar/EDI segment and 5,000 occurrence evaluations. Resource exhaustion is INCOMPLETE, never PASS or a structural FAIL. The external watchdog remains 10 seconds.
 
-Every rendered source window is at most 12,000 units, even when an offending element is larger. Source paging preserves contiguous original spans; clips are disclosed with original offsets. Full mode is now limited to 12,000 units, not 5 million. Fallback uses the same bound. Clear/remove/unmount empties source DOM, details, accepted results and input state; generation invalidation disposes workers, deadlines, announcements and delayed focus. JavaScript GC prevents any secure memory-zeroization guarantee.
+The editor receives the full accepted source and renders its visible viewport. Source-window paging and clipping are removed. The fallback also displays the full source. Clear/remove/unmount empties source DOM, details, accepted results and input state; generation invalidation disposes workers, deadlines, announcements and delayed focus. JavaScript GC prevents any secure memory-zeroization guarantee.
 
 Local diagnostics are opt-in through a details disclosure and contain only profile/build plus elapsed read/core/enrichment phase markers. They are neither transmitted nor persisted and omit filenames/source/payment values. Browser acceptance attachments distinguish wall time and source-DOM recovery from unmeasured process memory/GC behavior.
