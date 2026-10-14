@@ -29,12 +29,12 @@ const entry = (
     code,
     name,
     aliases: Object.freeze(aliases),
-    status: versions.some((item) => item.validationProfileId) ? "DEMO_SUPPORTED" : "REFERENCE_ONLY",
+    status: id === "nacha" ? "CANDIDATE_SUPPORTED" : "DEMO_SUPPORTED",
     versions: Object.freeze(versions),
   });
 
-// Retain the formats with executable validation. NACHA is the sole pending
-// entry; its rules-year label does not claim an implemented or approved pack.
+// Each catalog entry has executable validation. The NACHA label identifies a
+// public-source candidate profile, without claiming complete 2026 Rules approval.
 export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
   entry("pain-001", "ISO 20022", "pain.001", "Customer Credit Transfer Initiation", [
     "PAIN.001", "Customer Credit Transfer Initiation", "ISO XML",
@@ -61,7 +61,12 @@ export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
     "ACH CCD", "ACH PPD", "ACH CTX", "ACH WEB", "ACH TEL",
     "Corporate Credit or Debit", "Prearranged Payment and Deposit", "Corporate Trade Exchange",
     "Internet-Initiated", "Telephone-Initiated",
-  ], [version("2026 Nacha Rules", ACH_EXTENSIONS)]),
+  ], [Object.freeze({
+    id: "origination-public-2026",
+    label: "Public specification profile (2026 review)",
+    extensions: ACH_EXTENSIONS,
+    validationProfileId: "nacha-origination-public-2026",
+  })]),
 ]);
 
 export function searchFormatCatalog(query: string): readonly FormatCatalogEntry[] {

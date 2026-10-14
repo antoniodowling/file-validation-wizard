@@ -4,10 +4,10 @@ export const VALIDATION_DEADLINE_MS = 10_000;
 export type WorkerFailureCode = "FILE_TOO_LARGE" | "PROFILE_UNAVAILABLE" | "INVALID_ENCODING" | "ENGINE_ERROR";
 export type ValidationFailureCode = WorkerFailureCode | "FILE_READ_ERROR" | "WORKER_UNAVAILABLE" | "WORKER_ERROR" | "TIMEOUT";
 
-export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820";
-export type ParserKind = "ISO_XML" | "EDI_X12";
-export type FormatPackMode = "DEMO" | "PRODUCTION";
-export type CatalogStatus = "DEMO_SUPPORTED" | "REFERENCE_ONLY";
+export type FormatFamily = "PAIN.001" | "PAIN.008" | "EDI 820" | "NACHA";
+export type ParserKind = "ISO_XML" | "EDI_X12" | "NACHA_FIXED";
+export type FormatPackMode = "DEMO" | "CANDIDATE" | "PRODUCTION";
+export type CatalogStatus = "DEMO_SUPPORTED" | "CANDIDATE_SUPPORTED" | "REFERENCE_ONLY";
 export type RuleOutcome = "PASS" | "ERROR" | "WARNING";
 export type FindingSeverity = "ERROR" | "WARNING";
 export type OverallStatus = "PASS" | "PASS_WITH_WARNINGS" | "FAIL";
@@ -53,7 +53,13 @@ export interface EdiVersionIdentifiers {
   readonly st03?: string;
 }
 
-export type VersionIdentifiers = IsoVersionIdentifiers | EdiVersionIdentifiers;
+export interface NachaVersionIdentifiers {
+  readonly kind: "NACHA_FIXED";
+  readonly profile: "origination-public-2026";
+  readonly secCodes: readonly string[];
+}
+
+export type VersionIdentifiers = IsoVersionIdentifiers | EdiVersionIdentifiers | NachaVersionIdentifiers;
 
 export interface RuleEvaluation {
   readonly outcome: RuleOutcome;
@@ -131,6 +137,7 @@ export interface RuleResult {
   readonly locator: string;
   readonly message: string;
   readonly ordinal: number;
+  readonly sourceLocation?: FindingLocation;
 }
 
 export interface ValidationRun {

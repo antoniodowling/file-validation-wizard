@@ -9,31 +9,32 @@ import {
 import { FORMAT_PACKS } from "../src/format-packs";
 
 describe("focused format catalog", () => {
-  it("retains executable formats and one pending NACHA entry", () => {
+  it("retains executable formats and one NACHA candidate", () => {
     expect(FORMAT_CATALOG.map((item) => item.id)).toEqual(["pain-001", "pain-008", "x12-820", "nacha"]);
     expect(new Set(FORMAT_CATALOG.map((item) => item.id)).size).toBe(4);
-    expect(FORMAT_CATALOG.filter((item) => item.status === "REFERENCE_ONLY").map((item) => item.id)).toEqual(["nacha"]);
+    expect(FORMAT_CATALOG.filter((item) => item.status === "REFERENCE_ONLY").map((item) => item.id)).toEqual([]);
     expect(FORMAT_CATALOG.filter((item) => item.id !== "nacha").every((item) => item.versions.length === 3)).toBe(true);
   });
 
-  it("keeps NACHA unavailable until a validation pack exists", () => {
+  it("connects the public NACHA candidate without claiming an embedded annual version", () => {
     const nacha = findCatalogEntry("nacha");
     expect(nacha?.versions).toEqual([{
-      id: "2026 nacha rules",
-      label: "2026 Nacha Rules",
+      id: "origination-public-2026",
+      label: "Public specification profile (2026 review)",
+      validationProfileId: "nacha-origination-public-2026",
       extensions: [".ach", ".txt"],
     }]);
-    expect(FORMAT_PACKS.some((pack) => pack.id.includes("nacha"))).toBe(false);
+    expect(FORMAT_PACKS.some((pack) => pack.id === "nacha-origination-public-2026")).toBe(true);
     for (const code of ["CCD", "PPD", "CTX", "WEB", "TEL"]) {
       expect(searchFormatCatalog(code).map((item) => item.id)).toEqual(["nacha"]);
     }
   });
 
-  it("maps exactly nine supported versions to executable profiles", () => {
+  it("maps exactly ten supported versions to executable profiles", () => {
     const profileIds = FORMAT_CATALOG.flatMap((item) =>
       item.versions.flatMap((version) => version.validationProfileId ? [version.validationProfileId] : []),
     );
-    expect(profileIds).toHaveLength(9);
+    expect(profileIds).toHaveLength(10);
     expect(new Set(profileIds)).toEqual(new Set(FORMAT_PACKS.map((pack) => pack.id)));
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").map((item) => item.code)).toEqual([
       "pain.001",
@@ -43,7 +44,7 @@ describe("focused format catalog", () => {
     expect(FORMAT_PACKS.filter((pack) => pack.family === "PAIN.001").every(
       (pack) => pack.guideUrl === "https://developer.huntington.com/enterprisepayments/docs/iso-pain001",
     )).toBe(true);
-    expect(FORMAT_PACKS.filter((pack) => pack.family !== "PAIN.001").every((pack) => pack.guideUrl === null)).toBe(true);
+    expect(FORMAT_PACKS.filter((pack) => pack.family !== "PAIN.001" && pack.family !== "NACHA").every((pack) => pack.guideUrl === null)).toBe(true);
   });
 
   it("searches codes, names, standards, and aliases case-insensitively", () => {

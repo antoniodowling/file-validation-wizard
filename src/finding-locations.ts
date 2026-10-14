@@ -414,6 +414,14 @@ function locateEdiFinding(source: string, pack: FormatPack, finding: RuleResult)
 }
 
 export function locateFindings(source: string, pack: FormatPack, run: ValidationRun): readonly FindingLocationEntry[] {
+  if (pack.parserKind === "NACHA_FIXED") {
+    // NACHA records already provide canonical offsets while being validated.
+    // No second index is required, including beyond the companion-index budget.
+    return Object.freeze(run.results.filter((finding) => finding.outcome !== "PASS").map((finding) =>
+      Object.freeze({ ordinal: finding.ordinal, location: validatedLocation(
+        finding.sourceLocation ?? fileWide("This finding applies to the complete ACH file."), source.length,
+      ) })));
+  }
   if (source.length > MAX_SOURCE_INDEX_CHARACTERS) {
     return Object.freeze(run.results
       .filter((finding) => finding.outcome !== "PASS")

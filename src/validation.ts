@@ -1,5 +1,6 @@
 import { deriveOverallStatus } from "./outcome";
 import { parseEdi } from "./parsers/edi";
+import { parseNacha } from "./parsers/nacha";
 import { parseIso } from "./parsers/iso";
 import { result } from "./parsers/shared";
 import type { FormatPack, RuleResult, ValidationRun } from "./types";
@@ -9,7 +10,10 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
     throw new Error("The selected validation profile is not available.");
   }
 
-  const parsed = pack.parserKind === "ISO_XML" ? parseIso(source, pack) : parseEdi(source, pack);
+  const parsed = pack.parserKind === "ISO_XML" ? parseIso(source, pack)
+    : pack.parserKind === "EDI_X12" ? parseEdi(source, pack)
+    : pack.parserKind === "NACHA_FIXED" ? parseNacha(source, pack)
+    : (() => { throw new Error("Unsupported parser kind."); })();
   const results: RuleResult[] = [...parsed.results];
   if (parsed.context) {
     for (const rule of pack.rules) {

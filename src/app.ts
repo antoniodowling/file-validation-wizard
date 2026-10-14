@@ -585,7 +585,8 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         sampleLink.target = "_blank";
         sampleLink.rel = "noopener noreferrer";
         sampleLink.textContent = "sample file";
-        helper.append("See ", guideLink, " and ", sampleLink);
+        if (format.id === "nacha") helper.append("See ", guideLink, ". Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.");
+        else helper.append("See ", guideLink, " and ", sampleLink);
       } else {
         helper.textContent = "File Format Guide unavailable.";
       }
@@ -597,7 +598,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     const version = selectedVersion();
     const extensions = version?.extensions ?? [];
     requiredElement<HTMLElement>("#upload-title").textContent = version
-      ? `Upload your ${version.label} file`
+      ? selectedFormat()?.id === "nacha" ? "Upload your NACHA / ACH file" : `Upload your ${version.label} file`
       : "Upload your payment file";
     fileInput.accept = extensions.join(",");
     requiredElement<HTMLElement>("#accepted-extensions").textContent = extensions.length
@@ -898,7 +899,9 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     resultsPage = 1;
     const label = overallStatusLabel(currentRun.overallStatus);
     requiredElement<HTMLElement>("#results-title").textContent = label;
-    requiredElement<HTMLElement>("#result-basis").textContent = currentRun.overallStatus === "FAIL"
+    requiredElement<HTMLElement>("#result-basis").textContent = currentRun.formatId === "nacha-origination-public-2026"
+      ? "Checks file structure, fields, addenda relationships, counts, hashes, and amounts against the public specification profile. Authorization, bank eligibility, processing cutoffs, holidays, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance."
+      : currentRun.overallStatus === "FAIL"
       ? "Based on syntax and structure checks, this file contains the errors below. Please resolve them before file submission."
       : "This result is based on syntax and structure checks. It does not guarantee that ABC Bank will accept, process, or execute the file.";
     const passCount = currentRun.results.filter((result) => result.outcome === "PASS").length;

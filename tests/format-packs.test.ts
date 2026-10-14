@@ -8,10 +8,11 @@ import {
 import { isoPack } from "./helpers";
 
 describe("format-pack release gates", () => {
-  it("exposes nine complete demo profiles without claiming release approval", () => {
-    expect(FORMAT_PACKS).toHaveLength(9);
-    expect(enabledFormatPacks()).toHaveLength(9);
-    expect(FORMAT_PACKS.every((pack) => pack.mode === "DEMO")).toBe(true);
+  it("retains nine demo profiles and one NACHA candidate without claiming release approval", () => {
+    expect(FORMAT_PACKS).toHaveLength(10);
+    expect(enabledFormatPacks()).toHaveLength(10);
+    expect(FORMAT_PACKS.filter((pack) => pack.mode === "DEMO")).toHaveLength(9);
+    expect(FORMAT_PACKS.filter((pack) => pack.mode === "CANDIDATE").map((pack) => pack.family)).toEqual(["NACHA"]);
     expect(FORMAT_PACKS.every((pack) => Object.values(pack.approval).every((value) => !value))).toBe(true);
   });
 
@@ -24,6 +25,14 @@ describe("format-pack release gates", () => {
   it("rejects demo profiles that claim release approval", () => {
     const mislabeled = isoPack({ mode: "DEMO" });
     expect(formatPackReleaseErrors(mislabeled)).toContain("demo profile must not claim release approval");
+  });
+
+  it("keeps candidate approval claims gated and requires a source guide", () => {
+    const candidate = FORMAT_PACKS.find((pack) => pack.mode === "CANDIDATE")!;
+    expect(formatPackReleaseErrors({ ...candidate, approval: { ...candidate.approval, rulesApproved: true } }))
+      .toContain("candidate profile must not claim release approval");
+    expect(formatPackReleaseErrors({ ...candidate, guideUrl: null })).toContain("source guide URL");
+    expect(formatPackReleaseErrors({ ...candidate, mode: "PRODUCTION" })).toContain("rules approval");
   });
 
   it("accepts a complete approved production pack", () => {
