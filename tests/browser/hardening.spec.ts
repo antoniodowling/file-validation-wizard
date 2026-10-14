@@ -45,6 +45,13 @@ test("generated pane reflow, sample upload, full source, focus and portable prov
     expect(await page.locator(".validator-primary").evaluate(e=>e.scrollWidth <= e.clientWidth)).toBe(true);
     expect(await page.locator(".toolbar select").first().evaluate(e=>e.getBoundingClientRect().width)).toBeGreaterThan(160);
     expect(await page.locator(".table-wrap th").first().evaluate(e=>e.getBoundingClientRect().width)).toBeGreaterThanOrEqual(95);
+    const disclosureLayout = await page.evaluate(() => {
+      const actions = document.querySelector(".results-actions")!.getBoundingClientRect();
+      const disclosures = [...document.querySelectorAll(".results-technical-details details")].map(element => element.getBoundingClientRect());
+      return { actionsBottom: actions.bottom, firstTop: disclosures[0]!.top, firstBottom: disclosures[0]!.bottom, secondTop: disclosures[1]!.top };
+    });
+    expect(disclosureLayout.firstTop).toBeGreaterThan(disclosureLayout.actionsBottom);
+    expect(disclosureLayout.secondTop).toBeGreaterThan(disclosureLayout.firstBottom);
   }
   await divider.press("Home");
   await page.locator(".validator-primary").evaluate(e => { e.scrollTop = 0; });

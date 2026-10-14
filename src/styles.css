@@ -420,8 +420,9 @@ th, .severity { overflow-wrap: normal; }
 .file-explorer { container-type: inline-size; }
 .explorer-toolbar { flex-wrap: wrap; }
 .results-actions { flex-wrap: wrap; }
-.results-actions details { min-width: 0; max-width: 100%; }
-.results-actions details[open] { flex-basis: 100%; }
+.results-technical-details { display: grid; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.results-technical-details details { min-width: 0; max-width: 100%; }
+.results-technical-details summary { cursor: pointer; }
 #diagnostics-output { white-space: pre-wrap; overflow-wrap: anywhere; }
 @container (max-width: 600px) {
   .explorer-header { flex-direction: column; align-items: stretch; }

@@ -203,10 +203,13 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
           </div>
           <div class="step-actions split-actions results-actions">
             <button class="button secondary" type="button" data-open-step="2">← Back to file</button>
-            <details id="local-diagnostics"><summary>Local processing diagnostics (no file values)</summary><pre id="diagnostics-output"></pre></details>
-            <details><summary>Versioned DEMO coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
             <button id="export-json" class="button secondary" type="button" disabled>Export JSON report</button>
             <button id="export-csv" class="button secondary" type="button" disabled>Export CSV report</button>
+          </div>
+          <!-- Development-only disclosures; remove before public release. -->
+          <div class="results-technical-details">
+            <details id="local-diagnostics"><summary>Local processing diagnostics (no file values)</summary><pre id="diagnostics-output"></pre></details>
+            <details><summary>Versioned DEMO coverage and check evaluations</summary><pre id="coverage-snapshot" class="coverage-snapshot"></pre></details>
           </div>
         </div>
       </section>
