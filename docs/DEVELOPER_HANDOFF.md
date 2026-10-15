@@ -68,6 +68,8 @@ The larger kits are regression fixtures: [original NACHA](../demo-files/nacha/RE
 
 The [CSV Wire kit](../demo-files/csv-wire/README.md) adds 23 synthetic input fixtures and a manifest, bound to [its separate coverage revision](coverage/csv-wire-candidate-1.0.0.json). The discovered guide URL and functional extraction are preserved in [source scope](CSV_WIRE_SOURCE_SCOPE.md); no upstream semantic version is invented.
 
+The [mixed-findings kit](../demo-files/mixed-findings/README.md) adds two synthetic upload examples: PAIN.001.001.09 and NACHA origination r2 each report one error plus one warning, with overall FAIL. Its separate manifest pins bytes, rules, profiles and derivation without changing existing fixture/coverage revisions.
+
 The separate [14-file stress kit](../demo-files/hnb-validator-stress-files/README.md) exercises processing limits, encoding errors, and incomplete runs. Follow its instructions before running adversarial cases. Preserve every fixture, including malformed bytes, fixed-width spaces, line endings, and earlier profile expectations.
 
 ## Automated checks

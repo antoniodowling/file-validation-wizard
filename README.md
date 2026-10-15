@@ -55,9 +55,9 @@ Select the format and version shown, upload a linked file, and press **Validate*
 
 | Select format | Select version / profile | Files and expected results | Advisory checks currently implemented |
 | --- | --- | --- | --- |
-| PAIN.001 | pain.001.001.09 | [PASS](demo-files/pain.001.001.09-pass.xml), [PASS WITH WARNINGS](demo-files/pain.001.001.09-pass-with-warnings.xml), [FAIL](demo-files/pain.001.001.09-fail.xml) | Missing XML declaration |
+| PAIN.001 | pain.001.001.09 | [PASS](demo-files/pain.001.001.09-pass.xml), [PASS WITH WARNINGS](demo-files/pain.001.001.09-pass-with-warnings.xml), [FAIL](demo-files/pain.001.001.09-fail.xml), [FAIL with warning + error](demo-files/mixed-findings/pain.001.001.09-fail-with-warnings.xml) | Missing XML declaration |
 | 820 (ASC X12) | 005010 | [PASS](demo-files/hnb-validator-stress-files/11-edi-820-005010-baseline-pass.edi), the small baseline from the stress kit | None implemented |
-| NACHA | Expanded entries and declared healthcare — candidate (2026 r2) | [PASS](demo-files/ach-candidates/origination-healthcare-pass.ach), [PASS WITH WARNINGS](demo-files/nacha-expanded/effective-weekend-warning.ach), [FAIL](demo-files/ach-candidates/origination-healthcare-missing-fail.ach) | Weekend effective date; populated operator settlement date |
+| NACHA | Expanded entries and declared healthcare — candidate (2026 r2) | [PASS](demo-files/ach-candidates/origination-healthcare-pass.ach), [PASS WITH WARNINGS](demo-files/nacha-expanded/effective-weekend-warning.ach), [FAIL](demo-files/ach-candidates/origination-healthcare-missing-fail.ach), [FAIL with warning + error](demo-files/mixed-findings/nacha-r2-fail-with-warnings.ach) | Weekend effective date; populated operator settlement date |
 | ACH Returns | General network returns — public-source candidate (2026 r1) | [PASS](demo-files/ach-candidates/returns-ccd-pass.ach), [FAIL](demo-files/ach-candidates/returns-trace-fail.ach) | None implemented |
 | ACH Control Totals | 58-column standalone candidate (2026 r1) | [PASS](demo-files/ach-candidates/totals-pass.txt), [FAIL](demo-files/ach-candidates/totals-date-fail.txt) | None implemented |
 | File Received ACK | Single pipe-delimited scenario — candidate (1.0 r1) | [PASS](demo-files/ach-candidates/ack-received-pass.txt), [FAIL](demo-files/ach-candidates/ack-date-fail.txt) | None for ACK syntax; see disposition note below |
@@ -67,6 +67,8 @@ Select the format and version shown, upload a linked file, and press **Validate*
 The PAIN.001 warning example omits the recommended XML declaration. Its FAIL example has a namespace mismatch, which stops validation before structural checks run. Use these examples to inspect finding locations and CSV exports as well as the result summary.
 
 The NACHA warning example has a weekend effective entry date and is also valid under the selected r2 profile, although it is stored in the retained r1 fixture kit. It produces PASS WITH WARNINGS with no errors; it does not exercise the healthcare-specific checks.
+
+Each **FAIL with warning + error** example produces one error and one warning together. PAIN.001 combines an empty message ID with a missing XML declaration; NACHA r2 combines missing declared-healthcare addenda with a weekend effective date. The error keeps the overall result FAIL. These are existing profile behaviors; no warning rules were added. See the [mixed-findings kit](demo-files/mixed-findings/README.md) for exact profiles and provenance.
 
 “None implemented” means the current profile has no advisory warning rules; it does not mean warnings could never apply to that format. PASS WITH WARNINGS requires an implemented advisory rule to fire without an error. Any error makes the overall result FAIL, even if warnings are also present. PAIN.008 has the same missing-XML-declaration advisory as PAIN.001; its wiring samples are described below.
 
@@ -88,6 +90,7 @@ Each kit covers valid inputs, specific errors, warnings, or unsupported cases. E
 | [ach-candidates/](demo-files/ach-candidates/README.md) | 57 | Latest origination r2, ordinary Returns/COR, control totals, and ACK candidates; each manifest entry names its profile |
 | [bai2/](demo-files/bai2/README.md) | 22 | Huntington BAI2 candidate: 21 synthetic fixtures and one preserved public guide sample |
 | [csv-wire/](demo-files/csv-wire/README.md) | 23 | Synthetic domestic/international USD CSV Wire input, failures and unsupported scenarios; separate candidate r1 and manifest |
+| [mixed-findings/](demo-files/mixed-findings/README.md) | 2 | One PAIN.001.001.09 DEMO and one NACHA r2 candidate example, each producing FAIL with one error and one warning |
 
 The remaining PAIN.001 examples cover:
 
