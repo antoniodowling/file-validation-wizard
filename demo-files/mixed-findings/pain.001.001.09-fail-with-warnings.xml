@@ -1,0 +1,11 @@
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId></MsgId>
+      <NbOfTxs>1</NbOfTxs>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>DEMO-PAYMENT-001</PmtInfId>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

@@ -1,0 +1,50 @@
+{
+  "revision": "mixed-findings-fixtures-1.0.0",
+  "claim": "Synthetic UI/validator examples for existing rules; no bank/standards acceptance and no profile semantics changed.",
+  "fixtures": [
+    {
+      "file": "pain.001.001.09-fail-with-warnings.xml",
+      "profileId": "pain-001-09",
+      "expectedStatus": "FAIL",
+      "errorCount": 1,
+      "warningCount": 1,
+      "errorRuleIds": [
+        "iso.message-id"
+      ],
+      "warningRuleIds": [
+        "demo.xml-declaration"
+      ],
+      "bytes": 268,
+      "sha256": "a2c0ba43cd189dc57df81f22932dea985e3091ddea9adb6f592654f9dfa90a1d",
+      "synthetic": true,
+      "derivedFrom": "demo-files/pain.001.001.09-pass.xml",
+      "derivedFromSha256": "7d2ff6939f46e967b8ff17c3863ebe73fa22f9420925de0bae46f8f8171f46a8",
+      "changes": [
+        "Remove optional XML declaration to trigger the existing advisory.",
+        "Empty MsgId while preserving the selected namespace, container and valid XML syntax."
+      ]
+    },
+    {
+      "file": "nacha-r2-fail-with-warnings.ach",
+      "profileId": "nacha-origination-expanded-public-2026-r2",
+      "expectedStatus": "FAIL",
+      "errorCount": 1,
+      "warningCount": 1,
+      "errorRuleIds": [
+        "nacha.healthcare-addenda"
+      ],
+      "warningRuleIds": [
+        "nacha.effective-weekend"
+      ],
+      "bytes": 949,
+      "sha256": "ed1d5bb30d093b17726317e8b68a02605b7f6ccfa8363d72881957ca8d858835",
+      "synthetic": true,
+      "derivedFrom": "demo-files/ach-candidates/origination-healthcare-missing-fail.ach",
+      "derivedFromSha256": "7499371a38458a4b51a5c45729f9a368b9c46d9de2ff57db878f373d7e8f92e9",
+      "changes": [
+        "Retain the missing healthcare addenda error from the synthetic source fixture.",
+        "Set batch effective date columns 70-75 to Saturday 261017; retain all 94-column framing and controls."
+      ]
+    }
+  ]
+}
