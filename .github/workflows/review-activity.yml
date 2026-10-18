@@ -1,0 +1,18 @@
+# Unprivileged notification only. The workflow_run consumer uses its own default
+# branch code, fetches authoritative API data, and ignores outputs/artifacts here.
+name: Review activity
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+permissions: {}
+concurrency:
+  group: review-activity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - run: echo 'Review activity recorded; trusted enforcement will re-read GitHub.'

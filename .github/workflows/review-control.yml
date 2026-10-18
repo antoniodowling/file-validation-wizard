@@ -1,0 +1,55 @@
+name: Trusted review enforcement
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited, labeled, unlabeled, closed]
+  workflow_run:
+    workflows: [Review activity, Validate handoff]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # PR label removal requires Pull requests write on the actual PR endpoint.
+  pull-requests: write
+  actions: write
+
+# Coalesce only events for the same PR. The surviving event re-reads its state.
+# Distinct PRs cannot replace each other's pending invalidations.
+concurrency:
+  group: trusted-review-${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  enforce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: review-enforcement
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/heads/main
+          persist-credentials: false
+      - name: Create narrowly scoped enforcement token
+        id: enforcement-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.REVIEW_ENFORCEMENT_APP_ID }}
+          private-key: ${{ secrets.ANTONIOPRREVIEWENFORCEMENT20261017PRIVATEKEYPEM }}
+          repositories: file-validation-wizard
+          permission-statuses: write
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          STATUS_TOKEN: ${{ steps.enforcement-token.outputs.token }}
+          AUTOMATION_ACTIVE: ${{ vars.REVIEW_AUTOMATION_ACTIVE }}
+        with:
+          script: |
+            const gate = require('./ci/review-policy/gate.cjs');
+            if (context.eventName === 'workflow_dispatch') {
+              const prs = await github.paginate(github.rest.pulls.list, {...context.repo, state: 'open', per_page: 100});
+              for (const pr of prs) {
+                await gate.control({github, context: {...context, repo: context.repo, payload: {pull_request: pr}}, active: process.env.AUTOMATION_ACTIVE === 'true', statusToken: process.env.STATUS_TOKEN});
+              }
+            } else {
+              await gate.control({github, context, active: process.env.AUTOMATION_ACTIVE === 'true', statusToken: process.env.STATUS_TOKEN});
+            }

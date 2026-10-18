@@ -1,16 +1,54 @@
 name: Validate handoff
+run-name: CI ${{ github.event_name }} ${{ github.event.action || 'push' }} ${{ github.event.label.name || '-' }}
+
 on:
-  push:
-    branches:
-      - main
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+  push:
+    branches: [main]
+
 permissions:
   contents: read
+  pull-requests: read
+  actions: read
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  authorize-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      run-tests: ${{ steps.authorization.outputs.run-tests || steps.bootstrap.outputs.run-tests }}
+      head: ${{ steps.authorization.outputs.head }}
+      base: ${{ steps.authorization.outputs.base }}
+    steps:
+      - name: Bootstrap or protected-branch verification
+        id: bootstrap
+        if: github.event_name == 'push' || vars.REVIEW_AUTOMATION_ACTIVE != 'true'
+        run: echo 'run-tests=true' >> "$GITHUB_OUTPUT"
+      - name: Read trusted authorization policy
+        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/heads/main
+          persist-credentials: false
+      - name: Require current trusted LGTM before allocating test runner
+        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
+        id: authorization
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            if (context.payload.action === 'labeled' && context.payload.label?.name !== 'ci-ready') {
+              throw new Error('Unrelated label cannot initiate CI');
+            }
+            await require('./ci/review-policy/gate.cjs').authorize({github, context, core, active: true});
+
   validate:
+    needs: authorize-review
+    if: needs.authorize-review.outputs.run-tests == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -21,6 +59,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Test review-policy regressions
+        run: node --test ci/review-policy/gate.test.cjs
       - run: npm ci
       - run: npm run validate:core
       - run: npm run check:readme-drift
@@ -35,3 +75,37 @@ jobs:
             playwright-report/
           if-no-files-found: ignore
           retention-days: 14
+
+  ci-verification:
+    if: always()
+    needs: [authorize-review, validate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check mandatory authorization and test result
+        env:
+          AUTH_RESULT: ${{ needs.authorize-review.result }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+          ACTIVE: ${{ vars.REVIEW_AUTOMATION_ACTIVE }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          test "$AUTH_RESULT" = success
+          if [ "$ACTIVE" != true ] || [ "$EVENT" = push ]; then
+            test "$VALIDATE_RESULT" = success
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
+        with:
+          ref: refs/heads/main
+          persist-credentials: false
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
+        env:
+          EXPECTED_HEAD: ${{ needs.authorize-review.outputs.head }}
+          EXPECTED_BASE: ${{ needs.authorize-review.outputs.base }}
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+        with:
+          script: |
+            await require('./ci/review-policy/gate.cjs').verify({github, context, active: true,
+              head: process.env.EXPECTED_HEAD, base: process.env.EXPECTED_BASE,
+              syntaxResult: process.env.VALIDATE_RESULT});
