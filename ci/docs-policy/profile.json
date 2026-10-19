@@ -1,0 +1,13 @@
+{
+  "repository": "antoniodowling/file-validation-wizard",
+  "classifier": "tools/docs_ci.py",
+  "tag": "wizard-docs-automerge:v1",
+  "workflows": [
+    {
+      "path": ".github/workflows/validate.yml",
+      "aggregates": [
+        "validate"
+      ]
+    }
+  ]
+}

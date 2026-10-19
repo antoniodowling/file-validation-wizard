@@ -1,9 +1,9 @@
 name: Validate handoff
-run-name: CI ${{ github.event_name }} ${{ github.event.action || 'push' }} ${{ github.event.label.name || '-' }}
+run-name: CI ${{ github.event_name }} ${{ github.event.action || 'push' }}
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
 
@@ -13,44 +13,52 @@ permissions:
   actions: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  EXPECTED_SHA: ${{ github.sha }}
 
 jobs:
-  authorize-review:
+  plan:
+    if: ${{ github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false' }}
+    name: Classify offline scope
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
-      run-tests: ${{ steps.authorization.outputs.run-tests || steps.bootstrap.outputs.run-tests }}
-      head: ${{ steps.authorization.outputs.head }}
-      base: ${{ steps.authorization.outputs.base }}
+      scope: ${{ steps.scope.outputs.scope }}
+      sha: ${{ steps.scope.outputs.sha }}
     steps:
-      - name: Bootstrap or protected-branch verification
-        id: bootstrap
-        if: github.event_name == 'push' || vars.REVIEW_AUTOMATION_ACTIVE != 'true'
-        run: echo 'run-tests=true' >> "$GITHUB_OUTPUT"
-      - name: Read trusted authorization policy
-        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: refs/heads/main
+          path: candidate
+          ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - name: Require current trusted LGTM before allocating test runner
-        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
-        id: authorization
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          script: |
-            if (context.payload.action === 'labeled' && context.payload.label?.name !== 'ci-ready') {
-              throw new Error('Unrelated label cannot initiate CI');
-            }
-            await require('./ci/review-policy/gate.cjs').authorize({github, context, core, active: true});
-
-  validate:
-    needs: authorize-review
-    if: needs.authorize-review.outputs.run-tests == 'true'
+          path: policy
+          ref: ${{ github.event.pull_request.base.sha || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before) || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        shell: python
+        run: |
+          import os, runpy
+          from pathlib import Path
+          scope = 'full'
+          policy = Path('policy/tools/docs_ci.py')
+          if policy.is_file():
+              scope = runpy.run_path(str(policy))['classify_environment'](os.environ, 'candidate')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"scope={scope}\nsha={os.environ['EXPECTED_SHA']}\n")
+  checks:
+    needs: plan
+    if: ${{ (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.scope == 'full' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      sha: ${{ steps.identity.outputs.sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -59,8 +67,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Test review-policy regressions
-        run: node --test ci/review-policy/gate.test.cjs
+      - name: Test merge-policy regressions
+        run: node --test ci/docs-policy/*.test.cjs
+      - run: python3 -m unittest discover -s ci -p 'test_docs_adapter.py'
       - run: npm ci
       - run: npm run validate:core
       - run: npm run check:readme-drift
@@ -76,36 +85,50 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  ci-verification:
-    if: always()
-    needs: [authorize-review, validate]
+      - id: identity
+        run: echo "sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
+
+  validate:
+    name: validate
+    if: ${{ always() && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') }}
+    needs: [plan, checks]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Check mandatory authorization and test result
-        env:
-          AUTH_RESULT: ${{ needs.authorize-review.result }}
-          VALIDATE_RESULT: ${{ needs.validate.result }}
-          ACTIVE: ${{ vars.REVIEW_AUTOMATION_ACTIVE }}
-          EVENT: ${{ github.event_name }}
-        run: |
-          test "$AUTH_RESULT" = success
-          if [ "$ACTIVE" != true ] || [ "$EVENT" = push ]; then
-            test "$VALIDATE_RESULT" = success
-          fi
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
         with:
-          ref: refs/heads/main
+          path: candidate
+          ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
-        if: github.event_name == 'pull_request' && vars.REVIEW_AUTOMATION_ACTIVE == 'true'
-        env:
-          EXPECTED_HEAD: ${{ needs.authorize-review.outputs.head }}
-          EXPECTED_BASE: ${{ needs.authorize-review.outputs.base }}
-          VALIDATE_RESULT: ${{ needs.validate.result }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          script: |
-            await require('./ci/review-policy/gate.cjs').verify({github, context, active: true,
-              head: process.env.EXPECTED_HEAD, base: process.env.EXPECTED_BASE,
-              syntaxResult: process.env.VALIDATE_RESULT});
+          path: policy
+          ref: ${{ github.event.pull_request.base.sha || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before) || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Independently verify exact validation result
+        shell: python
+        env:
+          NEEDS: ${{ format('{{"plan":{0},"checks":{1}}}', toJSON(needs.plan), toJSON(needs.checks)) }}
+        run: |
+          import json, os, runpy
+          from pathlib import Path
+          needs = json.loads(os.environ['NEEDS'])
+          policy = Path('policy/tools/docs_ci.py')
+          if policy.is_file():
+              trusted = runpy.run_path(str(policy))
+              scope = trusted['classify_environment'](os.environ, 'candidate')
+              trusted['evaluate'](needs, os.environ['EXPECTED_SHA'], scope)
+          else:
+              if set(needs) != {'plan', 'checks'}:
+                  raise SystemExit('Missing or unexpected lane')
+              for lane in needs.values():
+                  if lane['result'] != 'success' or lane['outputs'].get('sha') != os.environ['EXPECTED_SHA']:
+                      raise SystemExit('Bootstrap requires all exact-head lanes')
+              if needs['plan']['outputs'].get('scope') != 'full':
+                  raise SystemExit('Bootstrap requires full scope')
+          scope = locals().get('scope', 'full')
+          print('Not required — documentation-only' if scope == 'docs' else 'All mandatory validation checks passed.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('Not required — documentation-only\n' if scope == 'docs' else 'All mandatory validation checks passed.\n')

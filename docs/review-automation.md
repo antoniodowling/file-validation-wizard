@@ -1,3 +1,43 @@
+# Repository CI and documentation merge policy
+
+M4 adopts the policy proven in the Software Delivery Management, Eero and Yonio
+representatives. Mandatory review gates remain removed. Ready code starts the
+existing applicable CI without a submitted review, marker or label. Draft source
+jobs skip before runner allocation; independent engineering review still applies
+to implementation delivery. Holds, blocking objections and native protections stay.
+
+Owner-authored same-repository prose is classified from complete immutable Git
+changes using trusted target-base code. Unknown, executable, binary, instruction
+and enforcement inputs retain full validation. Required results say
+`Not required — documentation-only` for admitted prose; test success is never
+invented. Rename/deletion paths, modes and the complete main push range are checked.
+
+The trusted default-branch controller uses the existing status-only App and its
+main-only credential environment. Candidate code never receives privileged
+credentials. The App-pinned `docs-merge-policy` complements the unchanged native
+substantive requirements; code needs actual required aggregate success from the
+latest matching workflow/run attempt. Informational jobs do not replace proof.
+Qualified docs may enable native auto-merge at the exact classified head. Strict
+base, thread resolution, force/deletion protection and deliberate holds remain.
+Review-related labels and timestamps do not start CI or establish eligibility.
+
+## Suspension and rollback
+
+Disarm affected docs-owned auto-merge requests before suspending automation.
+Set `DOCS_AUTOMERGE_ACTIVE=false` and reconcile affected PRs through the trusted
+controller. Retain substantive requirements and existing credentials. Restore
+reviewed source/settings only against expected-current readback; never remove all
+branch protection. An unsafe bypass stops further rollout. Credential or runner
+failures remain explicit destination blockers.
+
+No deployment, release, live-data access, device installation, native activation,
+credential privilege expansion or scheduler amendment is authorized by this policy.
+
+## Superseded bootstrap record
+
+The material below describes the earlier review-before-CI bootstrap. M4 supersedes
+its operational instructions; it remains historical evidence, not current policy.
+
 # Review-gated CI bootstrap
 
 Status: inactive infrastructure candidate adapted from the accepted Ansible pilot
