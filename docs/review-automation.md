@@ -1,3 +1,22 @@
+# Current docs-only scope — explicit owner correction
+
+All plain-text Markdown documents use the same docs-only CI and automatic merge
+flow, including agent/skill instructions, governance and tracking records,
+security and operational runbooks, and documentation in template/fixture,
+instruction-audit and skill-maintenance folders. Common root legal/contribution
+documents qualify too. Document names and directories do not select application
+builds; there is no separate instruction-validation lane or mandatory review gate.
+
+Complete immutable Git proof on both rename paths, regular non-executable modes,
+UTF-8/no-binary checks, current-head/repository/issuer identity, deliberate holds
+and native protection remain. Actual code, workflow/configuration, dependency,
+executable/binary and mixed inputs keep their applicable validation.
+
+This explicit owner decision supersedes the document exclusions in the earlier
+policy below. Its source and provider evidence remain historical.
+
+## Earlier policy record
+
 # Repository CI and documentation merge policy
 
 M4 adopts the policy proven in the Software Delivery Management, Eero and Yonio

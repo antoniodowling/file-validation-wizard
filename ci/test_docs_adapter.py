@@ -64,8 +64,7 @@ class DocsClassificationTests(unittest.TestCase):
         self.assertEqual(classify(f.root, 'pull_request', event, merge), 'docs')
 
     def test_code_workflow_policy_unknown_and_mixed_paths_run_full(self):
-        for path in ('code.py', '.github/workflows/ci.yml', 'tools/docs_ci.py', 'AGENTS.md',
-                     'docs/AGENTS.md', 'docs/fixture.json', 'docs/.hidden.md', 'other.md', 'new.txt', 'docs/templates/guide.md', 'docs/governance/SECURITY_PRIVACY.md', 'docs/AGENTS.override.md'):
+        for path in ('code.py', '.github/workflows/ci.yml', 'tools/docs_ci.py', 'docs/fixture.json', 'new.txt', 'requirements.txt', 'docs/guide.mdx', 'docs/guide.html', 'docs/diagram.svg'):
             with self.subTest(path=path):
                 f = self.fixture()
                 (f.root / 'README.md').write_text('Docs change\n')
@@ -154,11 +153,12 @@ class AdapterContractTests(unittest.TestCase):
         self.assertNotIn('ci-ready', workflow)
         self.assertFalse((ROOT / '.github/workflows/review-control.yml').exists())
 
-    def test_unknown_instruction_and_behavior_documents_are_not_prose(self):
-        for path in ('docs/review-automation.md', 'AGENTS.md', 'docs/AGENTS.md', 'SECURITY.md', 'ci/policy.md', '.github/workflows/ci.yml', 'docs/operations/ci.md'):
-            if path == 'docs/operations/ci.md' and policy['REPOSITORY'].endswith('file-validation-wizard'):
-                continue
-            self.assertFalse(policy['markdown_path'](path), path)
+    def test_all_document_names_and_folders_are_admitted(self):
+        for path in ('AGENTS.md', 'docs/AGENTS.md', 'docs/review-automation.md',
+                     'GOVERNANCE.md', 'PROJECT_TRACKER.md', 'SECURITY.md',
+                     'docs/operations/ci.md', 'docs/templates/guide.md',
+                     'docs/fixtures/guide.md', '.agents/skills/example/SKILL.md'):
+            self.assertTrue(policy['markdown_path'](path), path)
 
     def test_full_requires_exact_checks_and_docs_requires_skips(self):
         sha = 'a' * 40
@@ -200,3 +200,37 @@ class WorkflowDocsTests(unittest.TestCase):
                     env['NEEDS']=json.dumps(needs)
                     result=subprocess.run([__import__('sys').executable,'-c',guard],cwd=root,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                     self.assertNotEqual(result.returncode,0)
+
+
+class AllProseTests(unittest.TestCase):
+    fixture = DocsClassificationTests.fixture
+
+    def test_all_document_categories_are_docs_in_real_pr_and_push(self):
+        paths = ('AGENTS.md', 'AGENTS.override.md', 'SKILL.md', 'SECURITY.md',
+                 'GOVERNANCE.md', 'PROJECT_TRACKER.md', 'PENDING_TASKS.md',
+                 'DECISION_LOG.md', 'design-qa.md', 'LICENSE', 'NOTICE.txt',
+                 'docs/governance/PROJECT_STANDARDS.md', 'docs/governance/DECISION_LOG.md',
+                 'docs/governance/SECURITY_PRIVACY.md', 'docs/governance/RUNBOOK.md',
+                 'docs/governance/TESTING.md', 'docs/review-automation.md',
+                 'docs/templates/guide.md', 'docs/fixtures/guide.md',
+                 'docs/instruction-audit/report.md', 'docs/skill-maintenance/report.md',
+                 '.agents/skills/helper/SKILL.md', 'ci/CORE.md',
+                 'docs/.hidden.md', 'nested/AGENTS.md', 'guide.markdown')
+        f = self.fixture()
+        for path in paths:
+            p=f.root/path; p.parent.mkdir(parents=True,exist_ok=True)
+            p.write_text('Plain documentation, including instructions.  \n')
+            self.assertTrue(policy['markdown_path'](path),path)
+        head=f.commit()
+        self.assertEqual(classify(f.root,'push',f.push(head),head),'docs')
+        merge,event=f.merge()
+        self.assertEqual(classify(f.root,'pull_request',event,merge),'docs')
+        files=[{'filename':path,'status':'added'} for path in paths]
+        self.assertTrue(policy['pr_docs'](f.root,f.base,head,merge,files))
+
+    def test_document_paths_never_admit_traversal_or_executable_types(self):
+        for path in ('../AGENTS.md','docs/../guide.md','/AGENTS.md','docs//guide.md',
+                     './AGENTS.md','docs/guide.md/','docs/guide\\name.md',
+                     'docs/guide\n.md','requirements.txt','fixtures/payload.json',
+                     '.github/workflows/ci.yml','docs/template.sql'):
+            self.assertFalse(policy['markdown_path'](path),repr(path))
