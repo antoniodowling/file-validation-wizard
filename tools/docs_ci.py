@@ -8,12 +8,6 @@ from pathlib import PurePosixPath
 
 FULL_LANES = ('checks',)
 REPOSITORY = 'antoniodowling/file-validation-wizard'
-PROTECTED_FILES = frozenset((
-    'docs/review-automation.md', 'docs/REVIEW-AUTOMATION.md', 'docs/governance/PROJECT_STANDARDS.md',
-    'docs/governance/DECISION_LOG.md', 'docs/governance/SECURITY_PRIVACY.md',
-    'docs/governance/RUNBOOK.md', 'docs/governance/TESTING.md',
-))
-PROTECTED_DOC_PREFIXES = ('docs/instruction-audit/', 'docs/skill-maintenance/')
 SHA = re.compile(r'[0-9a-f]{40}')
 MAX_MARKDOWN_BYTES = 1024 * 1024
 
@@ -23,16 +17,23 @@ def git(root, *args):
 
 
 def markdown_path(path):
+    """Admit prose by document type, including agent, governance and CI guidance."""
     parts = PurePosixPath(path).parts
-    return (path in ('README.md', 'CHANGELOG.md') or
-            (len(parts) > 1 and parts[0] == 'docs' and path.endswith('.md'))) and (
-        path not in PROTECTED_FILES and not path.startswith(PROTECTED_DOC_PREFIXES)
-        and all(part not in ('.', '..', 'AGENTS.md', 'AGENTS.override.md', 'SKILL.md', 'SECURITY.md')
-                and not part.startswith('.') for part in parts)
-        and not any(part.lower() in ('template', 'templates', 'fixture', 'fixtures') for part in parts)
-        and str(PurePosixPath(path)) == path and not any(ord(c) < 32 for c in path)
-        and not any(c in path for c in ('\\', '\x7f')))
-
+    if (not parts or path.startswith('/') or str(PurePosixPath(path)) != path
+            or any(part in ('.', '..') for part in parts)
+            or any(ord(c) < 32 for c in path) or any(c in path for c in ('\\', '\x7f'))):
+        return False
+    if path.lower().endswith(('.md', '.markdown')):
+        return True
+    name = parts[-1].upper()
+    for suffix in ('.TXT', '.RST'):
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+            break
+    return len(parts) == 1 and name in {
+        'README', 'CHANGELOG', 'CONTRIBUTING', 'CODE_OF_CONDUCT', 'AUTHORS',
+        'LICENSE', 'NOTICE', 'COPYING', 'COPYRIGHT',
+    }
 
 def changed_markdown(root, before, after):
     """Inspect every raw diff entry, including both sides of renames and file modes."""
