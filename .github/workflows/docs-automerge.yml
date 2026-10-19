@@ -1,0 +1,54 @@
+name: Trusted documentation merge policy
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited, labeled, unlabeled, closed]
+  workflow_run:
+    workflows: [Review activity, Validate handoff]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Existing PR number to reconcile
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: docs-policy-${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number || github.run_id }}
+  cancel-in-progress: false
+jobs:
+  enforce:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      contains(fromJSON('["pull_request","pull_request_review","pull_request_review_comment"]'), github.event.workflow_run.event)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: review-enforcement
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/heads/main
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Create status-only policy publisher
+        id: app
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.REVIEW_ENFORCEMENT_APP_ID }}
+          private-key: ${{ secrets.ANTONIOPRREVIEWENFORCEMENT20261017PRIVATEKEYPEM }}
+          repositories: file-validation-wizard
+          permission-statuses: write
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          STATUS_TOKEN: ${{ steps.app.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          DOCS_AUTOMERGE_ACTIVE: ${{ vars.DOCS_AUTOMERGE_ACTIVE }}
+        with:
+          script: |
+            await require('./ci/docs-policy/controller.cjs').control({github,context,
+              active:process.env.DOCS_AUTOMERGE_ACTIVE==='true',statusToken:process.env.STATUS_TOKEN});
