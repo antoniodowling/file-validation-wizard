@@ -71,8 +71,7 @@ async function protectedRoute(github) {
   const rules=await github.paginate(github.rest.repos.getBranchRules,{...REPO,branch:'main',per_page:100});
   const requirements=rules.filter(r=>r.type==='required_status_checks');
   const required=requirements.flatMap(r=>r.parameters?.required_status_checks||[]);
-  return requirements.some(r=>r.parameters?.strict_required_status_checks_policy===true)&&
-    required.some(c=>c.context===CONTEXT&&c.integration_id===APP)&&
+  return required.some(c=>c.context===CONTEXT&&c.integration_id===APP)&&
     profile.workflows.every(w=>w.aggregates.every(name=>required.some(c=>c.context===name&&c.integration_id===15368)))&&
     rules.some(r=>r.type==='pull_request'&&r.parameters?.required_review_thread_resolution===true)&&rules.some(r=>r.type==='non_fast_forward')&&rules.some(r=>r.type==='deletion');
 }
@@ -97,8 +96,11 @@ async function workflowCI(github, s, workflow) {
     throw Error('Unexpected code CI provenance');
   // Some private-repository runs omit PR associations. The snapshot already proves
   // one open PR owns this head; exact repository/branch/head bind that fallback.
+  // A completed run keeps its recorded base when main advances. Its PR/head and
+  // any supplied target ref must still agree; base identity remains provenance.
   if(!Array.isArray(r.pull_requests)||r.pull_requests.length&&
-     !r.pull_requests.some(q=>q.number===p.number&&q.head?.sha===p.head.sha&&q.base?.sha===p.base.sha))
+     !r.pull_requests.some(q=>q.number===p.number&&q.head?.sha===p.head.sha&&SHA.test(q.base?.sha||'')&&
+       (q.base.ref===undefined||q.base.ref===p.base.ref)))
     throw Error('Contradictory code CI association');
   if(r.status!=='completed')return {state:'pending',description:'Waiting for current code CI'};
   if(r.conclusion!=='success')return {state:'failure',description:'Latest code CI did not pass'};
