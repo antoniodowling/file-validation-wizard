@@ -1,3 +1,20 @@
+# Current branch-freshness policy
+
+Successful required CI for the unchanged PR head remains eligible when main
+advances. The controller supports strict and loose required checks and retains a
+run's valid recorded base instead of requiring it to equal today's target SHA.
+PR/head/repository/workflow, any supplied target ref, latest attempt and actual
+aggregate success remain bound. Docs classification uses current target/merge
+objects and snapshot changes during evaluation still fail closed.
+
+The approved provider rollout changes only required-check freshness, preserving
+required contexts/issuers, holds and other protections. No new CI lane or review
+requirement is added. Refresh branches for conflicts or identified interactions
+that invalidate affected proof; loose checks accept clean semantic-interaction
+risk. This current owner decision supersedes earlier strict-base wording below.
+
+## Earlier policy and acceptance records
+
 # Current docs-only scope — explicit owner correction
 
 All plain-text Markdown documents use the same docs-only CI and automatic merge

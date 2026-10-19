@@ -72,7 +72,7 @@ test('disarm failure leaves required guard failing',async()=>{
  const gql=f.args.github.graphql;f.args.github.graphql=async q=>{if(q.startsWith('mutation'))throw Error('denied');return gql(q);};
  await assert.rejects(policy.reconcile({...f.args,scope:()=> 'full'}),/denied/);assert.equal(f.states.at(-1).state,'failure');
 });
-test('wrong App issuer or absent strict required route prevents arming',async()=>{
+test('wrong App issuer or absent required route prevents arming',async()=>{
  for(const rules of [[],[{type:'required_status_checks',parameters:{strict_required_status_checks_policy:true,required_status_checks:[{context:policy.CONTEXT,integration_id:1}]}}]]){
   const f=fixture();const page=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='rules'?rules:page(endpoint);
   await policy.reconcile(f.args);assert.ok(!f.calls.includes('arm'));
@@ -129,7 +129,8 @@ test('latest draft or pending attempt cannot fall back to an older same-head suc
 test('foreign provenance, contradictory associations and attempt mismatches fail closed',async()=>{
  for(const change of [f=>f.ci.run.path='other.yml',f=>f.ci.run.repository.full_name='other/repo',
    f=>f.ci.run.pull_requests=[{number:2,head:{sha:f.s.pr.head.sha},base:{sha:f.s.pr.base.sha}}],
-   f=>f.ci.run.pull_requests=[{number:1,head:{sha:f.s.pr.head.sha},base:{sha:'e'.repeat(40)}}]]){
+   f=>f.ci.run.pull_requests=[{number:1,head:{sha:f.s.pr.head.sha},base:{sha:'not-a-sha'}}],
+   f=>f.ci.run.pull_requests=[{number:1,head:{sha:f.s.pr.head.sha},base:{sha:f.s.pr.base.sha,ref:'other'}}]]){
   const f=fixture();change(f);await assert.rejects(policy.codeCI(f.args.github,f.s),/provenance|association/);
  }
  for(const change of [f=>f.ci.jobs[0].run_attempt=2,f=>f.ci.jobs[0].run_id=8,f=>f.ci.jobs[0].head_sha='e'.repeat(40),f=>f.ci.jobs.push(clone(f.ci.jobs[0])),f=>f.ci.jobs=[]]){
@@ -178,4 +179,31 @@ test('multiple workflow profiles require every native aggregate',async()=>{
  assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'success');
  jobs[0].conclusion='skipped';assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'failure');
  jobs[0].conclusion='success';second.status='in_progress';assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'pending');
+});
+
+
+test('loose required checks retain the protected docs auto-merge route',async()=>{
+ const f=fixture();const paginate=f.args.github.paginate;
+ f.args.github.paginate=async(endpoint,...args)=>{
+  const result=await paginate(endpoint,...args);
+  if(endpoint==='rules')for(const rule of result)if(rule.type==='required_status_checks')rule.parameters.strict_required_status_checks_policy=false;
+  return result;
+ };
+ await policy.reconcile(f.args);assert.ok(f.calls.includes('arm'));assert.ok(policy.ownRequest(f.s.auto));
+});
+test('completed current-head code CI survives a later target-base advance',async()=>{
+ for(const explicitTarget of [false,true]){
+  const f=fixture();const oldBase='e'.repeat(40);
+  f.ci.run.pull_requests=[{number:f.s.pr.number,head:{sha:f.s.pr.head.sha},base:{sha:oldBase,...(explicitTarget?{ref:f.s.pr.base.ref}:{})}}];
+  await policy.reconcile({...f.args,scope:()=> 'full'});
+  assert.equal(f.states.at(-1).state,'success');assert.ok(!f.calls.includes('arm'));
+ }
+});
+test('target advance never permits evidence for a changed head',async()=>{
+ const f=fixture();f.s.pr.head.sha='e'.repeat(40);
+ assert.notEqual((await policy.codeCI(f.args.github,f.s)).state,'success');
+});
+test('target-base drift during one classification still fails closed',async()=>{
+ const f=fixture();f.args.scope=()=>{f.s.pr.base.sha='e'.repeat(40);return 'docs';};
+ await assert.rejects(policy.reconcile(f.args),/changed/);assert.ok(!f.calls.includes('arm'));
 });
