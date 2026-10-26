@@ -115,7 +115,7 @@ test('ownership uses the observed raw GraphQL Bot identity and controller footer
 test('code guard waits for actual success instead of accepting skipped draft checks',async()=>{
  for(const conclusion of ['skipped','cancelled','failure',null]){
   const f=fixture();f.ci.jobs[0].conclusion=conclusion;
-  await policy.reconcile({...f.args,scope:()=> 'full'});assert.equal(f.states.at(-1).state,'failure');
+  await policy.reconcile({...f.args,scope:()=> 'full'});assert.equal(f.states.at(-1).state,conclusion==='skipped'?'pending':'failure');
  }
 });
 test('latest draft or pending attempt cannot fall back to an older same-head success',async()=>{
@@ -123,7 +123,7 @@ test('latest draft or pending attempt cannot fall back to an older same-head suc
   const f=fixture();const old=clone(f.ci.run);old.id=8;f.ci.runs.push(old);
   if(pending){f.ci.run.run_attempt=2;f.ci.run.status='in_progress';}
   else f.ci.jobs[0].conclusion='skipped';
-  const c=await policy.codeCI(f.args.github,f.s);assert.equal(c.state,pending?'pending':'failure');
+  const c=await policy.codeCI(f.args.github,f.s);assert.equal(c.state,'pending');
  }
 });
 test('foreign provenance, contradictory associations and attempt mismatches fail closed',async()=>{
@@ -177,7 +177,7 @@ test('multiple workflow profiles require every native aggregate',async()=>{
  f.args.github.rest.actions.getWorkflowRun=async({run_id})=>({data:clone(run_id===10?second:f.ci.run)});
  const workflows=[{path:f.ci.run.path,aggregates:['validate']},{path:second.path,aggregates:['Second result']}];
  assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'success');
- jobs[0].conclusion='skipped';assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'failure');
+ jobs[0].conclusion='skipped';assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'pending');
  jobs[0].conclusion='success';second.status='in_progress';assert.equal((await policy.codeCI(f.args.github,f.s,workflows)).state,'pending');
 });
 

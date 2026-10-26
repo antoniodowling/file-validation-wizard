@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "reviewer": {
+    "login": "antoniodowling",
+    "id": 26848379
+  },
+  "enforcementAppId": 5363850,
+  "integrationAllowlist": [
+    "antoniodowling/Ansible",
+    "antoniodowling/Antonio-Health-Database",
+    "antoniodowling/eero-importer",
+    "antoniodowling/fi-importer",
+    "antoniodowling/file-validation-wizard",
+    "antoniodowling/HealthBridge",
+    "antoniodowling/Hevy-Importer",
+    "antoniodowling/macbook-server",
+    "antoniodowling/Pi-hole-Command-Center",
+    "antoniodowling/program-management-office",
+    "antoniodowling/Rowan-Health-Database",
+    "antoniodowling/software-delivery-management",
+    "antoniodowling/Yonio"
+  ],
+  "protectedPrefixes": [
+    ".github/",
+    "ci/",
+    ".pmo/",
+    ".agents/",
+    ".codex/"
+  ],
+  "protectedFiles": [
+    "AGENTS.md",
+    "CODEOWNERS",
+    "action.yml",
+    "action.yaml"
+  ],
+  "ciAuthorization": "connected-ci-ready"
+}

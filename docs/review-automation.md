@@ -184,3 +184,18 @@ mode false alone restores bootstrap validation; removing the key before status
 invalidation is not an emergency stop. Diagnose failures from the exact head's
 status target, current review/labels/threads, mandatory job results and restricted
 environment, without printing secrets.
+
+## Prepared protected handoff capability
+
+The prepared controller's primary protected handoff uses a separate actual
+GitHub review submitted by the authorized owner, headed `PROTECTED INTEGRATION AUTHORIZED` and containing the reserved `protected-integration-authorization:v1`
+marker. The ordinary hourly reviewer must never emit that marker. Main-installed
+bootstrap records remain supported. Issue comments and PR descriptions cannot
+supply this authorization.
+
+`buildOperatorReview` only formats proposed review data; it submits nothing and
+grants no authority. The independent operator must assess and submit the actual
+review. Its `approvedBase` may preserve the original qualified CI base after main
+advances; current-head, trusted-policy and ancestry checks still apply. These are
+source-candidate capabilities: installation, independent bootstrap and activation
+remain separate gates.
