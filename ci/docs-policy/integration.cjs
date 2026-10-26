@@ -105,16 +105,17 @@ function protectedRecord(s, authorization, records=approvals, implementationDige
     return deny('Protected change requires independent exact-candidate bootstrap authorization');
   return {ok:true,reason:'Independent exact-candidate protected authorization',record};
 }
-function buildOperatorReview(s,{allowCI=false,runIds=[],supplyChainReviewed,permissionsReviewed,nonWeakeningReviewed}={}) {
+function buildOperatorReview(s,{allowCI=false,runIds=[],approvedBase=s.targetSha,supplyChainReviewed,permissionsReviewed,nonWeakeningReviewed}={}) {
   const profile=require('./profile.json'),p=s.pr,review=reviewAuthorization(p,s.reviews);
   if(!review.ok || p.base?.repo?.full_name!==profile.repository || p.base.ref!=='main' ||
       p.head?.repo?.full_name!==profile.repository || !SHA.test(s.targetSha||'') ||
       !Number.isSafeInteger(p.number)||p.number<1 || typeof allowCI!=='boolean' ||
+      !SHA.test(approvedBase||'') ||
       !Array.isArray(runIds)||runIds.some(id=>!Number.isSafeInteger(id)||id<1) ||
       !Array.isArray(s.files)||s.files.length!==p.changed_files || !protectedPaths(s.files).length ||
       supplyChainReviewed!==true||permissionsReviewed!==true||nonWeakeningReviewed!==true)
     throw Error('Independent protected assessment and complete owning-repository snapshot required');
-  const record={repository:profile.repository,number:p.number,head:p.head.sha,base:s.targetSha,reviewId:review.reviewId,
+  const record={repository:profile.repository,number:p.number,head:p.head.sha,base:approvedBase,reviewId:review.reviewId,
     filesDigest:filesDigest(s.files),policyDigest:policyDigest(),runIds,allowCI,
     supplyChainReviewed,permissionsReviewed,nonWeakeningReviewed};
   return {commit_id:p.head.sha,event:'COMMENT',body:`${GRANT_LINE}\n\n<!-- ${GRANT_TAG} ${JSON.stringify(record)} -->`};

@@ -400,3 +400,13 @@ test('grant formatter requires affirmative assessments and complete trusted owni
   assert.throws(()=>gate.buildOperatorReview(f.s),/assessment/);
   f.s.pr.changed_files=2;assert.throws(()=>gate.buildOperatorReview(f.s,{supplyChainReviewed:true,permissionsReviewed:true,nonWeakeningReviewed:true}),/assessment/);
 });
+
+test('operator grant reuses qualified older-base protected CI after main advances without another suite',async()=>{
+  const f=fixture();f.s.files[0].filename='.github/workflows/ci.yml';f.s.targetSha='e'.repeat(40);
+  const request=gate.buildOperatorReview(f.s,{approvedBase:base,allowCI:false,runIds:[9],
+    supplyChainReviewed:true,permissionsReviewed:true,nonWeakeningReviewed:true});
+  f.s.reviews.push(review({id:8,body:request.body,html_url:`https://github.com/${profile.repository}/pull/1#pullrequestreview-8`}));
+  f.args.github.rest.repos.compareCommitsWithBasehead=async()=>({data:{status:'ahead',merge_base_commit:{sha:base}}});
+  assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');
+  assert.deepEqual(f.s.reviews.map(r=>r.id),[7,8]);assert.equal(f.mutations.length,1);
+});
