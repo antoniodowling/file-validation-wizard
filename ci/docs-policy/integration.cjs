@@ -4,6 +4,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const {execFileSync}=require('node:child_process');
 const policy = require('./integration-policy.json');
 const approvals = require('./protected-integrations.json');
 const SHA = /^[0-9a-f]{40}$/;
@@ -87,6 +88,23 @@ function policyDigest() {
     ...['.github/workflows/docs-automerge.yml',profile.classifier,...profile.workflows.map(w=>w.path),...(profile.trustedPolicyInputs||[])]
       .map(name=>[name,fs.readFileSync(path.join(root,name),'utf8')])
   ]);
+}
+async function currentPolicySource(github,repo,{root=process.cwd(),exec=execFileSync}={}) {
+  const profile=require('./profile.json');
+  const loaded=exec('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:10000}).trim();
+  const modulePath=path.relative(root,__dirname).split(path.sep).join('/');
+  if(!SHA.test(loaded)||modulePath.startsWith('..')||path.isAbsolute(modulePath))return false;
+  const current=async()=>{const {data:r}=await github.rest.git.getRef({...repo,ref:'heads/main'});return r.object?.sha;};
+  const target=await current();if(!SHA.test(target||''))return false;if(target===loaded)return true;
+  const {data:diff}=await github.rest.repos.compareCommitsWithBasehead({...repo,basehead:`${loaded}...${target}`});
+  // The compare endpoint caps changed-file evidence at300. Unknown/incomplete
+  // policy changes cannot authorize an older in-flight evaluator.
+  if(diff.status!=='ahead'||diff.merge_base_commit?.sha!==loaded||!Array.isArray(diff.files)||diff.files.length>=300)return false;
+  const inputs=new Set([
+    ...['integration.cjs','integration-policy.json','controller.cjs','profile.json','status.cjs','admission.cjs','protected-integrations.json'].map(n=>`${modulePath}/${n}`),
+    '.github/workflows/docs-automerge.yml',profile.classifier,...profile.workflows.map(w=>w.path),...(profile.trustedPolicyInputs||[])]);
+  if(diff.files.some(f=>typeof f.filename!=='string'||[f.filename,f.previous_filename].some(p=>inputs.has(p))))return false;
+  return await current()===target;
 }
 function protectedRecord(s, authorization, records=approvals, implementationDigest=policyDigest()) {
   const p=s.pr;
@@ -194,7 +212,7 @@ async function nativeChecks(github,repo,s,evidence,profile) {
   }
 }
 
-async function reconcileOnce({github,context,number,mode,autoMerge=false,statusToken,publish,adapter,profile}) {
+async function reconcileOnce({github,context,number,mode,autoMerge=false,statusToken,publish,adapter,profile,validatePolicySource}) {
   if (!['shadow','enforce','disabled'].includes(mode)) return {state:'INACTIVE'};
   const repo=context.repo, full=`${repo.owner}/${repo.repo}`;
   if(!policy.integrationAllowlist.includes(full))return {state:'REVIEW_ONLY',reason:'Repository outside integration allowlist'};
@@ -216,7 +234,7 @@ async function reconcileOnce({github,context,number,mode,autoMerge=false,statusT
     await post(REVIEW,'pending','Reading exact-head review authorization');
     await post(CI,'pending','Checking qualified current-head CI');
     if(mode==='enforce')await post(LEGACY,'pending','Evaluating review and CI contract');
-    if(mode==='disabled')return await fail('Review integration disabled after migration; native merge withheld');
+    if(mode==='disabled')return await fail('Integration disabled or trusted policy source outdated; native merge withheld');
     // Review history precedes full files/Git object reads and CI job requests.
     const reviews=await github.paginate(github.rest.pulls.listReviews,{...repo,pull_number:number,per_page:100});
     const review=reviewAuthorization(pr,reviews);
@@ -260,6 +278,7 @@ async function reconcileOnce({github,context,number,mode,autoMerge=false,statusT
     if(!requirements(rules,profile,{dual:false}))return await fail('Existing native protection contract missing or misattributed');
     const fresh=await adapter.snapshot(github,number);
     if(adapter.binding(fresh)!==adapter.binding(s))return await fail('Candidate changed during validation');
+    if(validatePolicySource && !await validatePolicySource())return await fail('Trusted policy source changed or is unverifiable');
     await post(REVIEW,'success','Actual current-head LGTM; threads and protected route verified');
     await post(CI,evidence.state,evidence.state==='success'?'Actual current-head LGTM and qualified native CI passed':evidence.description);
     if(mode==='enforce')await post(LEGACY,evidence.state,evidence.state==='success'?'Current-head review and qualified CI passed':evidence.description);
@@ -272,6 +291,7 @@ async function reconcileOnce({github,context,number,mode,autoMerge=false,statusT
     const last=await adapter.snapshot(github,number);
     const {data:lastRepo}=await github.rest.repos.get(repo);
     if(adapter.binding(last)!==adapter.binding(s) || !candidate(last.pr,lastRepo).ok) return await fail('Candidate changed before native enrollment');
+    if(validatePolicySource && !await validatePolicySource())return await fail('Trusted policy source changed before enrollment');
     if(last.auto) {
       if(last.auto.mergeMethod!=='MERGE')return {state:'BLOCKED',head,reason:'Existing auto-merge uses another method'};
       return {state:'AUTO_MERGE_ARMED',head,ci:evidence.state,existing:true};
@@ -331,11 +351,20 @@ async function control(args) {
   }
   const results=[];
   for(const number of [...new Set(numbers)]) {
-    try {results.push(await reconcile({...args,number}));}
+    try {
+      const validatePolicySource=async()=>{
+        try{return await (args.validateSource||currentPolicySource)(github,context.repo)===true;}
+        catch{return false;}
+      };
+      const current=args.mode!=='enforce'||await validatePolicySource();
+      results.push(await reconcile({...args,number,
+        ...(args.mode==='enforce'?{validatePolicySource}:{}),...(!current?{mode:'disabled'}:{})}));
+      if(!current)break;
+    }
     catch(error) {results.push({state:'ERROR',number,reason:error.message});}
   }
   if(results.some(r=>r.state==='ERROR'))throw Error('One or more PR reconciliations failed; all independent candidates were attempted');
   return results;
 }
 module.exports={policy,REVIEW,CI,LEGACY,TAG,ENABLE,GRANT_LINE,GRANT_TAG,digest,operatorGrant,buildOperatorReview,reviewAuthorization,protectedPaths,filesDigest,policyDigest,
-  protectedRecord,protectedAuthorization,protectedCIApproval,verifyApprovedBase,requirements,candidate,ownRequest,nativeChecks,reconcile,control};
+  protectedRecord,protectedAuthorization,protectedCIApproval,verifyApprovedBase,currentPolicySource,requirements,candidate,ownRequest,nativeChecks,reconcile,control};

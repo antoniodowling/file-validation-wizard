@@ -410,3 +410,34 @@ test('operator grant reuses qualified older-base protected CI after main advance
   assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');
   assert.deepEqual(f.s.reviews.map(r=>r.id),[7,8]);assert.equal(f.mutations.length,1);
 });
+
+test('in-flight evaluator permits unrelated main advancement but rejects changed, renamed or incomplete trusted policy',async()=>{
+  const loaded='a'.repeat(40),target='b'.repeat(40);let changes=[{filename:'application.txt'}];
+  const github={rest:{git:{getRef:async()=>({data:{object:{sha:target}}})},repos:{compareCommitsWithBasehead:async()=>({data:{status:'ahead',merge_base_commit:{sha:loaded},files:changes}})}}};
+  const options={exec:()=>loaded};assert.equal(await gate.currentPolicySource(github,adapter.REPO,options),true);
+  for(const files of [[{filename:'ci/docs-policy/integration.cjs'}],[{filename:'renamed.json',previous_filename:'ci/docs-policy/protected-integrations.json'}],
+    Array.from({length:300},(_,i)=>({filename:`app-${i}`}))]){
+    changes=files;assert.equal(await gate.currentPolicySource(github,adapter.REPO,options),false);
+  }
+});
+test('stale policy source fails gates closed before publishing eligibility or enrollment',async()=>{
+  const f=fixture();f.args.context.eventName='pull_request_target';f.args.context.payload={pull_request:{number:1}};
+  const result=await gate.control({...f.args,validateSource:async()=>false});
+  assert.equal(result[0].state,'BLOCKED');assert.equal(f.mutations.length,0);
+  assert.equal(f.statuses.findLast(s=>s.contextName===gate.REVIEW).state,'failure');
+});
+
+test('policy validation errors and policy drift during reconciliation invalidate earlier armed eligibility',async()=>{
+  for(const outcomes of [[new Error('GitHub metadata unavailable')],[true,false],[true,true,false]]){
+    const f=fixture();f.s.auto={mergeMethod:'MERGE'};
+    f.args.context.eventName='pull_request_target';f.args.context.payload={pull_request:{number:1}};
+    let calls=0;
+    const result=await gate.control({...f.args,validateSource:async()=>{
+      const v=outcomes[calls++];if(v instanceof Error)throw v;return v;
+    }});
+    assert.equal(result[0].state,'BLOCKED');assert.equal(f.mutations.length,0);
+    for(const context of [gate.REVIEW,gate.CI,gate.LEGACY])
+      assert.equal(f.statuses.findLast(s=>s.contextName===context).state,'failure');
+    if(outcomes.length<3)assert.ok(!f.statuses.some(s=>s.state==='success'));
+  }
+});
