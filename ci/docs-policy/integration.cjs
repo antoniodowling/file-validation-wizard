@@ -72,6 +72,21 @@ function protectedPaths(files) {
     p.startsWith('/') || p.split('/').includes('..') || policy.protectedFiles.includes(p) ||
     policy.protectedPrefixes.some(prefix=>p.startsWith(prefix))))].sort();
 }
+async function requiresProtectedIntegration(s,adapter,github) {
+  if(!protectedPaths(s.files).length)return false;
+  // Preserve the established prose exception only through the independently
+  // trusted complete immutable Git classifier. Names/extensions are no proof.
+  try {
+    const profile=require('./profile.json');let root=__dirname;
+    while(!fs.existsSync(path.join(root,profile.classifier))||!fs.existsSync(path.join(root,'.github/workflows/docs-automerge.yml'))) {
+      const parent=path.dirname(root);if(parent===root)return true;root=parent;
+    }
+    let token=process.env.GITHUB_TOKEN;
+    if(!token&&github?.auth)token=(await github.auth()).token;
+    const exec=(command,args,options)=>execFileSync(command,args,{...options,cwd:root});
+    return await adapter.classify(s,{exec,token})!=='docs';
+  } catch {return true;}
+}
 function filesDigest(files) {
   return digest(files.map(f=>[f.filename,f.previous_filename||null,f.status,f.sha||null]).sort((a,b)=>a[0].localeCompare(b[0])));
 }
@@ -260,12 +275,12 @@ async function reconcileOnce({github,context,number,mode,autoMerge=false,statusT
     if(s.pr.head.sha!==head || s.pr.base.sha!==pr.base.sha || !reviewAuthorization(s.pr,s.reviews).ok ||
        reviewAuthorization(s.pr,s.reviews).reviewId!==review.reviewId) return await fail('Candidate or review changed');
     if(s.shared!==1 || s.threads.some(t=>t.isResolved!==true) || adapter.decision(s).blocked) return await fail('Shared head, unresolved thread or objection');
-    const paths=protectedPaths(s.files);
+    const protectedChange=await requiresProtectedIntegration(s,adapter,github);
     // Existing native aggregate owns affected-test applicability. An old-base
     // successful run remains usable under the accepted loose freshness policy.
     const evidence=await adapter.codeCI(github,s);
     await nativeChecks(github,repo,s,evidence,profile);
-    if(paths.length) {
+    if(protectedChange) {
       const approval=protectedAuthorization(s,review,evidence);
       if(!approval.ok)return await fail(approval.reason);
       // Approval is installed by a separately reviewed main commit, which itself
@@ -366,5 +381,5 @@ async function control(args) {
   if(results.some(r=>r.state==='ERROR'))throw Error('One or more PR reconciliations failed; all independent candidates were attempted');
   return results;
 }
-module.exports={policy,REVIEW,CI,LEGACY,TAG,ENABLE,GRANT_LINE,GRANT_TAG,digest,operatorGrant,buildOperatorReview,reviewAuthorization,protectedPaths,filesDigest,policyDigest,
+module.exports={policy,REVIEW,CI,LEGACY,TAG,ENABLE,GRANT_LINE,GRANT_TAG,digest,operatorGrant,buildOperatorReview,reviewAuthorization,protectedPaths,requiresProtectedIntegration,filesDigest,policyDigest,
   protectedRecord,protectedAuthorization,protectedCIApproval,verifyApprovedBase,currentPolicySource,requirements,candidate,ownRequest,nativeChecks,reconcile,control};

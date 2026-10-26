@@ -38,7 +38,7 @@ async function authorize({github,context,mode,workflowPath}) {
   if(results.some(r=>r.state==='failure'))return {run:false,reason:'Existing exact-head CI failed; no automatic rerun'};
   if(results.every(r=>r.state==='success') || results.some(r=>r.state==='pending'&&r.missing!==true))
     return {run:false,reason:'Reusing completed or active exact-head CI; no second suite'};
-  if(gate.protectedPaths(snapshot.files).length) {
+  if(await gate.requiresProtectedIntegration(snapshot,adapter,github)) {
     // A manual existing auto request does not authorize NEW protected testing.
     const grant=gate.protectedCIApproval(snapshot,authorization);
     if(!grant.ok || !await gate.verifyApprovedBase(github,repo,grant.record,snapshot.targetSha))return {run:false,reason:'Protected CI bootstrap authorization missing or stale'};

@@ -441,3 +441,15 @@ test('policy validation errors and policy drift during reconciliation invalidate
     if(outcomes.length<3)assert.ok(!f.statuses.some(s=>s.state==='success'));
   }
 });
+
+test('protected prose retains ordinary handoff only after trusted immutable Git docs classification',async()=>{
+  const f=fixture();f.s.files[0].filename='AGENTS.md';let classified=0;
+  f.args.adapter={...adapter,classify:()=>{classified++;return 'docs';}};
+  assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');assert.equal(classified,1);
+  for(const classify of [()=> 'full',()=>{throw Error('incomplete Git evidence');}]){
+    const x=fixture();x.s.files[0].filename='ci/fixtures/README.md';x.args.adapter={...adapter,classify};
+    assert.equal((await gate.reconcile(x.args)).state,'BLOCKED');assert.equal(x.mutations.length,0);
+  }
+  const x=fixture();x.s.files[0].filename='.github/workflows/ci.yml';
+  assert.equal(await gate.requiresProtectedIntegration(x.s,{classify:()=> 'full'},x.args.github),true);
+});
