@@ -17,7 +17,7 @@ async function snapshot(github, number) {
     github.paginate(github.rest.pulls.listFiles,{...REPO,pull_number:number,per_page:100}),
     github.paginate(github.rest.pulls.listReviews,{...REPO,pull_number:number,per_page:100}),
     github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit,{...REPO,commit_sha:pr.head.sha,per_page:100}),
-    github.graphql(`query($owner:String!,$repo:String!,$number:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$number){id autoMergeRequest{commitBody enabledBy{login __typename}}}}}`,{...REPO,number})
+    github.graphql(`query($owner:String!,$repo:String!,$number:Int!){repository(owner:$owner,name:$repo){ref(qualifiedName:"refs/heads/main"){target{oid}} pullRequest(number:$number){id autoMergeRequest{mergeMethod commitBody enabledBy{login __typename}}}}}`,{...REPO,number})
   ]);
   const threads=[];
   let cursor=null;
@@ -31,7 +31,7 @@ async function snapshot(github, number) {
   } while(cursor);
   const detail=details.repository?.pullRequest;
   if (!detail?.id) throw Error('Missing auto-merge evidence');
-  return {pr,files,reviews,threads,id:detail.id,auto:detail.autoMergeRequest,
+  return {pr,files,reviews,threads,id:detail.id,auto:detail.autoMergeRequest,targetSha:details.repository?.ref?.target?.oid,
     shared:associated.filter(p=>p.state==='open'&&p.head?.sha===pr.head.sha).length};
 }
 
@@ -49,7 +49,7 @@ function decision(s) {
 }
 
 function binding(s) {
-  return JSON.stringify({head:s.pr.head.sha,base:s.pr.base.sha,target:s.pr.base.ref,state:s.pr.state,
+  return JSON.stringify({head:s.pr.head.sha,base:s.pr.base.sha,targetSha:s.targetSha,target:s.pr.base.ref,state:s.pr.state,
     draft:s.pr.draft,author:s.pr.user,headRepo:s.pr.head.repo?.full_name,baseRepo:s.pr.base.repo?.full_name,
     labels:s.pr.labels.map(l=>l.name).sort(),files:s.files.map(f=>[f.filename,f.previous_filename,f.status,f.sha]),
     reviews:s.reviews.map(r=>[r.id,r.state,r.commit_id,r.body]),threads:s.threads,shared:s.shared});
@@ -78,17 +78,17 @@ async function protectedRoute(github) {
 
 // Draft check jobs are skipped by Actions, which native required checks accept.
 // Release the code guard only after a real aggregate success from the latest run.
-async function workflowCI(github, s, workflow) {
+async function workflowCI(github, s, workflow, excluded=new Set(), beforeRunId=Infinity) {
   const p=s.pr;
   const matching=async()=>{
     const runs=await github.paginate(github.rest.actions.listWorkflowRuns,{...REPO,
       workflow_id:workflow.path.split('/').at(-1),head_sha:p.head.sha,event:'pull_request',per_page:100});
-    return runs.filter(r=>r.head_sha===p.head.sha&&r.head_branch===p.head.ref&&
+    return runs.filter(r=>r.id<beforeRunId&&!excluded.has(r.id)&&r.head_sha===p.head.sha&&r.head_branch===p.head.ref&&
       r.head_repository?.full_name===p.head.repo?.full_name)
       .sort((a,b)=>b.id-a.id)[0];
   };
   const candidate=await matching();
-  if(!candidate)return {state:'pending',description:'Waiting for current code CI'};
+  if(!candidate)return {state:'pending',description:'Waiting for reviewed candidate CI handoff',missing:true};
   const {data:r}=await github.rest.actions.getWorkflowRun({...REPO,run_id:candidate.id});
   if(r.path!==workflow.path||r.event!=='pull_request'||
      r.repository?.full_name!==FULL||r.head_sha!==p.head.sha||r.head_branch!==p.head.ref||
@@ -102,10 +102,23 @@ async function workflowCI(github, s, workflow) {
      !r.pull_requests.some(q=>q.number===p.number&&q.head?.sha===p.head.sha&&SHA.test(q.base?.sha||'')&&
        (q.base.ref===undefined||q.base.ref===p.base.ref)))
     throw Error('Contradictory code CI association');
-  if(r.status!=='completed')return {state:'pending',description:'Waiting for current code CI'};
+  if(r.status!=='completed')return {state:'pending',description:'Waiting for current code CI',missing:false};
   if(r.conclusion!=='success')return {state:'failure',description:'Latest code CI did not pass'};
   const jobs=await github.paginate(github.rest.actions.listJobsForWorkflowRun,
     {...REPO,run_id:r.id,filter:'latest',per_page:100});
+  // Draft envelopes execute no validation at all. Missing work remains pending;
+  // it is never a pass or a reason to permanently deny first reviewed execution.
+  if(jobs.length&&jobs.every(j=>j.status==='completed'&&j.conclusion==='skipped'))
+    return {state:'pending',description:'Source validation deferred; reviewed execution required',missing:true};
+  // A deliberately deferred review-admission envelope is not executed CI. It
+  // cannot establish success, and does not destroy an earlier real same-head
+  // proof. Unknown/skipped-only graphs still fail below.
+  const plan=jobs.find(j=>j.name===(workflow.admissionJob||profile.admissionJob||'Classify offline scope'));
+  const deferred=plan?.status==='completed'&&plan.conclusion==='success'&&
+    plan.steps?.some(step=>step.name==='Review-authorized CI admission'&&step.conclusion==='success')&&
+    workflow.aggregates.every(name=>jobs.filter(j=>j.name===name).length===1&&jobs.find(j=>j.name===name).conclusion==='skipped')&&
+    jobs.every(j=>j.status==='completed'&&['success','skipped'].includes(j.conclusion));
+  if(deferred){excluded.add(r.id);return workflowCI(github,s,workflow,excluded,beforeRunId);}
   for(const name of workflow.aggregates) {
     const aggregates=jobs.filter(j=>j.name===name);
     const j=aggregates[0];
@@ -117,13 +130,22 @@ async function workflowCI(github, s, workflow) {
   const {data:current}=await github.rest.actions.getWorkflowRun({...REPO,run_id:r.id});
   if(latest?.id!==r.id||current.run_attempt!==r.run_attempt||current.status!=='completed'||current.conclusion!=='success')
     return {state:'pending',description:'Code CI changed during verification'};
-  return {state:'success',description:'Current code CI passed; no review requirement'};
+  const testedBase=r.pull_requests?.find(q=>q.number===p.number)?.base?.sha||null;
+  const checkIds=workflow.aggregates.map(name=>{
+    const url=jobs.find(j=>j.name===name)?.check_run_url||'';
+    const prefix=`https://api.github.com/repos/${FULL}/check-runs/`;
+    return {name,id:url.startsWith(prefix)&&/^[0-9]+$/.test(url.slice(prefix.length))?Number(url.slice(prefix.length)):null};
+  });
+  return {state:'success',description:'Current code CI passed; no review requirement',runIds:[r.id],
+    runs:[{id:r.id,attempt:r.run_attempt,head:r.head_sha,path:r.path,testedBase,checkIds}],
+    head:p.head.sha,runAttempt:r.run_attempt,testedBase};
 }
 
 async function codeCI(github, s, workflows=profile.workflows) {
   if(!workflows.length)throw Error('Missing code CI profile');
   const results=await Promise.all(workflows.map(w=>workflowCI(github,s,w)));
-  return results.find(r=>r.state==='failure') || results.find(r=>r.state!=='success') || results[0];
+  return results.find(r=>r.state==='failure') || results.find(r=>r.state!=='success') ||
+    {...results[0],runIds:results.flatMap(r=>r.runIds||[]),runs:results.flatMap(r=>r.runs||[])};
 }
 
 async function reconcile({github,context,number,active,statusToken,scope=classify,exec=execFileSync,publish=postStatus}) {
@@ -165,6 +187,24 @@ async function reconcile({github,context,number,active,statusToken,scope=classif
 async function control(args) {
   const {github,context}=args;
   if(`${context.repo.owner}/${context.repo.repo}`!==FULL) throw Error('Unexpected repository');
+  if(args.integrationMode==='enforce') {
+    return require('./integration.cjs').control({...args,mode:args.integrationMode,
+      autoMerge:args.integrationAutoMerge===true,adapter:module.exports,profile,publish:args.publish||postStatus});
+  }
+  if(args.integrationMode==='shadow') {
+    // Shadow producers must never interrupt the still-required legacy producer.
+    await control({...args,integrationMode:undefined,migrationProbeDone:true});
+    return require('./integration.cjs').control({...args,mode:'shadow',autoMerge:false,
+      adapter:module.exports,profile,publish:args.publish||postStatus});
+  }
+  if(!args.migrationProbeDone) {
+    const integration=require('./integration.cjs');
+    const rules=await github.paginate(github.rest.repos.getBranchRules,{...REPO,branch:'main',per_page:100});
+    const migrated=args.integrationMode==='disabled'||rules.some(r=>r.type==='required_status_checks'&&
+      r.parameters?.required_status_checks?.some(c=>['review-gate','ci-required'].includes(c.context)));
+    if(migrated)return integration.control({...args,mode:'disabled',
+      autoMerge:false,adapter:module.exports,profile,publish:args.publish||postStatus});
+  }
   let numbers=[];
   if(context.payload.pull_request)numbers=[context.payload.pull_request.number];
   else if(context.eventName==='workflow_dispatch') {
@@ -180,4 +220,4 @@ async function control(args) {
   }
   for(const number of [...new Set(numbers)])await reconcile({...args,number});
 }
-module.exports={REPO,CONTEXT,APP,TAG,ownRequest,decision,binding,classify,protectedRoute,snapshot,codeCI,reconcile,control};
+module.exports={REPO,CONTEXT,APP,TAG,ownRequest,decision,binding,classify,protectedRoute,snapshot,workflowCI,codeCI,reconcile,control};

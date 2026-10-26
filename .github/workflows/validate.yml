@@ -3,7 +3,7 @@ run-name: CI ${{ github.event_name }} ${{ github.event.action || 'push' }}
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, labeled]
   push:
     branches: [main]
 
@@ -13,8 +13,8 @@ permissions:
   actions: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ vars.REVIEW_INTEGRATION_MODE != 'enforce' && github.event.action == 'labeled' && 'notification' || 'source' }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && (github.event.action == 'synchronize' || github.event.action == 'converted_to_draft') }}
 
 env:
   EXPECTED_SHA: ${{ github.sha }}
@@ -28,20 +28,40 @@ jobs:
     outputs:
       scope: ${{ steps.scope.outputs.scope }}
       sha: ${{ steps.scope.outputs.sha }}
+      admitted: ${{ steps.admission.outputs.admitted }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: policy
+          ref: refs/heads/main
+          fetch-depth: 0
+          persist-credentials: false
+      - id: admission
+        name: Review-authorized CI admission
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          REVIEW_INTEGRATION_MODE: ${{ vars.REVIEW_INTEGRATION_MODE }}
+        with:
+          script: |
+            const installed = require('node:fs').existsSync('./policy/ci/docs-policy/admission.cjs');
+            if (!installed && process.env.REVIEW_INTEGRATION_MODE === 'enforce')
+              throw Error('Trusted source admission is not installed');
+            const ignoredLabel = context.eventName === 'pull_request' && context.payload.action === 'labeled' &&
+              process.env.REVIEW_INTEGRATION_MODE !== 'enforce';
+            const result = ignoredLabel ? {run:false,reason:'Deferred label notification'} :
+              installed ? await require('./policy/ci/docs-policy/admission.cjs').authorize({github,context,
+                mode:process.env.REVIEW_INTEGRATION_MODE}) : {run:true,reason:'Inactive bootstrap source contract'};
+            core.setOutput('admitted', result.run ? 'true' : 'false');
+            core.info(result.reason);
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: steps.admission.outputs.admitted == 'true'
         with:
           path: candidate
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          path: policy
-          ref: ${{ github.event.pull_request.base.sha || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before) || github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
       - id: scope
+        if: steps.admission.outputs.admitted == 'true'
         shell: python
         run: |
           import os, runpy
@@ -54,7 +74,7 @@ jobs:
               output.write(f"scope={scope}\nsha={os.environ['EXPECTED_SHA']}\n")
   checks:
     needs: plan
-    if: ${{ (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.scope == 'full' }}
+    if: ${{ (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.scope == 'full' && (vars.REVIEW_INTEGRATION_MODE != 'enforce' || needs.plan.outputs.admitted == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -68,7 +88,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - name: Test merge-policy regressions
-        run: node --test ci/docs-policy/*.test.cjs
+        run: node --test ci/docs-policy/*.test.cjs ci/source-adapter.test.cjs
       - run: python3 -m unittest discover -s ci -p 'test_docs_adapter.py'
       - run: npm ci
       - run: npm run validate:core
@@ -90,7 +110,7 @@ jobs:
 
   validate:
     name: validate
-    if: ${{ always() && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') }}
+    if: ${{ always() && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.admitted == 'true' }}
     needs: [plan, checks]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
