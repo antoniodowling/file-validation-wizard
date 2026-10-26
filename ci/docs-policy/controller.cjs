@@ -103,13 +103,29 @@ async function workflowCI(github, s, workflow, excluded=new Set(), beforeRunId=I
        (q.base.ref===undefined||q.base.ref===p.base.ref)))
     throw Error('Contradictory code CI association');
   if(r.status!=='completed')return {state:'pending',description:'Waiting for current code CI',missing:false};
-  if(r.conclusion!=='success')return {state:'failure',description:'Latest code CI did not pass'};
+  if(!['success','skipped'].includes(r.conclusion))return {state:'failure',description:'Latest code CI did not pass'};
   const jobs=await github.paginate(github.rest.actions.listJobsForWorkflowRun,
     {...REPO,run_id:r.id,filter:'latest',per_page:100});
   // Draft envelopes execute no validation at all. Missing work remains pending;
   // it is never a pass or a reason to permanently deny first reviewed execution.
-  if(jobs.length&&jobs.every(j=>j.status==='completed'&&j.conclusion==='skipped'))
-    return {state:'pending',description:'Source validation deferred; reviewed execution required',missing:true};
+  if(jobs.length&&jobs.every(j=>j.status==='completed'&&j.conclusion==='skipped')) {
+    const prefix=`https://api.github.com/repos/${FULL}/check-runs/`;
+    if(new Set(jobs.map(j=>j.id)).size!==jobs.length||new Set(jobs.map(j=>j.name)).size!==jobs.length||
+       new Set(jobs.map(j=>j.check_run_url)).size!==jobs.length||
+       jobs.some(j=>!Number.isSafeInteger(j.id)||j.id<1||typeof j.name!=='string'||!j.name||
+         j.run_id!==r.id||j.run_attempt!==r.run_attempt||j.head_sha!==p.head.sha||
+         typeof j.check_run_url!=='string'||!j.check_run_url.startsWith(prefix)||!/^[1-9][0-9]*$/.test(j.check_run_url.slice(prefix.length)))||
+       workflow.aggregates.some(name=>jobs.filter(j=>j.name===name).length!==1))
+      return {state:'failure',description:'Invalid deferred code CI graph'};
+    const latest=await matching();
+    const {data:current}=await github.rest.actions.getWorkflowRun({...REPO,run_id:r.id});
+    if(latest?.id!==r.id||current.id!==r.id||current.run_attempt!==r.run_attempt||
+       current.status!=='completed'||current.conclusion!==r.conclusion)
+      return {state:'pending',description:'Code CI changed during verification',missing:false};
+    excluded.add(r.id);return workflowCI(github,s,workflow,excluded,beforeRunId);
+  }
+  // A skipped run with any executed or unknown job graph is not a draft envelope.
+  if(r.conclusion!=='success')return {state:'failure',description:'Latest code CI did not pass'};
   // A deliberately deferred review-admission envelope is not executed CI. It
   // cannot establish success, and does not destroy an earlier real same-head
   // proof. Unknown/skipped-only graphs still fail below.

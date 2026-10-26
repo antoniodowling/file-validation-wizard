@@ -13,7 +13,8 @@ function fixture() {
    head_branch:s.pr.head.ref,event:'pull_request',path:'.github/workflows/validate.yml',
    repository:{full_name:'antoniodowling/file-validation-wizard'},head_repository:{full_name:'antoniodowling/file-validation-wizard'},pull_requests:[]},
    jobs:[{id:99,run_id:9,run_attempt:1,head_sha:s.pr.head.sha,name:'validate',status:'completed',conclusion:'success'}]};
- ci.runs=[ci.run];
+
+ for(const job of ci.jobs)job.check_run_url=`https://api.github.com/repos/${s.pr.head.repo.full_name}/check-runs/${job.id}`; ci.runs=[ci.run];
  const github={rest:{pulls:{get:()=>({data:clone(s.pr)}),listFiles:'files',listReviews:'reviews'},repos:{listPullRequestsAssociatedWithCommit:'associated',getBranchRules:'rules'},actions:{listWorkflowRuns:'runs',listJobsForWorkflowRun:'jobs',getWorkflowRun:async()=>({data:clone(ci.run)})}},
   paginate:async(endpoint)=>{
    if(endpoint==='runs')return clone(ci.runs);
@@ -118,13 +119,11 @@ test('code guard waits for actual success instead of accepting skipped draft che
   await policy.reconcile({...f.args,scope:()=> 'full'});assert.equal(f.states.at(-1).state,conclusion==='skipped'?'pending':'failure');
  }
 });
-test('latest draft or pending attempt cannot fall back to an older same-head success',async()=>{
- for(const pending of [false,true]){
-  const f=fixture();const old=clone(f.ci.run);old.id=8;f.ci.runs.push(old);
-  if(pending){f.ci.run.run_attempt=2;f.ci.run.status='in_progress';}
-  else f.ci.jobs[0].conclusion='skipped';
-  const c=await policy.codeCI(f.args.github,f.s);assert.equal(c.state,'pending');
- }
+test('latest active attempt cannot fall back to an older same-head success',async()=>{
+ const f=fixture(),old={...clone(f.ci.run),id:8};f.ci.runs.push(old);
+ f.ci.run.run_attempt=2;f.ci.run.status='in_progress';
+ const get=f.args.github.rest.actions.getWorkflowRun;f.args.github.rest.actions.getWorkflowRun=async options=>options.run_id===8?{data:clone(old)}:get(options);
+ const c=await policy.codeCI(f.args.github,f.s);assert.equal(c.state,'pending');assert.equal(c.missing,false);
 });
 test('foreign provenance, contradictory associations and attempt mismatches fail closed',async()=>{
  for(const change of [f=>f.ci.run.path='other.yml',f=>f.ci.run.repository.full_name='other/repo',
