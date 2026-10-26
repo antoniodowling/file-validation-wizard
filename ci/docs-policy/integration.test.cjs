@@ -453,3 +453,23 @@ test('protected prose retains ordinary handoff only after trusted immutable Git 
   const x=fixture();x.s.files[0].filename='.github/workflows/ci.yml';
   assert.equal(await gate.requiresProtectedIntegration(x.s,{classify:()=> 'full'},x.args.github),true);
 });
+
+test('ordinary implementation and regression tests enroll and admit CI without a protected operator grant',async()=>{
+  const f=fixture();f.s.files=['src/example.py','tests/test_example.py','tools/export_report.py','scripts/run_report.sh']
+    .map(filename=>({filename,status:'modified',sha:'d'.repeat(40)}));f.s.pr.changed_files=f.s.files.length;
+  assert.deepEqual(gate.protectedPaths(f.s.files),[]);
+  assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');
+  f.s.pr.labels=[{name:'ci-ready'}];f.args.context.eventName='pull_request';
+  f.args.context.payload={pull_request:clone(f.s.pr)};
+  const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
+  assert.equal((await require('./admission.cjs').authorize({...f.args,workflowPath:profile.workflows[0].path})).run,true);
+  assert.equal(f.s.reviews.length,1,'No operator grant or replacement LGTM');
+});
+test('exact main-owned classifier, imported evaluators and workflow paths stay protected through renames',()=>{
+  const paths=[profile.classifier,...(profile.trustedPolicyInputs||[]),...profile.workflows.map(w=>w.path),
+    'ci/docs-policy/integration.cjs','.github/workflows/other.yml'];
+  for(const filename of paths){
+    assert.deepEqual(gate.protectedPaths([{filename,status:'modified'}]),[filename]);
+    assert.deepEqual(gate.protectedPaths([{filename:'tests/ordinary.py',previous_filename:filename,status:'renamed'}]),[filename]);
+  }
+});

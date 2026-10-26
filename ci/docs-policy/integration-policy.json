@@ -1,6 +1,9 @@
 {
   "version": 1,
-  "reviewer": {"login": "antoniodowling", "id": 26848379},
+  "reviewer": {
+    "login": "antoniodowling",
+    "id": 26848379
+  },
   "enforcementAppId": 5363850,
   "integrationAllowlist": [
     "antoniodowling/Ansible",
@@ -17,7 +20,18 @@
     "antoniodowling/software-delivery-management",
     "antoniodowling/Yonio"
   ],
-  "protectedPrefixes": [".github/", "ci/", "tools/", "scripts/", "tests/", ".pmo/", ".agents/", ".codex/"],
-  "protectedFiles": ["AGENTS.md", "CODEOWNERS", "action.yml", "action.yaml"],
+  "protectedPrefixes": [
+    ".github/",
+    "ci/",
+    ".pmo/",
+    ".agents/",
+    ".codex/"
+  ],
+  "protectedFiles": [
+    "AGENTS.md",
+    "CODEOWNERS",
+    "action.yml",
+    "action.yaml"
+  ],
   "ciAuthorization": "connected-ci-ready"
 }

@@ -68,8 +68,13 @@ function reviewAuthorization(pr, reviews) {
 
 function protectedPaths(files) {
   if (!Array.isArray(files) || !files.length) throw Error('Missing complete changed paths');
+  const profile=require('./profile.json');
+  // Protect the actual independently trusted enforcement closure, not every
+  // application test or utility merely because it shares a parent directory.
+  const inputs=new Set([...policy.protectedFiles,profile.classifier,
+    ...profile.workflows.map(w=>w.path),...(profile.trustedPolicyInputs||[])]);
   return [...new Set(files.flatMap(f=>[f.filename,f.previous_filename].filter(Boolean)).filter(p=>
-    p.startsWith('/') || p.split('/').includes('..') || policy.protectedFiles.includes(p) ||
+    p.startsWith('/') || p.split('/').includes('..') || inputs.has(p) ||
     policy.protectedPrefixes.some(prefix=>p.startsWith(prefix))))].sort();
 }
 async function requiresProtectedIntegration(s,adapter,github) {
