@@ -495,3 +495,139 @@ test('same-head review, hold or policy change during native enrollment never rel
     assert.ok(!f.statuses.some(s=>[gate.CI,gate.LEGACY].includes(s.contextName)&&s.state==='success'));
   }
 });
+
+
+
+test('read-only repository projection admits ordinary CI only after the existing native MERGE handoff',async()=>{
+  const {authorize}=require('./admission.cjs');
+  for(const method of [null,'SQUASH','MERGE']){
+    const f=fixture();delete f.repository.allow_auto_merge;delete f.repository.allow_merge_commit;
+    f.s.pr.labels=[{name:'ci-ready'}];f.s.auto=method?{mergeMethod:method}:null;
+    f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+    const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
+    const result=await authorize({...f.args,workflowPath:profile.workflows[0].path});assert.equal(result.run,method==='MERGE');
+    if(method!=='MERGE')assert.equal(result.reason,'Native exact-head enrollment must precede CI authorization');
+    assert.equal(gate.candidateEligibility(f.s.pr,f.repository).ok,true);
+    assert.equal(gate.candidate(f.s.pr,f.repository).ok,false,'Native enrollment still requires settings metadata');
+    assert.equal(Object.hasOwn(f.repository,'allow_auto_merge'),false);
+    assert.equal(Object.hasOwn(f.repository,'allow_merge_commit'),false);
+    assert.equal(f.mutations.length,0,'Admission neither invents settings nor enrolls a merge');
+  }
+});
+test('native candidate and enrollment still reject missing or explicitly false merge settings',async()=>{
+  for(const name of ['allow_auto_merge','allow_merge_commit'])for(const value of [undefined,false]){
+    const f=fixture();if(value===undefined)delete f.repository[name];else f.repository[name]=value;
+    assert.equal(gate.candidateEligibility(f.s.pr,f.repository).ok,true);
+    assert.deepEqual(gate.candidate(f.s.pr,f.repository),{ok:false,reason:'Native auto-merge or merge commits unavailable'});
+    assert.equal((await gate.reconcile(f.args)).state,'BLOCKED');assert.equal(f.mutations.length,0);
+  }
+});
+test('read-only protected source CI still requires a correct policy-bound prospective grant',async()=>{
+  const {authorize}=require('./admission.cjs');
+  for(const variant of ['valid','missing','wrong-head','wrong-review','stale-policy','wrong-files']){
+    const f=fixture();delete f.repository.allow_auto_merge;delete f.repository.allow_merge_commit;
+    f.s.files[0].filename='.github/workflows/dependency.yml';f.s.pr.labels=[{name:'ci-ready'}];
+    f.s.auto={mergeMethod:'MERGE'}; // A manual native request alone cannot grant protected execution.
+    f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+    if(variant!=='missing'){
+      let grant=grantReview(f);
+      if(variant==='wrong-head')grant={...grant,commit_id:'e'.repeat(40)};
+      if(variant==='wrong-review')grant.body=grant.body.replace('"reviewId":7','"reviewId":6');
+      if(variant==='stale-policy')grant.body=grant.body.replace(gate.policyDigest(),'0'.repeat(64));
+      if(variant==='wrong-files')grant.body=grant.body.replace(gate.filesDigest(f.s.files),'0'.repeat(64));
+      f.s.reviews.push(grant);
+    }
+    const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
+    assert.equal((await authorize({...f.args,workflowPath:profile.workflows[0].path})).run,variant==='valid',variant);
+    assert.equal(f.mutations.length,0);
+  }
+});
+test('read-only source admission preserves identity, readiness and authorization denials with specific reasons',async()=>{
+  const {authorize}=require('./admission.cjs');
+  const cases=[
+    [f=>f.repository.archived=true,'Repository archived, disabled or metadata missing'],
+    [f=>delete f.repository.archived,'Repository archived, disabled or metadata missing'],
+    [f=>f.repository.disabled=true,'Repository archived, disabled or metadata missing'],
+    [f=>f.repository.full_name='untrusted/repository','Repository outside integration allowlist'],
+    [f=>f.s.pr.draft=true,'PR closed or draft'],
+    [f=>f.s.pr.state='closed','PR closed or draft'],
+    [f=>f.s.pr.labels.push({name:'merge-hold'}),'Integration hold'],
+    [f=>f.s.pr.mergeable=false,'Merge conflicts'],
+    [f=>f.s.pr.mergeable=null,'Mergeability not yet established'],
+    [f=>f.s.pr.head.repo.full_name='other/fork','Unsupported base or fork'],
+    [f=>f.s.reviews=[],'Missing current completed trusted review'],
+    [f=>f.s.pr.labels=[],'Connected actor CI handoff required'],
+    [f=>f.rules.splice(0),'Dual trusted enforcement not installed'],
+    [f=>f.s.threads=[{isResolved:false}],'Incomplete or changed candidate, shared head or blocking review'],
+    [f=>f.s.shared=2,'Incomplete or changed candidate, shared head or blocking review'],
+  ];
+  for(const [change,reason] of cases){
+    const f=fixture();delete f.repository.allow_auto_merge;delete f.repository.allow_merge_commit;
+    f.s.pr.labels=[{name:'ci-ready'}];f.s.auto={mergeMethod:'MERGE'};
+    f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};change(f);
+    const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
+    assert.deepEqual(await authorize({...f.args,workflowPath:profile.workflows[0].path,wait:async()=>{}}),{run:false,reason});assert.equal(f.mutations.length,0);
+  }
+});
+test('source admission rechecks the fresh read-only repository projection before execution',async()=>{
+  const {authorize}=require('./admission.cjs'),f=fixture();
+  delete f.repository.allow_auto_merge;delete f.repository.allow_merge_commit;
+  f.s.pr.labels=[{name:'ci-ready'}];f.s.auto={mergeMethod:'MERGE'};
+  f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+  const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
+  let reads=0;f.args.github.rest.repos.get=async()=>({data:{...clone(f.repository),archived:++reads>1}});
+  assert.deepEqual(await authorize({...f.args,workflowPath:profile.workflows[0].path}),{run:false,reason:'Repository archived, disabled or metadata missing'});
+  assert.equal(reads,2);assert.equal(f.mutations.length,0);
+});
+
+
+test('unknown initial mergeability gets one bounded read without weakening the read-only handoff',async()=>{
+  const {authorize}=require('./admission.cjs');
+  for(const initial of [null,undefined]){
+    const f=fixture();delete f.repository.allow_auto_merge;delete f.repository.allow_merge_commit;
+    f.s.pr.mergeable=initial;f.s.pr.labels=[{name:'ci-ready'}];f.s.auto={mergeMethod:'MERGE'};
+    f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+    const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
+    let clock=0,waits=0;const reads=[];f.args.github.rest.pulls.get=async options=>{reads.push(options);return {data:clone(f.s.pr)};};
+    const result=await authorize({...f.args,workflowPath:profile.workflows[0].path,now:()=>clock,wait:async ms=>{waits++;clock+=ms;f.s.pr.mergeable=true;}});
+    assert.equal(result.run,true);assert.equal(waits,1);
+    const retried=reads.filter(r=>r.request);assert.equal(retried.length,1);
+    assert.ok(retried[0].request.signal instanceof AbortSignal);assert.equal(retried[0].request.signal.aborted,false);assert.equal(retried[0].request.retries,0);
+    assert.equal(f.mutations.length,0);
+  }
+});
+test('mergeability refresh aborts on head or base drift and never retries a known conflict',async()=>{
+  const {authorize}=require('./admission.cjs');
+  for(const change of [f=>f.s.pr.head.sha='e'.repeat(40),f=>f.s.pr.base.sha='e'.repeat(40),f=>f.s.pr.base.ref='other']){
+    const f=fixture();f.s.pr.mergeable=null;f.s.pr.labels=[{name:'ci-ready'}];f.s.auto={mergeMethod:'MERGE'};
+    f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+    let waits=0;
+    const result=await authorize({...f.args,workflowPath:profile.workflows[0].path,wait:async()=>{waits++;change(f);f.s.pr.mergeable=true;}});
+    assert.deepEqual(result,{run:false,reason:'Candidate head or target changed during mergeability verification'});
+    assert.equal(waits,1);assert.ok(!f.reads.includes('files'));assert.equal(f.mutations.length,0);
+  }
+  const f=fixture();f.s.pr.mergeable=false;f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+  let waits=0;assert.deepEqual(await authorize({...f.args,workflowPath:profile.workflows[0].path,wait:async()=>{waits++;}}),{run:false,reason:'Merge conflicts'});assert.equal(waits,0);
+});
+test('persistent unknown, refresh timeout and read failure remain explicit admission denials',async()=>{
+  const {authorize}=require('./admission.cjs');
+  for(const variant of ['unknown','deadline','read-error','transport-timeout']){
+    const f=fixture();f.s.pr.mergeable=null;f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+    let clock=0,waits=0,reads=0,signal;f.args.github.rest.pulls.get=async options=>{
+      reads++;
+      if(reads===2 && variant==='read-error')throw Error('synthetic read failure');
+      if(reads===2 && variant==='transport-timeout'){
+        signal=options.request?.signal;
+        return await new Promise((resolve,reject)=>{
+          const timer=setTimeout(()=>reject(Error('Expected transport abort')),30);
+          signal?.addEventListener('abort',()=>{clearTimeout(timer);reject(signal.reason);},{once:true});
+        });
+      }
+      return {data:clone(f.s.pr)};
+    };
+    const result=await authorize({...f.args,workflowPath:profile.workflows[0].path,now:()=>clock,wait:async ms=>{waits++;clock+=variant==='deadline'?1001:variant==='transport-timeout'?999:ms;}});
+    assert.deepEqual(result,{run:false,reason:variant==='unknown'?'Mergeability not yet established':['deadline','transport-timeout'].includes(variant)?'Mergeability verification deadline expired':'Mergeability verification read failed'});
+    if(variant==='transport-timeout'){assert.ok(signal instanceof AbortSignal);assert.equal(signal.aborted,true);}
+    assert.equal(waits,1);assert.equal(reads,variant==='deadline'?1:2);assert.ok(!f.reads.includes('files'));assert.equal(f.mutations.length,0);
+  }
+});

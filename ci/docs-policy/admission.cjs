@@ -2,7 +2,7 @@
 // Read-only, main-owned source admission. It runs before candidate checkout.
 const gate=require('./integration.cjs');
 const profile=require('./profile.json');
-async function authorize({github,context,mode,workflowPath}) {
+async function authorize({github,context,mode,workflowPath,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms)),now=Date.now}) {
   if(context.eventName==='pull_request' && context.payload.action==='labeled' && mode!=='enforce')
     return {run:false,reason:'Deferred label notification'};
   if(mode!=='enforce' || context.eventName!=='pull_request')return {run:true,reason:'Existing non-PR or inactive source contract'};
@@ -10,13 +10,36 @@ async function authorize({github,context,mode,workflowPath}) {
   if(workflows.length!==1)throw Error('Exact configured source workflow required for CI admission');
   const repo=context.repo,number=context.payload.pull_request?.number;
   if(`${repo.owner}/${repo.repo}`!==profile.repository || !Number.isSafeInteger(number))throw Error('Unexpected admission destination');
-  const {data:pr}=await github.rest.pulls.get({...repo,pull_number:number});
+  let {data:pr}=await github.rest.pulls.get({...repo,pull_number:number});
   const reviews=await github.paginate(github.rest.pulls.listReviews,{...repo,pull_number:number,per_page:100});
   const authorization=gate.reviewAuthorization(pr,reviews);
   if(!authorization.ok)return {run:false,reason:authorization.reason};
   const {data:repository}=await github.rest.repos.get(repo);
-  if(!gate.candidate(pr,repository).ok || pr.head.sha!==context.payload.pull_request.head.sha ||
-      pr.base.ref!==context.payload.pull_request.base.ref)return {run:false,reason:'Candidate changed or is ineligible'};
+  // Read-only metadata proves source eligibility, not native merge settings.
+  // The observed MERGE request or separate protected grant below admits work.
+  if(pr.head.sha!==context.payload.pull_request.head.sha || pr.base.ref!==context.payload.pull_request.base.ref)
+    return {run:false,reason:'Candidate head or target changed from CI event'};
+  let eligible=gate.candidateEligibility(pr,repository);
+  if(!eligible.ok && eligible.reason==='Mergeability not yet established' && pr.mergeable==null) {
+    // New checks can invalidate GitHub's mergeability cache. One bounded read
+    // may resolve unknown state; it never treats unknown as successful proof.
+    const original={head:pr.head.sha,base:pr.base.sha,target:pr.base.ref},deadline=now()+1000;
+    await wait(150);
+    const remaining=deadline-now();
+    if(remaining<=0)return {run:false,reason:'Mergeability verification deadline expired'};
+    const signal=AbortSignal.timeout(remaining);
+    let refreshed;
+    try {
+      ({data:refreshed}=await github.rest.pulls.get({...repo,pull_number:number,request:{signal,retries:0}}));
+    } catch {
+      return {run:false,reason:signal.aborted?'Mergeability verification deadline expired':'Mergeability verification read failed'};
+    }
+    if(refreshed?.head?.sha!==original.head || refreshed?.base?.sha!==original.base || refreshed?.base?.ref!==original.target)
+      return {run:false,reason:'Candidate head or target changed during mergeability verification'};
+    if(now()>=deadline)return {run:false,reason:'Mergeability verification deadline expired'};
+    pr=refreshed;eligible=gate.candidateEligibility(pr,repository);
+  }
+  if(!eligible.ok)return {run:false,reason:eligible.reason};
   if(!pr.labels.some(l=>l.name==='ci-ready'))return {run:false,reason:'Connected actor CI handoff required'};
   const result=await github.graphql(`query($owner:String!,$repo:String!,$number:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$number){headRefOid autoMergeRequest{mergeMethod}}}}`,{...repo,number});
   const current=result.repository?.pullRequest;
@@ -49,10 +72,15 @@ async function authorize({github,context,mode,workflowPath}) {
   // stale review or a head that changed while the event waited for a runner.
   const {data:fresh}=await github.rest.pulls.get({...repo,pull_number:number});
   const latest=await github.paginate(github.rest.pulls.listReviews,{...repo,pull_number:number,per_page:100});
+  const {data:freshRepository}=await github.rest.repos.get(repo);
   const last=await adapter.snapshot(github,number);
-  if(fresh.head.sha!==pr.head.sha || gate.reviewAuthorization(fresh,latest).reviewId!==authorization.reviewId ||
-      adapter.binding(last)!==adapter.binding(snapshot) || !gate.candidate(fresh,repository).ok ||
-      !fresh.labels.some(l=>l.name==='ci-ready'))return {run:false,reason:'CI authorization changed'};
+  const finalEligibility=gate.candidateEligibility(fresh,freshRepository);
+  if(!finalEligibility.ok)return {run:false,reason:finalEligibility.reason};
+  const finalReview=gate.reviewAuthorization(fresh,latest);
+  if(!finalReview.ok)return {run:false,reason:finalReview.reason};
+  if(fresh.head.sha!==pr.head.sha || finalReview.reviewId!==authorization.reviewId ||
+      adapter.binding(last)!==adapter.binding(snapshot))return {run:false,reason:'Candidate or review evidence changed before source execution'};
+  if(!fresh.labels.some(l=>l.name==='ci-ready'))return {run:false,reason:'Connected actor CI handoff required'};
   return {run:true,reason:'Current-head review and native enrollment verified'};
 }
 module.exports={authorize};

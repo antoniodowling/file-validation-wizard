@@ -194,15 +194,23 @@ function requirements(rules, profile, {dual=true}={}) {
     rules.some(r=>r.type==='non_fast_forward') && rules.some(r=>r.type==='deletion') &&
     !rules.some(r=>r.type==='merge_queue');
 }
-function candidate(pr, repo) {
+// Source admission reads repository metadata with a read-only workflow token.
+// Native merge settings can be absent from that projection; candidate() below
+// still requires their authoritative positive values before any enrollment.
+function candidateEligibility(pr, repo) {
   if (!policy.integrationAllowlist.includes(repo.full_name)) return deny('Repository outside integration allowlist');
   if (repo.archived!==false || repo.disabled===true) return deny('Repository archived, disabled or metadata missing');
-  if (repo.allow_auto_merge!==true || repo.allow_merge_commit!==true) return deny('Native auto-merge or merge commits unavailable');
   if (pr.state!=='open' || pr.draft!==false) return deny('PR closed or draft');
   if (pr.base?.ref!=='main' || pr.base.repo?.full_name!==repo.full_name || pr.head?.repo?.full_name!==repo.full_name) return deny('Unsupported base or fork');
   if (!SHA.test(pr.head.sha||'') || !SHA.test(pr.base.sha||'')) return deny('Invalid candidate revision');
   if (!Array.isArray(pr.labels) || pr.labels.some(l=>['merge-hold','dependencies-pending','NEVER-MERGE'].includes(l.name))) return deny('Integration hold');
   if (pr.mergeable!==true) return deny(pr.mergeable===false?'Merge conflicts':'Mergeability not yet established');
+  return {ok:true};
+}
+function candidate(pr, repo) {
+  const eligible=candidateEligibility(pr,repo);
+  if(!eligible.ok)return eligible;
+  if(repo.allow_auto_merge!==true || repo.allow_merge_commit!==true)return deny('Native auto-merge or merge commits unavailable');
   return {ok:true};
 }
 function ownRequest(auto) {
@@ -395,4 +403,4 @@ async function control(args) {
   return results;
 }
 module.exports={policy,REVIEW,CI,LEGACY,TAG,ENABLE,GRANT_LINE,GRANT_TAG,digest,operatorGrant,buildOperatorReview,reviewAuthorization,protectedPaths,requiresProtectedIntegration,filesDigest,policyDigest,
-  protectedRecord,protectedAuthorization,protectedCIApproval,verifyApprovedBase,currentPolicySource,requirements,candidate,ownRequest,nativeChecks,reconcile,control};
+  protectedRecord,protectedAuthorization,protectedCIApproval,verifyApprovedBase,currentPolicySource,requirements,candidateEligibility,candidate,ownRequest,nativeChecks,reconcile,control};
