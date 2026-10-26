@@ -473,3 +473,25 @@ test('exact main-owned classifier, imported evaluators and workflow paths stay p
     assert.deepEqual(gate.protectedPaths([{filename:'tests/ordinary.py',previous_filename:filename,status:'renamed'}]),[filename]);
   }
 });
+
+test('completed CI keeps actual required evaluation pending until native enrollment avoids clean-status rejection',async()=>{
+  const f=fixture();let checked=false;
+  f.enrollment(()=>{
+    for(const context of [gate.CI,gate.LEGACY]){
+      if(f.statuses.findLast(s=>s.contextName===context)?.state==='success')throw Error('Pull request is in clean status');
+      assert.equal(f.statuses.findLast(s=>s.contextName===context)?.state,'pending');
+    }
+    checked=true;
+  });
+  assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');assert.equal(checked,true);
+  for(const context of [gate.CI,gate.LEGACY])assert.equal(f.statuses.findLast(s=>s.contextName===context).state,'success');
+  assert.equal(f.mutations.length,1,'One atomic enrollment; no fabricated validation or CI event');
+});
+test('same-head review, hold or policy change during native enrollment never releases required gates',async()=>{
+  for(const change of [f=>f.s.reviews.push(review({id:8,body:'Changes requested'})),f=>f.s.pr.labels.push({name:'merge-hold'}),f=>{f.policyCurrent=false;}]){
+    const f=fixture();f.policyCurrent=true;f.args.validatePolicySource=async()=>f.policyCurrent;f.enrollment(()=>change(f));
+    assert.equal((await gate.reconcile(f.args)).state,'BLOCKED');assert.equal(f.s.auto.mergeMethod,'MERGE');
+    for(const context of [gate.REVIEW,gate.CI,gate.LEGACY])assert.equal(f.statuses.findLast(s=>s.contextName===context).state,'failure');
+    assert.ok(!f.statuses.some(s=>[gate.CI,gate.LEGACY].includes(s.contextName)&&s.state==='success'));
+  }
+});

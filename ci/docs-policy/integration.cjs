@@ -300,21 +300,25 @@ async function reconcileOnce({github,context,number,mode,autoMerge=false,statusT
     if(adapter.binding(fresh)!==adapter.binding(s))return await fail('Candidate changed during validation');
     if(validatePolicySource && !await validatePolicySource())return await fail('Trusted policy source changed or is unverifiable');
     await post(REVIEW,'success','Actual current-head LGTM; threads and protected route verified');
-    await post(CI,evidence.state,evidence.state==='success'?'Actual current-head LGTM and qualified native CI passed':evidence.description);
-    if(mode==='enforce')await post(LEGACY,evidence.state,evidence.state==='success'?'Current-head review and qualified CI passed':evidence.description);
-    if(evidence.state==='failure')return {state:'CI_FAILED',head};
-    if(mode!=='enforce' || !autoMerge)return {state:'VALIDATED_NO_ENROLLMENT',head,ci:evidence.state};
+    const completeVerdict=async()=>{
+      await post(CI,evidence.state,evidence.state==='success'?'Actual current-head LGTM and qualified native CI passed':evidence.description);
+      if(mode==='enforce')await post(LEGACY,evidence.state,evidence.state==='success'?'Current-head review and qualified CI passed':evidence.description);
+    };
+    if(evidence.state==='failure'){await completeVerdict();return {state:'CI_FAILED',head};}
+    if(mode!=='enforce' || !autoMerge){await completeVerdict();return {state:'VALIDATED_NO_ENROLLMENT',head,ci:evidence.state};}
+    // GitHub refuses clean-PR enrollment. Keep this real evaluation pending
+    // until the SHA-pinned native handoff is verified, then release its verdict.
     // Required dual checks MUST already exist before pending-CI enrollment.
     // They stop future heads inheriting eligibility even if GitHub retains auto.
     const lastRules=await rulesFor(github,repo);
-    if(!requirements(lastRules,profile))return {state:'BLOCKED',head,reason:'Dual App-pinned checks not installed'};
+    if(!requirements(lastRules,profile)){await completeVerdict();return {state:'BLOCKED',head,reason:'Dual App-pinned checks not installed'};}
     const last=await adapter.snapshot(github,number);
     const {data:lastRepo}=await github.rest.repos.get(repo);
     if(adapter.binding(last)!==adapter.binding(s) || !candidate(last.pr,lastRepo).ok) return await fail('Candidate changed before native enrollment');
     if(validatePolicySource && !await validatePolicySource())return await fail('Trusted policy source changed before enrollment');
     if(last.auto) {
-      if(last.auto.mergeMethod!=='MERGE')return {state:'BLOCKED',head,reason:'Existing auto-merge uses another method'};
-      return {state:'AUTO_MERGE_ARMED',head,ci:evidence.state,existing:true};
+      if(last.auto.mergeMethod!=='MERGE')return await fail('Existing auto-merge uses another method');
+      await completeVerdict();return {state:'AUTO_MERGE_ARMED',head,ci:evidence.state,existing:true};
     }
     // Native optimistic concurrency. clientMutationId is a trace ID, NOT a lock.
     // Workflow-level serialization plus readback handles duplicate schedulers.
@@ -329,7 +333,11 @@ async function reconcileOnce({github,context,number,mode,autoMerge=false,statusT
     const after=await adapter.snapshot(github,number);
     if(after.pr.head.sha!==head)return await fail('Head changed during native enrollment');
     if(after.pr.merged===true)return {state:'MERGED',head,mergeSha:after.pr.merge_commit_sha};
-    if(after.auto?.mergeMethod==='MERGE')return {state:'AUTO_MERGE_ARMED',head,ci:evidence.state,recoveredRace:!!rejection};
+    if(after.auto?.mergeMethod==='MERGE'){
+      if(adapter.binding(after)!==adapter.binding(s))return await fail('Authorization changed during native enrollment');
+      if(validatePolicySource && !await validatePolicySource())return await fail('Trusted policy source changed during enrollment');
+      await completeVerdict();return {state:'AUTO_MERGE_ARMED',head,ci:evidence.state,recoveredRace:!!rejection};
+    }
     if(rejection)throw Error(`Native enrollment rejected: ${rejection.status||'API error'}`);
     throw Error('Native auto-merge enrollment not verified');
   } catch(error) {
