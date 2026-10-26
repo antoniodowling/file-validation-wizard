@@ -12,13 +12,41 @@ const TAG = 'review-integration:v1';
 const ENABLE = `mutation($input:EnablePullRequestAutoMergeInput!){enablePullRequestAutoMerge(input:$input){pullRequest{id headRefOid merged autoMergeRequest{mergeMethod}}}}`;
 const deny = reason => ({ok:false, reason});
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const GRANT_LINE='PROTECTED INTEGRATION AUTHORIZED';
+const GRANT_TAG='protected-integration-authorization:v1';
+function operatorGrant(review) {
+  if(review?.user?.login!==policy.reviewer.login || review.user.id!==policy.reviewer.id ||
+      !Number.isSafeInteger(review.id) || !['COMMENTED','APPROVED'].includes(review.state) ||
+      !SHA.test(review.commit_id||'') || !Number.isFinite(Date.parse(review.submitted_at||'')))return null;
+  const body=(review.body||'').replace(/\r\n/g,'\n');
+  if(body.split('\n')[0]!==GRANT_LINE || (body.match(/protected-integration-authorization:/g)||[]).length!==1 ||
+      body.includes('chatgpt-hourly-pr-review:'))return null;
+  const match=body.match(/^<!-- protected-integration-authorization:v1 (\{[^\n]+\}) -->$/m);
+  if(!match)return null;
+  let record;try{record=JSON.parse(match[1]);}catch{return null;}
+  // Compact canonical JSON rejects duplicate keys and hidden trailing data.
+  const keys=['repository','number','head','base','reviewId','filesDigest','policyDigest','runIds','allowCI',
+    'supplyChainReviewed','permissionsReviewed','nonWeakeningReviewed'];
+  if(JSON.stringify(record)!==match[1] || Object.keys(record).some(k=>!keys.includes(k)) ||
+      keys.some(k=>!Object.hasOwn(record,k)) || !policy.integrationAllowlist.includes(record.repository) ||
+      !Number.isSafeInteger(record.number)||record.number<1 || record.head!==review.commit_id ||
+      !SHA.test(record.base||'') || !Number.isSafeInteger(record.reviewId)||record.reviewId>=review.id ||
+      !/^[a-f0-9]{64}$/.test(record.filesDigest||'') || !/^[a-f0-9]{64}$/.test(record.policyDigest||'') ||
+      !Array.isArray(record.runIds)||record.runIds.some(id=>!Number.isSafeInteger(id)||id<1) ||
+      typeof record.allowCI!=='boolean' || record.supplyChainReviewed!==true ||
+      record.permissionsReviewed!==true || record.nonWeakeningReviewed!==true ||
+      review.html_url!==`https://github.com/${record.repository}/pull/${record.number}#pullrequestreview-${review.id}`)return null;
+  return {...record,authorization:{actor:review.user.login,actorId:review.user.id,url:review.html_url,grantReviewId:review.id}};
+}
 
 function reviewAuthorization(pr, reviews) {
   if (!SHA.test(pr.head?.sha || '') || !Array.isArray(reviews)) return deny('Missing head or review history');
   // REST listReviews only. No issue-comment or PR-body input exists here.
   if (reviews.some(r => !Number.isSafeInteger(r.id))) return deny('Incomplete review history');
   const submitted = [...reviews].filter(r => r.state !== 'PENDING').sort((a,b) => a.id-b.id);
-  const trusted = submitted.filter(r => r.user?.login === policy.reviewer.login && r.user?.id === policy.reviewer.id);
+  // A separate valid operator grant is authorization DATA, not a fresh LGTM.
+  // Malformed/revoked/dismissed grant-like reviews remain blocking conclusions.
+  const trusted = submitted.filter(r => r.user?.login === policy.reviewer.login && r.user?.id === policy.reviewer.id && !operatorGrant(r));
   const r = trusted.at(-1);
   if (!r || !['COMMENTED','APPROVED'].includes(r.state) || r.commit_id !== pr.head.sha ||
       !r.submitted_at || !Number.isFinite(Date.parse(r.submitted_at))) return deny('Missing current completed trusted review');
@@ -56,20 +84,40 @@ function policyDigest() {
   }
   return digest([
     ...['integration.cjs','integration-policy.json','controller.cjs','profile.json','status.cjs','admission.cjs'].map(name=>[name,fs.readFileSync(path.join(__dirname,name),'utf8')]),
-    ...['.github/workflows/docs-automerge.yml',profile.classifier,...profile.workflows.map(w=>w.path)]
+    ...['.github/workflows/docs-automerge.yml',profile.classifier,...profile.workflows.map(w=>w.path),...(profile.trustedPolicyInputs||[])]
       .map(name=>[name,fs.readFileSync(path.join(root,name),'utf8')])
   ]);
 }
 function protectedRecord(s, authorization, records=approvals, implementationDigest=policyDigest()) {
   const p=s.pr;
-  const record=records.version===1 && Array.isArray(records.approvals) && records.approvals.find(a=>a.repository===p.base.repo.full_name &&
+  const seeded=records.version===1&&Array.isArray(records.approvals)?records.approvals:[];
+  const submitted=(s.reviews||[]).map(operatorGrant).filter(Boolean)
+    .filter(a=>a.repository===p.base.repo.full_name&&a.number===p.number&&a.head===p.head.sha)
+    .sort((a,b)=>b.authorization.grantReviewId-a.authorization.grantReviewId);
+  // A later operator submission supersedes earlier grants; a stale replacement
+  // cannot silently fall back to an earlier successful authorization.
+  const record=(submitted.length?[submitted[0]]:seeded).find(a=>a.repository===p.base.repo.full_name &&
     a.number===p.number && a.head===p.head.sha && SHA.test(a.base||'') && a.reviewId===authorization.reviewId &&
     a.policyDigest===implementationDigest && a.filesDigest===filesDigest(s.files));
   if (!record || record.authorization?.actor!==policy.reviewer.login || record.authorization?.actorId!==policy.reviewer.id ||
       !/^https:\/\/github\.com\/antoniodowling\//.test(record.authorization?.url||'') ||
       record.supplyChainReviewed!==true || record.permissionsReviewed!==true || record.nonWeakeningReviewed!==true)
     return deny('Protected change requires independent exact-candidate bootstrap authorization');
-  return {ok:true,reason:'Independently installed protected authorization',record};
+  return {ok:true,reason:'Independent exact-candidate protected authorization',record};
+}
+function buildOperatorReview(s,{allowCI=false,runIds=[],supplyChainReviewed,permissionsReviewed,nonWeakeningReviewed}={}) {
+  const profile=require('./profile.json'),p=s.pr,review=reviewAuthorization(p,s.reviews);
+  if(!review.ok || p.base?.repo?.full_name!==profile.repository || p.base.ref!=='main' ||
+      p.head?.repo?.full_name!==profile.repository || !SHA.test(s.targetSha||'') ||
+      !Number.isSafeInteger(p.number)||p.number<1 || typeof allowCI!=='boolean' ||
+      !Array.isArray(runIds)||runIds.some(id=>!Number.isSafeInteger(id)||id<1) ||
+      !Array.isArray(s.files)||s.files.length!==p.changed_files || !protectedPaths(s.files).length ||
+      supplyChainReviewed!==true||permissionsReviewed!==true||nonWeakeningReviewed!==true)
+    throw Error('Independent protected assessment and complete owning-repository snapshot required');
+  const record={repository:profile.repository,number:p.number,head:p.head.sha,base:s.targetSha,reviewId:review.reviewId,
+    filesDigest:filesDigest(s.files),policyDigest:policyDigest(),runIds,allowCI,
+    supplyChainReviewed,permissionsReviewed,nonWeakeningReviewed};
+  return {commit_id:p.head.sha,event:'COMMENT',body:`${GRANT_LINE}\n\n<!-- ${GRANT_TAG} ${JSON.stringify(record)} -->`};
 }
 function protectedAuthorization(s,authorization,evidence,records=approvals,implementationDigest=policyDigest()) {
   const approved=protectedRecord(s,authorization,records,implementationDigest);
@@ -288,5 +336,5 @@ async function control(args) {
   if(results.some(r=>r.state==='ERROR'))throw Error('One or more PR reconciliations failed; all independent candidates were attempted');
   return results;
 }
-module.exports={policy,REVIEW,CI,LEGACY,TAG,ENABLE,digest,reviewAuthorization,protectedPaths,filesDigest,policyDigest,
+module.exports={policy,REVIEW,CI,LEGACY,TAG,ENABLE,GRANT_LINE,GRANT_TAG,digest,operatorGrant,buildOperatorReview,reviewAuthorization,protectedPaths,filesDigest,policyDigest,
   protectedRecord,protectedAuthorization,protectedCIApproval,verifyApprovedBase,requirements,candidate,ownRequest,nativeChecks,reconcile,control};

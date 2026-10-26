@@ -359,3 +359,44 @@ test('manual auto request never grants new protected CI without independent pros
   const pages=f.args.github.paginate;f.args.github.paginate=async endpoint=>endpoint==='runs'?[]:pages(endpoint);
   assert.equal((await authorize(f.args)).run,false);
 });
+
+function grantReview(f,id=8,changes={}) {
+  const request=gate.buildOperatorReview(f.s,{allowCI:true,runIds:[],supplyChainReviewed:true,permissionsReviewed:true,nonWeakeningReviewed:true});
+  return review({id,body:request.body,html_url:`https://github.com/${profile.repository}/pull/1#pullrequestreview-${id}`,...changes});
+}
+test('actual separate operator review grants protected CI and native handoff without changing main policy',async()=>{
+  const f=fixture();f.s.files[0].filename='.github/workflows/ci.yml';f.s.pr.labels=[{name:'ci-ready'}];
+  f.s.reviews.push(grantReview(f));
+  assert.equal(gate.reviewAuthorization(f.s.pr,f.s.reviews).reviewId,7,'Original LGTM is reused');
+  assert.equal(gate.protectedCIApproval(f.s,gate.reviewAuthorization(f.s.pr,f.s.reviews)).ok,true);
+  const {authorize}=require('./admission.cjs');f.args.context.eventName='pull_request';f.args.context.payload={pull_request:clone(f.s.pr)};
+  const pages=f.args.github.paginate;let executed=false;
+  f.args.github.paginate=async endpoint=>endpoint==='runs'&&!executed?[]:pages(endpoint);
+  assert.equal((await authorize(f.args)).run,true,'Prospective grant permits first protected execution');
+  executed=true;assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');
+  assert.equal(f.s.reviews.length,2,'No replacement LGTM submitted');
+});
+test('operator grant cannot come from PR text, issue comments, untrusted identities or wrong review commit',()=>{
+  const f=fixture();f.s.files[0].filename='.github/workflows/ci.yml';const grant=grantReview(f);
+  f.s.pr.body=grant.body;f.s.issueComments=[grant];
+  assert.equal(gate.protectedCIApproval(f.s,gate.reviewAuthorization(f.s.pr,f.s.reviews)).ok,false);
+  for(const changes of [{user:{login:'attacker',id:26848379}},{user:{login:'antoniodowling',id:1}},
+    {commit_id:'e'.repeat(40)},{state:'DISMISSED'},{html_url:'https://github.com/antoniodowling/other/pull/1#pullrequestreview-8'},
+    {body:grant.body+'\n<!-- protected-integration-authorization:v1 {} -->'},
+    {body:grant.body.replace('"number":1','"number":1,"number":1')}])assert.equal(gate.operatorGrant({...grant,...changes}),null);
+});
+test('latest stale operator grant cannot fall back; revoked or later blocking review withholds integration',()=>{
+  const f=fixture();f.s.files[0].filename='.github/workflows/ci.yml';const first=grantReview(f);f.s.reviews.push(first);
+  const newer={...first,id:9,html_url:`https://github.com/${profile.repository}/pull/1#pullrequestreview-9`,
+    body:first.body.replace(gate.policyDigest(),'0'.repeat(64))};f.s.reviews.push(newer);
+  assert.equal(gate.protectedCIApproval(f.s,gate.reviewAuthorization(f.s.pr,f.s.reviews)).ok,false);
+  f.s.reviews=[review(),first,review({id:10,body:'PROTECTED INTEGRATION REVOKED'})];
+  assert.equal(gate.reviewAuthorization(f.s.pr,f.s.reviews).ok,false);
+  f.s.reviews=[review(),first,review({id:11,state:'CHANGES_REQUESTED',body:'Changes requested'})];
+  assert.equal(gate.reviewAuthorization(f.s.pr,f.s.reviews).ok,false);
+});
+test('grant formatter requires affirmative assessments and complete trusted owning snapshot',()=>{
+  const f=fixture();f.s.files[0].filename='.github/workflows/ci.yml';
+  assert.throws(()=>gate.buildOperatorReview(f.s),/assessment/);
+  f.s.pr.changed_files=2;assert.throws(()=>gate.buildOperatorReview(f.s,{supplyChainReviewed:true,permissionsReviewed:true,nonWeakeningReviewed:true}),/assessment/);
+});
