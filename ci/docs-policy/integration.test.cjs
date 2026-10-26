@@ -631,3 +631,98 @@ test('persistent unknown, refresh timeout and read failure remain explicit admis
     assert.equal(waits,1);assert.equal(reads,variant==='deadline'?1:2);assert.ok(!f.reads.includes('files'));assert.equal(f.mutations.length,0);
   }
 });
+
+// Real API-shaped history: every response is bound to the requested owning run.
+function draftEnvelopeHistory({conclusion='skipped',prior=true}={}) {
+ const f=fixture(),original=f.runs||[f.run],originalGraphs=Array.isArray(f.jobs[0])?f.jobs:[f.jobs];
+ const deferred=original.map(run=>({...clone(run),id:run.id+1000,check_suite_id:run.check_suite_id+1000,conclusion}));
+ const runs=[...deferred,...(prior?original:[])],graphs=new Map(original.map((run,i)=>[run.id,originalGraphs[i]]));
+ for(const [i,run] of deferred.entries()){
+  const names=[profile.workflows[i].admissionJob||profile.admissionJob||'Classify offline scope',...profile.workflows[i].aggregates];
+  graphs.set(run.id,names.map((name,j)=>({id:11000+i*100+j,name,run_id:run.id,run_attempt:run.run_attempt,head_sha:f.s.pr.head.sha,
+    status:'completed',conclusion:'skipped',steps:[],check_run_url:`https://api.github.com/repos/${profile.repository}/check-runs/${11000+i*100+j}`})));
+ }
+ const pages=f.args.github.paginate;
+ f.args.github.paginate=async(endpoint,...args)=>{
+  const options=args[0]||{};
+  if(endpoint==='runs')return clone(runs.filter(run=>run.path.split('/').at(-1)===options.workflow_id));
+  if(endpoint==='jobs')return clone(graphs.get(options.run_id));
+  return pages(endpoint,...args);
+ };
+ f.args.github.rest.actions.getWorkflowRun=async({run_id})=>({data:clone(runs.find(run=>run.id===run_id))});
+ return {...f,historyRuns:runs,deferredRuns:deferred,historyGraphs:graphs,originalRuns:original};
+}
+test('overall-skipped and successful wholly skipped owning envelopes alone are missing validation',async()=>{
+ for(const conclusion of ['skipped','success']){
+  const f=draftEnvelopeHistory({conclusion,prior:false});
+  for(const workflow of profile.workflows){const result=await adapter.workflowCI(f.args.github,f.s,workflow);assert.equal(result.state,'pending');assert.equal(result.missing,true);assert.equal(result.runIds,undefined);}
+  assert.equal(f.mutations.length,0);
+ }
+});
+test('skipped owning history reuses only earlier real exact-head evidence from the required provider',async()=>{
+ for(const conclusion of ['skipped','success'])for(const trustedProvider of [false,true]){
+  const f=draftEnvelopeHistory({conclusion});
+  if(!trustedProvider){f.checks[0].app.id=999;await assert.rejects(gate.reconcile(f.args),/identity|provider/);assert.equal(f.mutations.length,0);}
+  else {
+   for(const workflow of profile.workflows){const result=await adapter.workflowCI(f.args.github,f.s,workflow);assert.equal(result.state,'success');assert.ok(result.runIds.every(id=>f.originalRuns.some(run=>run.id===id)));}
+   assert.equal((await gate.reconcile(f.args)).state,'AUTO_MERGE_ARMED');assert.equal(f.mutations.length,1);
+  }
+ }
+});
+test('deferred readiness can traverse owning draft history without inventing CI or losing earlier proof',async()=>{
+ for(const prior of [false,true]){
+  const f=draftEnvelopeHistory({prior}),draft=f.deferredRuns[0],ready={...clone(draft),id:draft.id+1000,conclusion:'success'};
+  f.historyRuns.unshift(ready);
+  f.historyGraphs.set(ready.id,f.historyGraphs.get(draft.id).map((job,i)=>({...clone(job),id:job.id+1000,run_id:ready.id,
+    ...(i===0?{conclusion:'success',steps:[{name:'Review-authorized CI admission',conclusion:'success'}]}:{})})));
+  const result=await adapter.workflowCI(f.args.github,f.s,profile.workflows[0]);assert.equal(result.state,prior?'success':'pending');
+  if(!prior)assert.equal(result.missing,true);
+ }
+});
+test('failed cancelled timed-out or active owning history cannot fall back to older validation',async()=>{
+ for(const conclusion of ['failure','cancelled','timed_out','action_required',null]){
+  const f=draftEnvelopeHistory({conclusion});assert.equal((await adapter.workflowCI(f.args.github,f.s,profile.workflows[0])).state,'failure');
+ }
+ for(const conclusion of ['failure','cancelled','timed_out']){
+  const f=draftEnvelopeHistory();f.originalRuns[0].conclusion=conclusion;
+  assert.equal((await adapter.workflowCI(f.args.github,f.s,profile.workflows[0])).state,'failure');
+ }
+ const f=draftEnvelopeHistory();f.originalRuns[0].status='in_progress';f.originalRuns[0].conclusion=null;
+ const result=await adapter.workflowCI(f.args.github,f.s,profile.workflows[0]);assert.equal(result.state,'pending');assert.equal(result.missing,false);
+});
+test('invalid duplicate or incomplete owning skipped graphs remain failures',async()=>{
+ for(const change of [jobs=>jobs[0].run_id=1,jobs=>jobs[0].run_attempt++,jobs=>jobs[0].head_sha='e'.repeat(40),
+  jobs=>jobs[0].id=null,jobs=>jobs[0].name='',jobs=>jobs[0].check_run_url='https://api.github.com/repos/other/repo/check-runs/1',
+  jobs=>delete jobs[0].check_run_url,jobs=>jobs[1].id=jobs[0].id,jobs=>jobs[1].name=jobs[0].name,
+  jobs=>jobs[1].check_run_url=jobs[0].check_run_url,jobs=>jobs.splice(1,1),jobs=>jobs.splice(0)]){
+  const f=draftEnvelopeHistory();change(f.historyGraphs.get(f.deferredRuns[0].id));
+  assert.equal((await adapter.workflowCI(f.args.github,f.s,profile.workflows[0])).state,'failure');
+ }
+});
+test('overall-skipped owning graphs with executed or unfinished jobs are never deferred evidence',async()=>{
+ for(const change of [jobs=>jobs[0].conclusion='success',jobs=>jobs[0].conclusion='failure',jobs=>jobs[0].conclusion=null,jobs=>jobs[0].status='in_progress']){
+  const f=draftEnvelopeHistory();change(f.historyGraphs.get(f.deferredRuns[0].id));assert.equal((await adapter.workflowCI(f.args.github,f.s,profile.workflows[0])).state,'failure');
+ }
+});
+test('owning draft freshness catches reruns newer work and changed terminal state before history reuse',async()=>{
+ for(const variant of ['attempt','newer-run','conclusion']){
+  const f=draftEnvelopeHistory(),draft=f.deferredRuns[0],get=f.args.github.rest.actions.getWorkflowRun;let reads=0;
+  f.args.github.rest.actions.getWorkflowRun=async options=>{
+   const value=await get(options);
+   if(options.run_id===draft.id&&++reads===1){
+    if(variant==='newer-run')f.historyRuns.unshift({...clone(draft),id:draft.id+1000,status:'in_progress',conclusion:null});
+    else if(variant==='attempt'){draft.run_attempt++;draft.status='in_progress';draft.conclusion=null;}
+    else draft.conclusion='failure';
+   }
+   return value;
+  };
+  const result=await adapter.workflowCI(f.args.github,f.s,profile.workflows[0]);assert.equal(result.state,'pending');assert.equal(result.missing,false);assert.equal(result.runIds,undefined);
+ }
+});
+test('owning skipped history never relaxes exact workflow repository head and attempt provenance',async()=>{
+ for(const change of [run=>run.path='other.yml',run=>run.repository.full_name='other/repo',run=>run.head_sha='e'.repeat(40),run=>run.run_attempt=0]){
+  const f=draftEnvelopeHistory(),get=f.args.github.rest.actions.getWorkflowRun;
+  f.args.github.rest.actions.getWorkflowRun=async options=>{const value=await get(options);if(options.run_id===f.deferredRuns[0].id)change(value.data);return value;};
+  await assert.rejects(adapter.workflowCI(f.args.github,f.s,profile.workflows[0]),/provenance/);
+ }
+});
