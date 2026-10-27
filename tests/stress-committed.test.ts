@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 import { validateWorkerRequest } from '../src/worker-request';
 import manifest from '../demo-files/hnb-validator-stress-files/manifest.json';
 
+// Validate the committed synthetic kit itself, not regenerated replacement files.
 it('checks the selected synthetic stress kit bytes and declared outcomes', () => {
   expect(manifest).toHaveLength(14);
   expect(new Set(manifest.map(item => item.name)).size).toBe(manifest.length);
