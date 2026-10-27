@@ -2,6 +2,7 @@ name: Validate handoff
 run-name: CI ${{ github.event_name }} ${{ github.event.action || 'push' }}
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, labeled]
   push:
@@ -21,7 +22,7 @@ env:
 
 jobs:
   plan:
-    if: ${{ github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (vars.CI_MODE != 'lean' && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false')) }}
     name: Classify offline scope
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -48,7 +49,7 @@ jobs:
               throw Error('Trusted source admission is not installed');
             const ignoredLabel = context.eventName === 'pull_request' && context.payload.action === 'labeled' &&
               process.env.REVIEW_INTEGRATION_MODE !== 'enforce';
-            const result = ignoredLabel ? {run:false,reason:'Deferred label notification'} :
+            const result = context.eventName === 'workflow_dispatch' ? {run:true,reason:'Manual full qualification'} : ignoredLabel ? {run:false,reason:'Deferred label notification'} :
               installed ? await require('./policy/ci/docs-policy/admission.cjs').authorize({github,context,
                 mode:process.env.REVIEW_INTEGRATION_MODE}) : {run:true,reason:'Inactive bootstrap source contract'};
             core.setOutput('admitted', result.run ? 'true' : 'false');
@@ -74,7 +75,7 @@ jobs:
               output.write(f"scope={scope}\nsha={os.environ['EXPECTED_SHA']}\n")
   checks:
     needs: plan
-    if: ${{ (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.scope == 'full' && (vars.REVIEW_INTEGRATION_MODE != 'enforce' || needs.plan.outputs.admitted == 'true') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || vars.CI_MODE != 'lean') && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.scope == 'full' && (vars.REVIEW_INTEGRATION_MODE != 'enforce' || needs.plan.outputs.admitted == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -110,7 +111,7 @@ jobs:
 
   validate:
     name: validate
-    if: ${{ always() && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.admitted == 'true' }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || vars.CI_MODE != 'lean') && (github.event_name != 'pull_request' || toJSON(github.event.pull_request.draft) == 'false') && needs.plan.outputs.admitted == 'true' }}
     needs: [plan, checks]
     runs-on: ubuntu-24.04
     timeout-minutes: 5

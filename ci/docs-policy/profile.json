@@ -2,6 +2,7 @@
   "repository": "antoniodowling/file-validation-wizard",
   "classifier": "tools/docs_ci.py",
   "tag": "wizard-docs-automerge:v1",
+  "trustedPolicyInputs": ["ci/fast-ci.py", "ci/fast-result.cjs", ".github/workflows/fast-ci.yml", ".github/workflows/fast-ci-result.yml"],
   "workflows": [
     {
       "path": ".github/workflows/validate.yml",

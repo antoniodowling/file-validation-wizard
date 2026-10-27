@@ -1,0 +1,47 @@
+name: Fast CI result
+on:
+  workflow_run:
+    workflows: [Fast CI]
+    types: [in_progress, completed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Existing PR whose exact-head result needs reconciliation
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+concurrency:
+  group: fast-ci-result-${{ github.event.workflow_run.head_branch || inputs.pr }}
+  cancel-in-progress: false
+jobs:
+  result:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    environment: review-enforcement
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/heads/main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Create status-only publisher
+        id: app
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: 5363850
+          private-key: ${{ secrets.ANTONIOPRREVIEWENFORCEMENT20261017PRIVATEKEYPEM }}
+          repositories: file-validation-wizard
+          permission-statuses: write
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          STATUS_TOKEN: ${{ steps.app.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LEAN_MODE: ${{ vars.CI_MODE }}
+        with:
+          script: |
+            await require('./ci/fast-result.cjs').control({github,context,
+              mode:process.env.LEAN_MODE,statusToken:process.env.STATUS_TOKEN});
