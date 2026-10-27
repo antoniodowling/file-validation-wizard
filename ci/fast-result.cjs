@@ -12,9 +12,13 @@ async function assess({github,s,mode}) {
      s.pr.head.repo?.full_name!=="antoniodowling/file-validation-wizard" ||
      s.shared!==1 || s.files.length!==s.pr.changed_files)
     return {state:"failure",description:"Candidate identity or complete change evidence is unavailable"};
+  const decision=adapter.decision(s);
+  // Native rules independently require thread resolution.
+  if(decision.blocked || !decision.supported || !decision.trusted)
+    return {state:"failure",description:"Review hold, objection or untrusted candidate"};
+  const review=gate.reviewAuthorization(s.pr,s.reviews);
+  if(!review.ok)return {state:"failure",description:"Current-head owner review is required"};
   if(await gate.requiresProtectedIntegration(s,adapter,github)) {
-    const review=gate.reviewAuthorization(s.pr,s.reviews);
-    if(!review.ok)return {state:"failure",description:"CI control change needs an exact-head independent review"};
     const approval=gate.protectedRecord(s,review);
     if(!approval.ok)return {state:"failure",description:"CI control change needs its exact-head operator authorization"};
     if(!await gate.verifyApprovedBase(github,adapter.REPO,approval.record,s.targetSha))
@@ -25,22 +29,29 @@ async function assess({github,s,mode}) {
 async function control({github,context,mode,statusToken,publish=postStatus}) {
   let numbers=[];
   let eventRun=null;
-  if(context.eventName==="workflow_dispatch") {
+  if(context.eventName==="pull_request_target") {
+    numbers=[context.payload.pull_request.number];
+  } else if(context.eventName==="workflow_dispatch") {
     const n=Number(context.payload.inputs?.pr);
     if(!Number.isSafeInteger(n)||n<1)throw Error("Explicit PR number required");
     numbers=[n];
   } else {
     const {data:r}=await github.rest.actions.getWorkflowRun({...adapter.REPO,run_id:context.payload.workflow_run.id});
-    if(r.path!==WORKFLOW.path || r.event!=="pull_request" ||
+    const reviewNotification=r.path===".github/workflows/review-activity.yml" &&
+      ["pull_request_review","pull_request_review_comment"].includes(r.event) && r.status==="completed";
+    if((r.path!==WORKFLOW.path || r.event!=="pull_request") && !reviewNotification ||
        r.repository?.full_name!=="antoniodowling/file-validation-wizard" ||
        r.head_repository?.full_name!=="antoniodowling/file-validation-wizard")return;
-    eventRun=r;
+    if(!reviewNotification)eventRun=r;
     const prs=await github.paginate(github.rest.pulls.list,{...adapter.REPO,state:"open",
       head:"antoniodowling:"+r.head_branch,per_page:100});
-    numbers=prs.filter(p=>p.head.sha===r.head_sha&&p.base.ref==="main").map(p=>p.number);
+    numbers=prs.filter(p=>p.base.ref==="main" && (reviewNotification || p.head.sha===r.head_sha)).map(p=>p.number);
   }
   for(const number of numbers) {
     const s=await adapter.snapshot(github,number);
+    if(s.pr.state!=="open")continue;
+    if(context.eventName==="workflow_dispatch" && context.payload.inputs?.branch!==s.pr.head.ref)
+      throw Error("Dispatch branch does not match the current PR head");
     if(eventRun && s.pr.head.sha!==eventRun.head_sha)continue;
     const runs=await github.paginate(github.rest.actions.listWorkflowRuns,{...adapter.REPO,
       workflow_id:"fast-ci.yml",head_sha:s.pr.head.sha,event:"pull_request",per_page:100});

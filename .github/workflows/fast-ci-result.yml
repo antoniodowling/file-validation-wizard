@@ -1,7 +1,10 @@
 name: Fast CI result
 on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, edited, labeled, unlabeled, closed]
   workflow_run:
-    workflows: [Fast CI]
+    workflows: [Fast CI, Review activity]
     types: [in_progress, completed]
   workflow_dispatch:
     inputs:
@@ -9,16 +12,20 @@ on:
         description: Existing PR whose exact-head result needs reconciliation
         required: true
         type: string
+      branch:
+        description: Exact current PR head branch, used to serialize reconciliation
+        required: true
+        type: string
 permissions:
   contents: read
   actions: read
   pull-requests: read
 concurrency:
-  group: fast-ci-result-${{ github.event.workflow_run.head_branch || inputs.pr }}
+  group: fast-ci-result-${{ github.event.workflow_run.head_branch || github.event.pull_request.head.ref || inputs.branch }}
   cancel-in-progress: false
 jobs:
   result:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'pull_request'
+    if: github.event_name != 'workflow_run' || contains(fromJSON('["pull_request","pull_request_review","pull_request_review_comment"]'), github.event.workflow_run.event)
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     environment: review-enforcement

@@ -53,8 +53,9 @@ jobs:
           tests/csv-wire.test.ts tests/mixed-findings.test.ts
           tests/nacha-fixtures.test.ts tests/nacha-expanded-fixtures.test.ts
           tests/nacha-origination-r2.test.ts tests/stress-policy.test.ts
-      - run: npm run test:stress-files
+      - name: Validate checked-in stress data
         if: steps.scope.outputs.stress == 'true'
+        run: npx vitest run tests/stress-committed.test.ts
       - name: Test CI controls
         if: steps.scope.outputs.control == 'true'
         run: |

@@ -59,5 +59,19 @@ class FastRouting(unittest.TestCase):
         run, _ = self.route()
         self.assertNotEqual(run.returncode, 0)
 
+    def test_new_malformed_synthetic_xml_fails(self):
+        (self.root/'demo-files').mkdir()
+        (self.root/'demo-files/new.xml').write_text('<broken>')
+        run, _ = self.route()
+        self.assertNotEqual(run.returncode, 0)
+
+    def test_prose_in_ci_does_not_run_control_tests(self):
+        (self.root/'ci').mkdir()
+        (self.root/'ci/notes.md').write_text('notes\n')
+        run, out = self.route()
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertIn('build=false', out)
+        self.assertIn('control=false', out)
+
 if __name__ == '__main__':
     unittest.main()
