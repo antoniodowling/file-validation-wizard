@@ -283,6 +283,7 @@ test('protected runtime handoff accepts independently installed approval after m
     fs.cpSync(__dirname,path.join(tmp,'ci/docs-policy'),{recursive:true});
     fs.cpSync('.github/workflows',path.join(tmp,'.github/workflows'),{recursive:true});
     fs.mkdirSync(path.join(tmp,'tools'),{recursive:true});fs.copyFileSync('tools/docs_ci.py',path.join(tmp,'tools/docs_ci.py'));
+    for(const name of ['fast-ci.py','fast-result.cjs'])fs.copyFileSync(`ci/${name}`,path.join(tmp,'ci',name));
     const f=fixture();f.s.files[0].filename='.github/workflows/dependency.yml';f.s.targetSha='e'.repeat(40);
     const record={repository:profile.repository,number:1,head,base,reviewId:7,filesDigest:gate.filesDigest(f.s.files),
       policyDigest:gate.policyDigest(),runIds:[9],supplyChainReviewed:true,permissionsReviewed:true,nonWeakeningReviewed:true,

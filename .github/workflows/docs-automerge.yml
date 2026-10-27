@@ -12,8 +12,6 @@ on:
         description: Existing PR number to reconcile
         required: true
         type: string
-  schedule:
-    - cron: '23 * * * *'
 permissions:
   contents: read
 concurrency:
@@ -22,7 +20,7 @@ concurrency:
 jobs:
   enforce:
     if: >-
-      (github.event_name != 'schedule' || vars.REVIEW_INTEGRATION_MODE == 'enforce') &&
+      vars.CI_MODE != 'lean' &&
       (github.event_name != 'workflow_run' || contains(fromJSON('["pull_request","pull_request_review","pull_request_review_comment"]'), github.event.workflow_run.event))
     runs-on: ubuntu-24.04
     timeout-minutes: 5

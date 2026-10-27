@@ -41,7 +41,7 @@ Use Node.js 22.12 or newer (`nvm use` selects the version in `.nvmrc`).
 | `npm run validate` | Everything in `validate:core`, plus Playwright browser tests |
 | `npm run check:readme-drift` | Whether `readme-package/` matches the Git checkpoint; it does not regenerate files |
 
-Before running browser tests, install Chromium, Firefox, and WebKit with `npx playwright install`. On Linux, use `npx playwright install --with-deps` if system dependencies are missing. GitHub Actions runs core checks, generated-package drift detection, and all three browser projects. Run the drift check after regeneration and committing any generated changes.
+Before running browser tests, install Chromium, Firefox, and WebKit with `npx playwright install`. On Linux, use `npx playwright install --with-deps` if system dependencies are missing. With `CI_MODE=lean`, the required Fast CI check classifies the complete change, checks whitespace, and builds source changes; selected synthetic fixture and CI-control changes also run their relevant checks. Documentation-only changes skip dependency installation and the build. The manually dispatched **Validate handoff** workflow retains core checks, generated-package drift detection, and all three browser projects; run it before release or handoff. A fast merge is not release qualification. Run the drift check after regeneration and committing any generated changes.
 
 ## Demo and test files
 
