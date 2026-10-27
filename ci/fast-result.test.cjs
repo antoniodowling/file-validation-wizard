@@ -12,6 +12,7 @@ function snapshot(filename='src/main.ts') {
 test('inactive mode and incomplete or untrusted candidates never succeed',async()=>{
   const s=snapshot();
   assert.equal((await result.assess({s,mode:'off'})).state,'pending');
+  assert.equal((await result.assess({s,mode:undefined})).state,'pending');
   for(const changes of [{shared:2},{files:[]},{pr:{...s.pr,draft:true}},{pr:{...s.pr,head:{repo:{full_name:'foreign/repo'}}}}])
     assert.equal((await result.assess({s:{...s,...changes},mode:'lean'})).state,'failure');
 });
