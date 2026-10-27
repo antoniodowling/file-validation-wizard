@@ -24,7 +24,8 @@ async function assess({github,s,mode}) {
     if(!await gate.verifyApprovedBase(github,adapter.REPO,approval.record,s.targetSha))
       return {state:"failure",description:"CI control approval base is no longer applicable"};
   }
-  return adapter.workflowCI(github,s,WORKFLOW);
+  const result=await adapter.workflowCI(github,s,WORKFLOW);
+  return result.state==="success" ? {...result,description:"Current-head validation and owner review passed"} : result;
 }
 async function control({github,context,mode,statusToken,publish=postStatus}) {
   let numbers=[];
