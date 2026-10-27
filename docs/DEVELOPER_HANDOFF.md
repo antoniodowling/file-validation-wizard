@@ -138,5 +138,6 @@ The catalog contains PAIN.001, PAIN.008, EDI 820, and one executable NACHA publi
 
 Role assignments above identify responsibilities; they do not imply a named person has accepted ownership. Historical run counts and temporary screenshot references are not current acceptance evidence. [Design QA](design-qa.md) is historical context only.
 
-Fast CI is the merge check when lean mode is active. Use the manually dispatched
-Validate handoff workflow for complete release or handoff qualification.
+Fast CI is the merge check when lean mode is active and requires the current-head
+owner review. Use the manually dispatched Validate handoff workflow for complete
+release or handoff qualification.
