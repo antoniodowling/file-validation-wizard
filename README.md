@@ -153,4 +153,4 @@ See [the file explorer implementation](docs/FILE_EXPLORER.md) for coordinate sem
 
 See [coverage and export semantics](docs/coverage/README.md) and [implementation evidence and remaining gates](docs/IMPLEMENTATION_EVIDENCE.md). The [historical September bundle receipt](docs/evidence/ruleset-2/receipt.json) records its original bundle, not later regenerated files. ISO/X12 and ACH profiles have separate coverage revisions; local test results do not establish bank acceptance or production approval.
 
-The fast lane checks changed synthetic inputs against their declared expectations.
+The fast lane checks changed JSON and non-negative XML syntax and runs selected synthetic fixture contract tests.
