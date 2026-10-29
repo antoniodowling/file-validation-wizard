@@ -27,10 +27,15 @@ export function quoteCsv(value: string): string {
 
 export function validationRunToCsv(run: ValidationRun): string {
   const schema = run.provenance?.schemaVersion ?? (run.reportedDisposition ? "3" : "2");
-  const headers = schema === "3" ? [...HEADERS, "Reported File Disposition", "Reported File Qualifier", "Reported Batch Dispositions"] : HEADERS;
+  const includesDisposition = schema === "3" || schema === "4";
+  const headers = [
+    ...HEADERS,
+    ...(includesDisposition ? ["Reported File Disposition", "Reported File Qualifier", "Reported Batch Dispositions"] : []),
+    ...(schema === "4" ? ["Execution Reason"] : []),
+  ];
   const occurrences = run.results.map(result => ({ ...result, rowKind: "evaluation-occurrence" }));
   const skipped = (run.checks ?? []).filter(check => check.state === "not-evaluated" || check.state === "not-applicable").map(check => ({
-    ruleId: check.ruleId, outcome: check.state, severity: null, field: "", locator: "", message: "See coverage prerequisites and execution status.",
+    ruleId: check.ruleId, outcome: check.state, severity: null, field: "", locator: "", message: schema === "4" && check.reason ? check.reason : "See coverage prerequisites and execution status.",
     location: undefined, rowKind: "check-state",
   }));
   const entries = [...occurrences, ...skipped];
@@ -53,7 +58,8 @@ export function validationRunToCsv(run: ValidationRun): string {
       run.executionStatus ?? "COMPLETED", run.verdict === null ? "" : run.verdict ?? run.overallStatus,
       JSON.stringify(result.location ?? { kind: "unavailable", explanation: "No authoritative source location" }),
       index === 0 ? JSON.stringify({ coverage: run.provenance?.coverage ?? [], exclusions: run.provenance?.exclusions ?? ["Legacy report; coverage unknown"], checks: run.checks ?? [] }) : `Coverage snapshot: first data row; ${run.provenance?.coverageRevision ?? "legacy unknown"}`,
-      ...(schema === "3" ? [run.reportedDisposition?.file.status ?? "", run.reportedDisposition?.file.qualifier ?? "", run.reportedDisposition ? JSON.stringify(run.reportedDisposition.batches) : ""] : []),
+      ...(includesDisposition ? [run.reportedDisposition?.file.status ?? "", run.reportedDisposition?.file.qualifier ?? "", run.reportedDisposition ? JSON.stringify(run.reportedDisposition.batches) : ""] : []),
+      ...(schema === "4" ? [run.executionReason ?? ""] : []),
     ]
       .map(quoteCsv)
       .join(","),

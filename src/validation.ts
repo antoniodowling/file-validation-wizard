@@ -64,9 +64,12 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
     verdict: deriveOverallStatus(frozenResults) as "PASS" | "PASS_WITH_WARNINGS" | "FAIL",
     checks: provenance.coverage.map(rule => {
       const evaluated = frozenResults.filter(r => r.ruleId === rule.id);
-      return { ruleId: rule.id, state: evaluated.length === 0
-        ? parsed.notApplicable?.includes(rule.id) ? "not-applicable" as const : "not-evaluated" as const
-        : evaluated.some(r => r.outcome !== "PASS") ? "failed" as const : "passed" as const,
+      const incomplete = parsed.incompleteChecks?.find(check => check.ruleId === rule.id);
+      return { ruleId: rule.id, state: evaluated.some(r => r.outcome !== "PASS") ? "failed" as const
+        : incomplete ? "not-evaluated" as const
+        : evaluated.length ? "passed" as const
+        : parsed.notApplicable?.includes(rule.id) ? "not-applicable" as const : "not-evaluated" as const,
+        ...(incomplete ? { reason: incomplete.reason } : {}),
         findingOrdinals: evaluated.filter(r => r.outcome !== "PASS").map(r => r.ordinal) };
     }),
     fileName,

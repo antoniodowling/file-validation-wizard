@@ -613,7 +613,7 @@ for (const scenario of [
   const download=page.waitForEvent("download"); await page.locator("#export-json").click();
   const report=await download; const file=await report.path();
   const {readFileSync}=await import("node:fs"); const json=JSON.parse(readFileSync(file!,"utf8"));
-  expect(json.exportSchemaVersion).toBe("3"); expect(json.verdict).toBe("PASS");
+  expect(json.exportSchemaVersion).toBe("4"); expect(json.verdict).toBe("PASS");
   if(scenario.query==="ACK")expect(json.reportedDisposition.file.status).toBe("REJECTED");
   await page.getByRole("button",{name:"Back to file"}).click();
   await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.fail}`));

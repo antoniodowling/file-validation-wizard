@@ -1,6 +1,6 @@
 import type { CoverageRule, FormatPack } from "./types";
 import { CSV_WIRE_RULE_IDS } from "./parsers/csv-wire";
-export const CSV_WIRE_REVISION = "huntington-csv-wire-candidate-1.0.0";
+export const CSV_WIRE_REVISION = "huntington-csv-wire-candidate-1.1.0";
 export const CSV_WIRE_GUIDE = "Huntington CSV Wire public guide; accessed 2026-10-14; no published semantic version or exact update timestamp verified; functional extraction SHA-256 6fe82ba05375d5deb999713ed82b33b89347c6cbebbb3f8eae274d342c2a17cb; docs/sources/csv-wire-guide-extract.json";
 export const CSV_WIRE_EXCLUSIONS = Object.freeze([
   "CANDIDATE only: no bank conformance, Product/SC/FT or rules/fixture approvals, Production activation or actual hosted ReadMe acceptance.",

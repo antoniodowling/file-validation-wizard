@@ -1,6 +1,6 @@
 import type { CoverageRule, FormatPack } from "./types";
 import { expandedNachaCoverageFor, NACHA_EXPANDED_EXCLUSIONS } from "./nacha-expanded-coverage";
-export const NACHA_ORIGINATION_R2_REVISION = "nacha-origination-public-2026-r2.1";
+export const NACHA_ORIGINATION_R2_REVISION = "nacha-origination-public-2026-r2.2";
 export const NACHA_ORIGINATION_R2_GUIDE = "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; full Rules qualification deferred";
 export const NACHA_ORIGINATION_R2_EXCLUSIONS = Object.freeze([
   ...NACHA_EXPANDED_EXCLUSIONS.filter(exclusion => !exclusion.startsWith("Healthcare classification")),

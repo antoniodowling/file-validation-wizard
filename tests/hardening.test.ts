@@ -33,8 +33,8 @@ describe("review regression boundaries", () => {
     const run = validateSource("x.xml", "<Document>", isoPack());
     expect(run.checks?.find(c => c.ruleId === "iso.message-id")?.state).toBe("not-evaluated");
     expect(run.executionStatus).toBe("COMPLETED"); expect(run.verdict).toBe("FAIL");
-    expect(validationRunToCsv(run)).toContain("2.1.0");
-    expect(JSON.parse(validationRunToJson(run)).provenance.schemaVersion).toBe("2");
+    expect(validationRunToCsv(run)).toContain("2.2.0");
+    expect(JSON.parse(validationRunToJson(run)).provenance.schemaVersion).toBe("4");
   });
   it.each([
     validEdi820.replace("BPR*C*1.00*C*ACH~", "").replace("GE*1*1~", "BPR*C*1.00*C*ACH~GE*1*1~"),

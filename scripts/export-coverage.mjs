@@ -12,6 +12,6 @@ try {
   const { FORMAT_PACKS } = await import(pathToFileURL(join(directory,'packs.mjs')).href);
   const { provenanceFor } = await import(pathToFileURL(join(directory,'coverage.mjs')).href);
   await mkdir('docs/coverage', { recursive:true });
-  const profiles = FORMAT_PACKS.filter(pack => pack.mode === "DEMO").map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; });
-  await writeFile('docs/coverage/ruleset-2.1.0.json', JSON.stringify(profiles,null,2)+'\n');
+  const profiles = FORMAT_PACKS.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; });
+  await writeFile('docs/coverage/report-schema-4.0.0.json', JSON.stringify(profiles,null,2)+'\n');
 } finally { await rm(directory,{recursive:true,force:true}); }

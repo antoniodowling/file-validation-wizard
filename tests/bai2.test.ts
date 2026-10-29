@@ -9,7 +9,7 @@ import { validationRunToCsv, validationRunToJson } from "../src/csv";
 import { ResourceLimitError } from "../src/resource-policy";
 import { parseBai2 } from "../src/parsers/bai2";
 import { provenanceFor } from "../src/coverage";
-import coverageSnapshot from "../docs/coverage/bai2-candidate-1.0.0.json";
+import { baiSnapshots as coverageSnapshot } from "./current-coverage";
 
 const fixture = (name: string): string => readFileSync(`demo-files/bai2/${name}`, "utf8");
 const pass = (): string => fixture("balances-pass.bai2");
@@ -29,7 +29,7 @@ describe("Huntington BAI2 candidate", () => {
     const report = run(source);
     expect(report.overallStatus, report.executionReason ?? JSON.stringify(report.results.filter(r => r.outcome !== "PASS"))).toBe(entry.expected);
     for (const id of entry.rules) expect(report.results.some(r => r.ruleId === id && r.outcome === "ERROR")).toBe(true);
-    expect(report.provenance?.schemaVersion).toBe("3");
+    expect(report.provenance?.schemaVersion).toBe("4");
     expect(report.provenance?.mode).toBe("CANDIDATE");
     expect(report.checks?.length).toBe(report.provenance?.coverage.length);
     for (const result of report.results) {
@@ -176,7 +176,7 @@ describe("Huntington BAI2 candidate", () => {
     const report = validateSource("=SYNTHETIC.bai2", pass(), BAI2_PACK);
     expect(validationRunToCsv(report)).toContain("'=SYNTHETIC.bai2");
     const json = JSON.parse(validationRunToJson(report));
-    expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.rulesetRevision).toBe("huntington-bai2-candidate-1.0.0");
+    expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.rulesetRevision).toBe("huntington-bai2-candidate-1.0.0");
     expect(json.provenance.exclusions.join(" ")).toContain("CSV conversion");
     expect(JSON.parse(validationRunToJson(run(fixture("funds-unsupported.bai2")))).verdict).toBeNull();
   });

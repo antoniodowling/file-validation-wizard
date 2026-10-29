@@ -74,14 +74,15 @@ describe("origination r2 declarations", () => {
   });
 });
 
-it("suppresses partial healthcare PASS when another declared entry has unknown prerequisites", () => {
+it("preserves healthcare occurrences while marking unknown prerequisites incomplete", () => {
   const rows = buildNacha([{ sec: "CCD", codes: ["22", "99"], amounts: [1n, 1n], addenda: [1, 1] }]);
   rows[1] = field(rows[1]!, 54, 63, "HCCLAIMPMT");
   rows[3] = field(rows[3]!, 4, 83, "TRN*1*TRACE*COMPANY~".padEnd(80));
   rows[5] = field(rows[5]!, 4, 83, "TRN*1*TRACE*COMPANY~".padEnd(80));
   const output = parseNacha(rows.join("\n"), pack);
   for (const id of ["healthcare-addenda", "healthcare-trn"]) {
-    expect(output.results.some(result => result.ruleId === `nacha.${id}` && result.outcome === "PASS")).toBe(false);
+    expect(output.results.some(result => result.ruleId === `nacha.${id}` && result.outcome === "PASS")).toBe(true);
+    expect(output.incompleteChecks?.some(check => check.ruleId === `nacha.${id}` && check.reason.length > 0)).toBe(true);
     expect(output.notApplicable).not.toContain(`nacha.${id}`);
   }
 });

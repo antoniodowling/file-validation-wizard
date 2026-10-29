@@ -26,7 +26,7 @@ for (const mount of ["standalone", "ReadMe package"]) test(`BAI2 upload, source 
   await expect(selector("result-basis")).toContainText("Candidate checks only");
   const download = page.waitForEvent("download"); await selector("export-json").click();
   const json = JSON.parse(readFileSync((await (await download).path())!, "utf8"));
-  expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.profileId).toBe("huntington-bai2-public-2026-r1");
+  expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.profileId).toBe("huntington-bai2-public-2026-r1");
   expect(json.provenance.exclusions.join(" ")).toContain("Nonempty funds layouts");
   await page.getByRole("button", { name: "Back to file" }).click();
   await selector("file-input").setInputFiles(resolve(process.cwd(), "demo-files/bai2/account-total-fail.bai2"));

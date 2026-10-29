@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import fixtures from "../demo-files/ach-candidates/manifest.json";
-import r2Snapshot from "../docs/coverage/nacha-origination-r2-1.1.0.json";
-import snapshots from "../docs/coverage/ach-candidates-1.0.0.json";
+
+import snapshots from "./current-coverage";
 import { ACK_PACK, CONTROL_TOTAL_PACK, ORIGINATION_R2_PACK, RETURNS_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validateWorkerRequest } from "../src/worker-request";
@@ -21,18 +21,18 @@ describe("integrated ACH candidate revisions", () => {
     const run = validateSource(fixture.name, text, pack);
     expect(run.overallStatus).toBe(fixture.expectedStatus);
     expect(run.results.filter(result => result.outcome !== "PASS").map(result => result.ruleId)).toEqual(fixture.expectedFindingIds);
-    expect(run.provenance?.schemaVersion).toBe("3");
+    expect(run.provenance?.schemaVersion).toBe("4");
     if (fixture.expectedStatus === "UNSUPPORTED") { expect(run.verdict).toBeNull(); expect(run.reportedDisposition).toBeUndefined(); }
     else expect(run.verdict).toBe(fixture.expectedStatus);
   });
   it("freezes separate new coverage without changing historical snapshots", () => {
-    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual([r2Snapshot[0], ...snapshots.slice(1)]);
+    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(packs.map(pack => snapshots.find(s => s.profileId === pack.id)));
   });
   it("exports bank-reported rejection independently of a passing validity verdict", () => {
     const run = validateSource("rejected.txt", source("ack-rejected-pass.txt"), ACK_PACK);
     expect(run.verdict).toBe("PASS"); expect(run.errorCount).toBe(0);
     expect(run.reportedDisposition?.file.status).toBe("REJECTED");
-    const json = JSON.parse(validationRunToJson(run)); expect(json.exportSchemaVersion).toBe("3");
+    const json = JSON.parse(validationRunToJson(run)); expect(json.exportSchemaVersion).toBe("4");
     expect(json.reportedDisposition.file.status).toBe("REJECTED");
     const csv = validationRunToCsv(run); expect(csv.split("\r\n")[0]).toContain('"Reported File Disposition","Reported File Qualifier","Reported Batch Dispositions"');
     expect(csv).toContain('"REJECTED","ChecksumMismatch"');
@@ -48,7 +48,7 @@ describe("integrated ACH candidate revisions", () => {
     expect(response.type).toBe("complete");
     if (response.type === "complete") { expect(response.source).toBe("\uFEFF"+text); expect(response.run.overallStatus).toBe("FAIL"); expect(response.run.reportedDisposition).toBeUndefined(); }
   });
-  it("keeps authoritative schema-3 finding spans for explorer navigation", () => {
+  it("keeps authoritative schema-4 finding spans for explorer navigation", () => {
     const text=source("totals-date-fail.txt"); const run=validateSource("bad.txt",text,CONTROL_TOTAL_PACK);
     const finding=locateFindings(text,CONTROL_TOTAL_PACK,run).find(location=>run.results.find(result=>result.ordinal===location.ordinal)?.ruleId==="ach-totals.transmission-date")!;
     expect(finding.location).toMatchObject({kind:"located",primary:{span:{start:50,end:58}}});

@@ -27,7 +27,7 @@ for (const mount of ["standalone", "ReadMe package"]) test(`CSV Wire local input
     if (file === "international-usd-pass.csv") {
       const download = page.waitForEvent("download"); await selector("export-json").click();
       const json = JSON.parse(readFileSync((await (await download).path())!, "utf8"));
-      expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.profileId).toBe("huntington-csv-wire-public-2026-r1");
+      expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.profileId).toBe("huntington-csv-wire-public-2026-r1");
       expect(json.provenance.exclusions.join(" ")).toContain("Non-USD timing");
       expect(json.checks.every((c: { state: string }) => ["passed", "not-applicable"].includes(c.state))).toBe(true);
     }

@@ -248,9 +248,11 @@ export interface CheckEvaluation {
   readonly ruleId: string;
   readonly state: "passed" | "failed" | "not-applicable" | "not-evaluated";
   readonly findingOrdinals: readonly number[];
+  /** Applicable occurrences were blocked; actual failures still take precedence. */
+  readonly reason?: string;
 }
 export interface RunProvenance {
-  readonly schemaVersion: "2" | "3";
+  readonly schemaVersion: "2" | "3" | "4";
   readonly profileId: string;
   readonly messageVersion: string;
   readonly implementationGuideRevision: string;
