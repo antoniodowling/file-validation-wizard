@@ -17,14 +17,26 @@ export interface XmlNode {
 export class XmlSyntaxError extends Error {
   constructor(readonly offset: number) { super("XML syntax or namespace binding is invalid."); }
 }
+export interface ParsedXmlDocument {
+  readonly root: XmlNode;
+  readonly hasDeclaration: boolean;
+}
+
+/** Preserve the root-only API for source-coordinate and syntax consumers. */
 export function parseXml(source: string): XmlNode {
+  return parseXmlDocument(source).root;
+}
+
+export function parseXmlDocument(source: string): ParsedXmlDocument {
   const parser = new SaxesParser({ xmlns: true, defaultXMLVersion: "1.0", forceXMLVersion: true });
   const stack: XmlNode[] = [];
   let root: XmlNode | undefined;
+  let hasDeclaration = false;
   let count = 0;
   let start = 0;
   parser.on("error", () => { throw new XmlSyntaxError(Math.max(0, Math.min(source.length, parser.position - 1))); });
   parser.on("xmldecl", (decl) => {
+    hasDeclaration = true;
     if (decl.version !== "1.0" || (decl.encoding && decl.encoding.toUpperCase() !== "UTF-8")) {
       throw new UnsupportedInputError("Only XML 1.0 encoded as UTF-8 is supported.");
     }
@@ -62,7 +74,7 @@ export function parseXml(source: string): XmlNode {
   for (let offset = 0; offset < source.length; offset += 4096) parser.write(source.slice(offset, offset + 4096));
   parser.close();
   if (!root) throw new XmlSyntaxError(0);
-  return root;
+  return { root, hasDeclaration };
 }
 export function children(node: XmlNode | undefined, local: string, uri: string): XmlNode[] {
   return node?.children.filter((child) => child.local === local && child.uri === uri) ?? [];

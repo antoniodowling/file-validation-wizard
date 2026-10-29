@@ -8,6 +8,7 @@ import { expandedNachaCoverageFor, NACHA_EXPANDED_REVISION, NACHA_EXPANDED_GUIDE
 import type { CoverageRule, FormatPack, RunProvenance } from "./types";
 import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
+export const ISO_RULESET_REVISION = "2.1.0";
 export const EXCLUSIONS = Object.freeze([
   "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
   "No complete ISO schema validation or Huntington implementation-guide validation.",
@@ -25,7 +26,7 @@ const descriptions: Record<string, readonly [string, string]> = {
   "iso.message-container": ["Exactly one selected message container in the selected namespace.", "iso.namespace-version"],
   "iso.group-header": ["Exactly one direct GrpHdr in the selected namespace.", "iso.message-container"],
   "iso.message-id": ["Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.", "iso.group-header"],
-  "iso.transaction-count-type": ["Exactly one scalar NbOfTxs containing 1 to 15 digits; no reconciliation claim.", "iso.group-header"],
+  "iso.transaction-count-type": ["Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.", "iso.group-header"],
   "iso.payment-information": ["At least one direct PmtInf in the selected namespace.", "iso.message-container"],
   "edi.fixed-header": ["ISA fixed separator positions and distinct element/component/segment delimiters.", "UTF-8 decoded source admitted"],
   "edi.final-termination": ["Final segment terminator present (trailing whitespace permitted).", "edi.fixed-header"],
@@ -40,7 +41,7 @@ const descriptions: Record<string, readonly [string, string]> = {
   "edi.control-numbers": ["Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.", "edi.envelope-nesting"],
   "edi.segment-count": ["Each SE01 equals segments in its own ST–SE transaction.", "edi.envelope-nesting"],
   "edi.payment-remittance": ["DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.", "edi.envelope-nesting"],
-  "demo.xml-declaration": ["Advisory: an XML declaration makes UTF-8 encoding explicit.", "Trusted format context"],
+  "demo.xml-declaration": ["Advisory: actual parser-observed XML declaration, not a processing instruction.", "Trusted format context"],
   "demo.non-empty-source": ["The admitted source contains non-whitespace text.", "Trusted format context"],
 };
 
@@ -60,7 +61,7 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
     severity: id === "demo.xml-declaration" ? "WARNING" : "ERROR",
     applicability: `Selected profile ${pack.id}, message version ${pack.version}; repeated envelopes evaluated individually where present.`,
     prerequisite: descriptions[id]?.[1] ?? "Trusted format context",
-    reference: id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+    reference: ["iso.transaction-count-type", "demo.xml-declaration"].includes(id) ? "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence" : id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
     evidence: "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance",
   }));
 }
@@ -76,7 +77,7 @@ export function provenanceFor(pack: FormatPack): RunProvenance {
     "HUNTINGTON_ACK": [ACK_RULESET_REVISION, ACK_GUIDE_REVISION, ACK_EXCLUSIONS],
   };
   const metadata = profileMetadata[pack.id] ?? profileMetadata[pack.parserKind];
-  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : RULESET_REVISION);
+  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : RULESET_REVISION);
   return Object.freeze({ schemaVersion: metadata ? "3" : "2", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
     implementationGuideRevision: metadata?.[1] ?? (expanded ? NACHA_EXPANDED_GUIDE : nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated"), mode: pack.mode,
     rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}`,

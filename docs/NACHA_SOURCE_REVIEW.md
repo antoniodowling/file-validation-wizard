@@ -36,3 +36,14 @@ The profile does not verify bank routing-directory membership, account existence
 ## Production qualification
 
 Required acceptance includes comparison with the governing current Operating Rules and relevant amendments, independent business/rule review, approved fixtures, representative browser performance and recovery, actual ReadMe integration, existing accessibility checks, and required sign-offs. Local tests do not establish those outcomes. No account registration, rulebook purchase, public hosting change, or deployment is part of this implementation.
+
+## 2026-10-29 independent-review corrections (issue #52)
+
+Current ordinary ruleset is `nacha-public-1.1.0`; expanded r1 is `nacha-expanded-public-1.1.0`; expanded r2 is `nacha-origination-public-2026-r2.1`. Selectable profile IDs and message scopes are unchanged. Previous coverage snapshots and fixture bytes remain historical evidence and are not overwritten.
+
+| Rule/behavior | Authority and decision | Regression evidence |
+| --- | --- | --- |
+| Ordinary reversal admission | [Nacha Reversals and Enforcement](https://www.nacha.org/rules/reversals-and-enforcement), formatting FAQ, effective 2021-06-30, rechecked 2026-10-29: the uppercase marker occurs within Company/Entry Description. Any uppercase `REVERSAL` substring is outside the ordinary profile. Case-insensitive rejection is separately identified conservative tool policy: malformed-case variants also receive UNSUPPORTED, without normalizing them into compliant declarations. Expanded profiles retain their case-specific checks. | `tests/nacha-review-regressions.test.ts`: whole/prefix/suffix/case variants, mixed batch orders, expanded case checks, ordinary control |
+| Remittance source coordinates | Evaluated payload is type-05 addenda columns 4–83, not the entry indicator/count. The boolean structural checker cannot identify one offending character. Report payload context, with at most 33 targets and explicit truncation; never claim the indicator is the exact payload error. | Same test: healthcare and first/middle/last CTX chunks across LF, CRLF and concatenated framing, bounded related contexts and first failure retention |
+
+These changes do not establish actual reversal purpose, eligibility, original-entry matching, bank acceptance, or complete current Rules qualification. General mixed-entity check completeness and CSV execution-reason improvements remain separate issue #51; this correction does not claim those are resolved.

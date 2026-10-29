@@ -7,8 +7,8 @@ import { NACHA_EXCLUSIONS, NACHA_RULESET_REVISION } from "../src/nacha-coverage"
 import { FORMAT_PACKS } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validationRunToCsv, validationRunToJson } from "../src/csv";
-import nachaSnapshots from "../docs/coverage/nacha-public-1.0.0.json";
-import snapshots from "../docs/coverage/ruleset-2.0.0.json";
+import nachaSnapshots from "../docs/coverage/nacha-public-1.1.0.json";
+import snapshots from "../docs/coverage/ruleset-2.1.0.json";
 
 const nonEmpty: ValidationRule = {
   id: "nacha.non-empty-source", description: "The selected file contains data.", field: "File content", defaultLocator: "file",
@@ -62,7 +62,7 @@ it("keeps candidate/public-source provenance and negative claims distinct from l
   const provenance = provenanceFor(pack);
   expect(provenance.mode).toBe("CANDIDATE");
   expect(provenance.rulesetRevision).toBe(NACHA_RULESET_REVISION);
-  expect(provenance.coverageRevision).toBe(`${pack.id}@nacha-public-1.0.0`);
+  expect(provenance.coverageRevision).toBe(`${pack.id}@nacha-public-1.1.0`);
   expect(provenance.implementationGuideRevision).toContain("Public sources reviewed 2026-10-14");
   expect(provenance.implementationGuideRevision).toContain("full current Operating Rules comparison deferred");
   expect(provenance.exclusions).toEqual(NACHA_EXCLUSIONS);
@@ -74,7 +74,7 @@ it("keeps candidate/public-source provenance and negative claims distinct from l
   expect(RULESET_REVISION).toBe("2.0.0");
   expect(EXCLUSIONS[0]).toContain("DEMO checks only");
 });
-it("preserves frozen legacy provenance snapshots verbatim", () => {
+it("matches the current combined DEMO provenance snapshot", () => {
   const legacy = FORMAT_PACKS.filter(profile => profile.mode === "DEMO");
   expect(legacy.map(profile => { const { buildRevision, ...snapshot } = provenanceFor(profile); return snapshot; }))
     .toEqual(snapshots);
