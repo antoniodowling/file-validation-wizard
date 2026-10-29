@@ -276,7 +276,7 @@ test("validates a matching PAIN profile and opens Results", async ({ page }) => 
   await expect(page.locator("thead th").nth(2)).toHaveText("Path");
 });
 
-test("shows only the format/version error for a mismatched PAIN message", async ({ page }) => {
+test("retains prerequisite passes with one format/version error for a mismatched PAIN message", async ({ page }) => {
   await page.goto("/");
   await openXmlUpload(page, "pain.001", "pain.001.001.09");
   await page.locator("#file-input").setInputFiles({
@@ -291,7 +291,9 @@ test("shows only the format/version error for a mismatched PAIN message", async 
 
   await expect(page.locator("#results-title")).toHaveText("FAIL");
   await expect(page.locator("#error-count")).toHaveText("1");
-  await expect(page.locator("#finding-rows tr")).toHaveCount(1);
+  await expect(page.locator("#finding-rows tr")).toHaveCount(4);
+  await expect(page.locator("#pass-count")).toHaveText("3");
+  await expect(page.locator("#finding-rows .severity.error")).toHaveCount(1);
   await expect(page.locator("#finding-rows")).toContainText(
     "Ensure the file format type/version you selected matches the file you uploaded.",
   );
@@ -465,7 +467,7 @@ test("shows the intended PASS and FAIL presentations for the PAIN.001.001.09 dem
   await expect(page.locator("#results-title")).toHaveText("FAIL");
   await expect(page.locator("#error-count")).toHaveText("1");
   await expect(page.locator("#warning-count")).toHaveText("0");
-  await expect(page.locator("#pass-count")).toHaveText("0");
+  await expect(page.locator("#pass-count")).toHaveText("3");
   await expect(page.locator("#check-summary")).toHaveCount(0);
   await expect(page.locator("#finding-rows .severity.error").first()).toHaveCSS("background-color", "rgb(255, 241, 241)");
   await expect(page.locator("#finding-rows .severity.error").first()).toHaveCSS("color", "rgb(193, 0, 0)");

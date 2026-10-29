@@ -42,7 +42,7 @@ for (const mount of ["standalone", "ReadMe package"]) test(`CSV Wire local input
   await expect(page.locator("[data-file-explorer] .cm-finding-error").first()).toBeAttached();
   const csvDownload = page.waitForEvent("download"); await selector("export-csv").click();
   const csv = readFileSync((await (await csvDownload).path())!, "utf8");
-  expect(csv).toContain("wire.amount"); expect(csv).toContain("huntington-csv-wire-candidate-1.0.0");
+  expect(csv).toContain("wire.amount"); expect(csv).toContain("huntington-csv-wire-candidate-1.1.0");
   await testInfo.attach(`${mount}-csv-wire-finding`, { body: await page.screenshot(), contentType: "image/png" });
   await page.getByRole("button", { name: "Back to file" }).click();
   await selector("file-input").setInputFiles(resolve("demo-files/csv-wire/cad-unsupported.csv"));
