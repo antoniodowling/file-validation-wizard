@@ -32,3 +32,17 @@ describe("offset-preserving EDI scanner", () => {
     expect(second?.valueSpan.start).toBe(source.lastIndexOf("820"));
   });
 });
+
+for (const term of ["\n", "\r"]) it(`preserves original offsets with ${JSON.stringify(term)} terminators`, () => {
+  const source = validEdi820.replaceAll("~", term) + "  ";
+  const segments = scanEdiSegments(source, "*", term);
+  expect(segments).toHaveLength(7);
+  expect(segments.map(segment => segment.id)).toEqual(["ISA", "GS", "ST", "BPR", "SE", "GE", "IEA"]);
+  for (const segment of segments) {
+    expect(source.slice(segment.idSpan.start, segment.idSpan.end)).toBe(segment.id);
+    expect(source[segment.span.end]).toBe(term);
+    for (const element of segment.locatedElements) expect(source.slice(element.span.start, element.span.end)).toBe(element.value);
+  }
+  const tail = scanEdiSegments(source.slice(0, -3), "*", term).at(-1)!;
+  expect(tail.id).toBe("IEA"); // An unterminated tail is retained for failure attribution.
+});

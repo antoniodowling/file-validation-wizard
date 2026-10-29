@@ -1,0 +1,59 @@
+[
+  {
+    "path": "demo-files/pain.001.001.09-multiple-errors.xml",
+    "sha256": "3121778a53a5653bf76014b2e2c050c3a0d65a967759e9b6d07f552493bd4ee6",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  },
+  {
+    "path": "demo-files/pain.001.001.09-pass-with-warnings.xml",
+    "sha256": "0474aa84e0d41ae28bef972d6d71b3cf37a4f77491bb3704278fcfe6eff46768",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  },
+  {
+    "path": "demo-files/pain.001.001.09-multiple-errors-resolved.xml",
+    "sha256": "10511f747de0d1364b95319e8065b2af57211b433772d2ce799172523771e83a",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  },
+  {
+    "path": "demo-files/pain.001.001.09-syntax-error.xml",
+    "sha256": "ab141eb1a4968a2e27155b12fe7cc618c6da7110c5579e44a48a3c61ec4ef1c4",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  },
+  {
+    "path": "demo-files/pain.001.001.09-fail.xml",
+    "sha256": "19679b613d35f43f664747da99ad7603e3b898b8f96a19865f29586e7a4226a3",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  },
+  {
+    "path": "demo-files/pain.001.001.09-pass.xml",
+    "sha256": "7d2ff6939f46e967b8ff17c3863ebe73fa22f9420925de0bae46f8f8171f46a8",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  },
+  {
+    "path": "tests/hardening.test.ts",
+    "sha256": "1d5462a22d15dfa426a7f7730122854ef0937c43e2427afc3a3c37397150db05",
+    "sourceRevision": "iso-edi-integrated-2.1.0-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending",
+    "previousSha256": "794385321ea97053419c50e724b4da2bbe77da3910a4f263dba58e8c24b5dfe5"
+  },
+  {
+    "path": "tests/helpers.ts",
+    "sha256": "c7ddbf9f5f105dd02e83bc103fa589afbb42c6f96566eb8fe9b93b4801055c01",
+    "sourceRevision": "ruleset-2.0.0-local-candidate",
+    "intendedClaim": "synthetic structural or wiring regression only; not ISO/X12/bank conformance",
+    "reviewState": "implementation-agent reviewed; independent human/domain review pending"
+  }
+]
