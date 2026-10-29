@@ -44,7 +44,7 @@ describe("NACHA ordinary origination parser", () => {
     expect(errors(bad(buildNacha(), 0, 30, 33, "    "))).toEqual([]);
     fails(bad(buildNacha(), 1, 70, 75, "260231"), "effective-date");
     fails(bad(buildNacha(), 1, 5, 20, " ".repeat(16)), "batch-required");
-    fails(bad(buildNacha(), 1, 54, 63, "REVERSAL  "), "batch-required");
+    expect(() => parse(bad(buildNacha(), 1, 54, 63, "REVERSAL  "))).toThrow("outside the ordinary origination profile");
   });
   it("reports weekends and operator settlement dates as warnings", () => {
     expect(parse(bad(buildNacha(), 1, 70, 75, "261017")).results.find((r) => r.ruleId === "nacha.effective-weekend")?.outcome).toBe("WARNING");

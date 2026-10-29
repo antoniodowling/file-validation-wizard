@@ -8,7 +8,7 @@ import { NACHA_EXPANDED_RULE_IDS } from "../src/parsers/nacha";
 import { ctxX12Syntax } from "../src/parsers/ach-remittance";
 import { ResourceLimitError } from "../src/resource-policy";
 import { field } from "./nacha-builder";
-import snapshot from "../docs/coverage/nacha-expanded-public-1.0.0.json";
+import snapshot from "../docs/coverage/nacha-expanded-public-1.1.0.json";
 const pack = EXPANDED_NACHA_PACK;
 const fixture = (name: string) => readFileSync(`demo-files/nacha-expanded/${name}.ach`, "utf8");
 const run = (source: string) => validateSource("synthetic.ach", source, pack);

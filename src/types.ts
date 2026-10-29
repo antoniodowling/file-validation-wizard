@@ -113,6 +113,8 @@ export interface ValidationContext {
   readonly source: string;
   readonly parserKind: ParserKind;
   readonly edi?: EdiDocument;
+  /** Document metadata produced by the XML parser, never inferred from source prefixes. */
+  readonly xml?: { readonly hasDeclaration: boolean };
 }
 
 export interface ValidationRule {

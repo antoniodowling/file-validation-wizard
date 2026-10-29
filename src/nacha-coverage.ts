@@ -1,8 +1,8 @@
 import type { CoverageRule, FormatPack } from "./types";
 import { NACHA_RULE_IDS } from "./parsers/nacha";
 
-export const NACHA_RULESET_REVISION = "nacha-public-1.0.0";
-export const NACHA_GUIDE_REVISION = "Public sources reviewed 2026-10-14; origination-public-2026 subset; full current Operating Rules comparison deferred";
+export const NACHA_RULESET_REVISION = "nacha-public-1.1.0";
+export const NACHA_GUIDE_REVISION = "Public sources reviewed 2026-10-14; reversal scope corrected 2026-10-29; origination-public-2026 subset; full current Operating Rules comparison deferred";
 export const NACHA_EXCLUSIONS = Object.freeze([
   "CANDIDATE public-source subset only. No production approval, full 2026 Operating Rules compliance, bank acceptance, funds availability, or execution guarantee.",
   "No customer authorization, consent, account existence or eligibility, fraud approval, or real transaction-purpose verification; purpose-dependent PAYROLL/PURCHASE requirements are not established.",
@@ -10,7 +10,7 @@ export const NACHA_EXCLUSIONS = Object.freeze([
   "No holiday calendar, transmission cutoff, bank processing window, live-date qualification, or actual settlement verification.",
   "No historical or cross-file duplicate detection; trace uniqueness applies only within the admitted file.",
   "No MAC authentication or validation of embedded EDI, UN/EDIFACT, tax, healthcare, or other remittance content semantics.",
-  "Only ordinary monetary CCD, PPD, CTX, WEB and TEL originations using transaction codes 22/27/32/37/52; other SEC/account codes, prenotes, zero-dollar remittance entries, returns/NOCs and reversals are outside the profile.",
+  "Only ordinary monetary CCD, PPD, CTX, WEB and TEL originations using transaction codes 22/27/32/37/52; other SEC/account codes, prenotes, zero-dollar remittance entries, returns/NOCs and reversals are outside the profile. Case-insensitive REVERSAL markers anywhere in the description produce UNSUPPORTED with no verdict (malformed-case admission is conservative tool policy).",
   "Field checks cover numeric syntax, constants, reserved spaces and required values, not complete alphabetic-field semantic validation or bank-specific identifier/padding policies.",
 ]);
 const PUBLIC_REFERENCE = "docs/NACHA_SOURCE_REVIEW.md; https://achdevguide.nacha.org/ach-file-overview; https://achdevguide.nacha.org/ach-file-details; https://www.firstcitizens.com/content/dam/firstcitizens/pdfs/commercial/commercial-advantage/nacha-file-specs.pdf (revision 02/2024, CTX layouts); public-source subset, not a complete approved 2026 ruleset";

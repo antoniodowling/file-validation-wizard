@@ -1,3 +1,11 @@
+## ACH and ISO review corrections (2026-10-29)
+
+Current ISO profiles use ruleset `2.1.0`; EDI remains `2.0.0` pending its separate review work. [Current DEMO coverage](ruleset-2.1.0.json) records this split. The original `ruleset-2.0.0.json` remains an immutable historical snapshot, not the current ISO runtime contract. ISO validates numeric character content without application trimming and observes declarations through the XML parser. See [ISO evidence and qualification](../ISO_RULE_CORRECTIONS.md).
+
+Ordinary ACH advances to `nacha-public-1.1.0`, expanded r1 to `nacha-expanded-public-1.1.0`, and expanded r2 to `nacha-origination-public-2026-r2.1`. Their new snapshots are `nacha-public-1.1.0.json`, `nacha-expanded-public-1.1.0.json`, and `nacha-origination-r2-1.1.0.json`. Original snapshots and historical fixture bytes remain unchanged. Profile IDs/message versions are unchanged. Export schemas remain 2/3; shared completeness and CSV execution-reason corrections belong to issue #51 and are not claimed here.
+
+Existing UI structure, styling and navigation are unchanged. Corrected outcomes and remittance context locations flow through existing consumers. All DEMO/CANDIDATE status and approval gates remain unchanged.
+
 # Coverage and report interpretation
 
 The BAI2 candidate now uses [bai2-candidate-1.1.0.json](bai2-candidate-1.1.0.json), schema-3 exports, and the [source scope](../BAI2_SOURCE_SCOPE.md). The [1.0.0 snapshot](bai2-candidate-1.0.0.json) and [original fixture manifest](../../demo-files/bai2/manifest.json) remain historical evidence. Revision 1.1.0 applies class-aware signs from base BAI Version 2 while retaining candidate code placement and limits. Unqualified funds/currency/code/transport scenarios receive no validity verdict; malformed numeric/layout prerequisites suppress dependent control checks.

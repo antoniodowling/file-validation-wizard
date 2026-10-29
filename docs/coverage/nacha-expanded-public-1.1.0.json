@@ -1,0 +1,501 @@
+[
+  {
+    "schemaVersion": "2",
+    "profileId": "nacha-origination-expanded-public-2026-r1",
+    "messageVersion": "origination-expanded-public-2026-r1",
+    "implementationGuideRevision": "Public sources reviewed 2026-10-14; remittance payload locations corrected 2026-10-29; origination-expanded-public-2026-r1; full current Operating Rules/UN-EDIFACT qualification deferred",
+    "mode": "CANDIDATE",
+    "rulesetRevision": "nacha-expanded-public-1.1.0",
+    "coverageRevision": "nacha-origination-expanded-public-2026-r1@nacha-expanded-public-1.1.0",
+    "coverage": [
+      {
+        "id": "nacha.framing",
+        "description": "Exactly 94 characters per record; complete concatenation or consistent LF/CRLF/CR delimiters, optional terminal delimiter, no blank records.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Every admitted source.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.ascii",
+        "description": "Every record contains only printable ASCII characters; tabs, control characters and non-ASCII text fail.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Every framed record.",
+        "prerequisite": "nacha.framing passed",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.record-order",
+        "description": "One file header, complete nonempty batches, adjacent entry addenda, one file control, then only all-9 padding.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Entire framed ASCII file.",
+        "prerequisite": "nacha.framing and nacha.ascii passed",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.blocking",
+        "description": "Total records, including all-9 padding, must form complete blocks of ten.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Entire framed ASCII file, including files with an order failure.",
+        "prerequisite": "nacha.framing and nacha.ascii passed",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-header",
+        "description": "Priority 01, size 094, block factor 10, format code 1, uppercase alphanumeric modifier, leading-blank destination routing and populated immediate origin.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File header; origin is an assigned identifier, not forced to a routing number.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.creation-date",
+        "description": "Creation date is a real YYMMDD calendar date interpreted in 2000–2099.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File header creation date.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.creation-time",
+        "description": "Optional creation time is blank or valid HHMM (00:00–23:59).",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File header creation time, including a blank optional time which passes.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.service-class",
+        "description": "Batch service class is 200, 220 or 225.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.sec-code",
+        "description": "SEC is CCD, PPD, CTX, WEB or TEL and belongs to the selected profile's supported SEC list.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-required",
+        "description": "Company name, identification and entry description are populated; reversals are permitted in this revision.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Every batch.",
+        "prerequisite": "Trusted record envelopes",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.effective-date",
+        "description": "Effective entry date is a real YYMMDD calendar date interpreted in 2000–2099.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.effective-weekend",
+        "description": "A valid effective entry date falling on Saturday or Sunday generates a WARNING; no holiday/cutoff determination.",
+        "ruleClass": "nacha-structure",
+        "severity": "WARNING",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch with a valid effective entry date; invalid dates suppress weekend evaluation as not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); valid date for the evaluated batch",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.settlement-date",
+        "description": "Settlement date must be blank or Julian 001–366. Invalid syntax/range is ERROR; a valid populated operator field generates WARNING.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header; blank is permitted, populated values require operator-field caution.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.originator-status",
+        "description": "Ordinary origination status code is 1.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.odfi",
+        "description": "Originating DFI is eight routing digits with a valid nonzero ABA prefix; no directory lookup.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-number",
+        "description": "Batch numbers are numeric, positive and ascending within the file; gaps are permitted.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch header, compared with preceding batch numbers.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.entry-required",
+        "description": "Receiving account and name are populated, using the CTX-specific name positions when applicable.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each entry detail record.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.transaction-code",
+        "description": "Checking/savings monetary 22/27/32/37, prenote 23/28/33/38, remittance 24/29/34/39; loan 52/53/54/55.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Every entry; WEB/TEL loan combinations produce an unsupported run pending qualification.",
+        "prerequisite": "Trusted record envelopes",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.entry-amount",
+        "description": "Monetary entries require positive ten-digit integer cents; prenotes/remittance entries require zero cents.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Entries with known transaction types; unknown codes suppress type-specific amount evaluation.",
+        "prerequisite": "Trusted record envelopes; known transaction type",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.routing",
+        "description": "Receiving routing number has nine digits, a valid nonzero ABA prefix and matching checksum; no directory membership proof.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each entry detail.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.trace",
+        "description": "Trace is fifteen digits with the batch ODFI prefix and a positive seven-digit sequence.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each entry detail.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.trace-order",
+        "description": "Numeric trace sequence ascends within each batch; gaps are permitted.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each entry detail, compared with preceding entry sequences in its batch.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.trace-unique",
+        "description": "Entry trace numbers are unique within the admitted file.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). All entry details in this file; no historical/cross-file comparison.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.sec-transaction",
+        "description": "Direction matches service class; TEL credit is checking/savings monetary reversal only; remittance codes are CCD/CTX only.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Known SEC, service class and transaction type.",
+        "prerequisite": "Trusted record envelopes; known SEC/service class/code",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.web-credit-originator",
+        "description": "WEB credits have populated originator identification in the entry's identification field.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). WEB credit entries only; other SECs and WEB debits are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.addenda-type",
+        "description": "Payment addenda use type 05; return/notification addenda are outside the profile.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Present addenda records; absent addenda are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.addenda-indicator",
+        "description": "Entry indicator is 0 without addenda or 1 with adjacent addenda.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Every entry, including entries without addenda.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.addenda-count",
+        "description": "TEL has no addenda, CCD/PPD/WEB at most one, CTX at most 9,999; CTX declared count equals actual following addenda.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Every entry in its SEC context, including zero-addenda entries.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.addenda-sequence",
+        "description": "Addenda sequence begins at 0001 and increases consecutively per entry.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Present addenda records; absent addenda are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.addenda-link",
+        "description": "Addenda entry sequence is numeric and matches the preceding entry trace's final seven digits.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Present addenda records; absent addenda are not applicable.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-mirror",
+        "description": "Batch control mirrors header service class, company identification, ODFI and batch number.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch control/header pair.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-count",
+        "description": "Batch numeric entry/addenda count equals actual entry plus addenda records.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch control.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-hash",
+        "description": "Sum of numeric receiving DFI prefixes modulo ten billion; malformed prefixes suppress reconciliation.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Batches with numeric prefixes for every entry.",
+        "prerequisite": "Trusted record envelopes; numeric routing prefixes",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-debit",
+        "description": "Batch numeric debit total equals interpreted entry amounts in exact integer cents.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch with interpretable numeric amounts and supported entry directions; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all batch amounts numeric and transaction directions supported",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.batch-credit",
+        "description": "Batch numeric credit total equals interpreted entry amounts in exact integer cents; debit/credit equality is not required.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Each batch with interpretable numeric amounts and supported entry directions; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all batch amounts numeric and transaction directions supported",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.reserved",
+        "description": "Batch/file control reserved fields and CTX entry reserved columns contain spaces.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). All batch/file controls and CTX entry details.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-batches",
+        "description": "File numeric batch count equals actual complete batches.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File control.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-blocks",
+        "description": "File numeric block count equals total records divided by ten, with complete ten-record blocking required.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File control, including padding records.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-count",
+        "description": "File numeric entry/addenda count equals actual entry plus addenda records across batches.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File control.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-hash",
+        "description": "Sum of receiving DFI prefixes modulo ten billion across batches; malformed prefixes suppress reconciliation.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Files with numeric prefixes for every entry.",
+        "prerequisite": "Trusted record envelopes; numeric routing prefixes",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-debit",
+        "description": "File numeric debit total equals interpreted entry amounts in exact integer cents across batches.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File with interpretable amounts and supported directions in every batch; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all file amounts numeric and transaction directions supported",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.file-credit",
+        "description": "File numeric credit total equals interpreted entry amounts in exact integer cents; debit/credit equality is not required.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). File with interpretable amounts and supported directions in every batch; otherwise not evaluated.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation); all file amounts numeric and transaction directions supported",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile nacha-origination-expanded-public-2026-r1 (origination-expanded-public-2026-r1). Selected NACHA profile after trusted parser context is available.",
+        "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.field-padding",
+        "description": "Nonblank alphanumeric header/entry fields are left justified with trailing spaces; optional blank fields are accepted.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Applicable alphanumeric fields; immediate routing/origin and payload fields use their own layouts.",
+        "prerequisite": "Trusted record envelopes",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.reversal-marker",
+        "description": "A description declaring reversal contains uppercase REVERSAL within its ten columns.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Descriptions containing REVERSAL without regard to case; other descriptions are not applicable.",
+        "prerequisite": "Trusted record envelopes",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.reversal-transaction",
+        "description": "Reversals are monetary; loan debit 55 requires uppercase REVERSAL; original matching and deadlines remain unverified.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Declared reversals or code 55 with known entry types.",
+        "prerequisite": "Trusted record envelopes; known transaction type",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.remittance-required",
+        "description": "Zero-dollar remittance and live CTX entries require addenda; prenotes do not require associated live-entry addenda.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Known remittance entry types and live CTX; other entries not applicable.",
+        "prerequisite": "Trusted record envelopes; known transaction type",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      },
+      {
+        "id": "nacha.ctx-remittance",
+        "description": "CTX X12 payload is reassembled without stripping chunk-boundary spaces; transaction sets contain BPR/BPS with envelope count/reference checks.",
+        "ruleClass": "nacha-structure",
+        "severity": "ERROR",
+        "applicability": "Present CTX type-05 addenda; UN/EDIFACT and opt-in XML produce unsupported runs pending qualification.",
+        "prerequisite": "Trusted record envelopes; payment addenda type known",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate",
+        "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
+      }
+    ],
+    "exclusions": [
+      "CANDIDATE public-source implementation only; no full 2026 Rules compliance, production approval, hosted ReadMe acceptance or bank acceptance.",
+      "No account validity, routing-directory membership, authorization, real purpose/eligibility, funds availability, settlement, live windows or submission.",
+      "No original-entry matching, historical duplicates, reversal purpose or deadlines, cross-file comparison, MAC authentication or complete X12/healthcare/tax business-guide conformance.",
+      "UN/EDIFACT and opt-in XML CTX payloads, plus WEB/TEL loan combinations, are source/qualification gated: unsupported runs carry no verdict.",
+      "Healthcare classification and required 835 TRN, PAYROLL/PURCHASE real-purpose obligations remain unverified without purpose evidence; they are not fake passed checks.",
+      "Other origination SECs, returns/NOCs, external facts and future amendments are outside this origination profile."
+    ]
+  }
+]

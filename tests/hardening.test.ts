@@ -33,7 +33,7 @@ describe("review regression boundaries", () => {
     const run = validateSource("x.xml", "<Document>", isoPack());
     expect(run.checks?.find(c => c.ruleId === "iso.message-id")?.state).toBe("not-evaluated");
     expect(run.executionStatus).toBe("COMPLETED"); expect(run.verdict).toBe("FAIL");
-    expect(validationRunToCsv(run)).toContain("2.0.0");
+    expect(validationRunToCsv(run)).toContain("2.1.0");
     expect(JSON.parse(validationRunToJson(run)).provenance.schemaVersion).toBe("2");
   });
   it.each([
