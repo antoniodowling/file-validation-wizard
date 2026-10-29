@@ -81,7 +81,9 @@ const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>
     mode: "DEMO",
     identifiers: Object.freeze({
       kind: "EDI_X12",
-      isa12: version === "004010" ? "00401" : "00501",
+      ...(version === "008030"
+        ? { unqualifiedReason: "The 008030 interchange/group version relationship is unqualified. Exact X12 release/control artifacts and an applicable trading-partner guide are required; no validity verdict is available." }
+        : { isa12: version === "004010" ? "00401" : "00501" }),
       gs08: version,
     }),
     approval: noApprovals,

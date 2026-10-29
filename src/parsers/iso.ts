@@ -7,6 +7,8 @@ export interface ParserOutput {
   readonly incompleteChecks?: readonly { readonly ruleId: string; readonly reason: string }[];
   readonly reportedDisposition?: import("../types").ReportedDisposition;
   readonly notApplicable?: readonly string[];
+  /** A promised occurrence could not run; retain other occurrence evidence without claiming complete evaluation. */
+  readonly notEvaluated?: readonly string[];
   readonly context: ValidationContext | null;
   readonly results: readonly RuleResult[];
 }

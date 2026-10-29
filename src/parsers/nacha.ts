@@ -256,7 +256,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
         if (entryType) check("reversal-transaction", reversal && entryType.kind === "monetary", "Reversal entry type", "Reversal entries must be monetary and loan debit 55 requires the REVERSAL description. Original matching, purpose and deadlines are unverified.", row, 2, 3);
         else incomplete("reversal-transaction");
       }
-      if (expanded && !entryType || !expanded && !credit && !debit && sec === "WEB") incomplete("web-credit-originator");
+      if (sec === "WEB" && (expanded ? !entryType : !credit && !debit)) incomplete("web-credit-originator");
       required(row, 13, 29, "entry-required", "Receiving account");
       required(row, sec === "CTX" ? 59 : 55, sec === "CTX" ? 74 : 76, "entry-required", "Receiving name");
       if (sec === "CTX") reserved(row, 75, 76);

@@ -109,3 +109,15 @@ it("has bounded CSV incompleteness for many malformed rows and no false optional
   expect(parsed.notApplicable).toEqual([]);
   expect(parsed.results.filter(r=>r.ruleId==="wire.layout")).toHaveLength(1);
 });
+
+// A known non-WEB SEC makes the WEB-only field inapplicable even when direction is unknown.
+it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("keeps non-WEB unknown codes inapplicable in $id", pack => {
+  for (const sec of ["CCD", "PPD", "CTX"]) {
+    for (const codes of [["99", "22"], ["22", "99"]]) {
+      const run = ach(buildNacha([{sec, codes}]), pack);
+      expect(state(run, "nacha.web-credit-originator")).toBe("not-applicable");
+      expect(state(run, "nacha.entry-amount")).toBe("not-evaluated");
+      expect(run.verdict).toBe("FAIL");
+    }
+  }
+});

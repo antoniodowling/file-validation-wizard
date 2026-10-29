@@ -18,7 +18,7 @@ function validIsoFor(pack: FormatPack): string {
 function validEdiFor(pack: FormatPack): string {
   const identifiers = pack.identifiers as EdiVersionIdentifiers;
   return validEdi820
-    .replace("*00501*000000001", `*${identifiers.isa12}*000000001`)
+    .replace("*00501*000000001", `*${identifiers.isa12 ?? "00501"}*000000001`)
     .replaceAll("005010", identifiers.gs08);
 }
 
@@ -109,7 +109,7 @@ describe("EDI 820 validation", () => {
 
   it("fails version and transaction structure mismatches", () => {
     const source = validEdi820
-      .replace("*005010~", "*004010~")
+      .replace("*005010~", "*008030~")
       .replace("BPR*C*1.00*C*ACH~", "")
       .replace("SE*3*0001~", "SE*4*9999~");
     const run = validateSource("remittance.edi", source, ediPack());
@@ -122,12 +122,12 @@ describe("EDI 820 validation", () => {
 });
 
 describe("demo validation profiles", () => {
-  it("passes a matching synthetic fixture for all nine profiles", () => {
+  it("checks matching synthetic fixtures while containing the unqualified 008030 profile", () => {
     const legacyPacks = FORMAT_PACKS.filter((pack) => pack.mode === "DEMO");
     expect(legacyPacks).toHaveLength(9);
     for (const pack of legacyPacks) {
       const source = pack.parserKind === "ISO_XML" ? validIsoFor(pack) : validEdiFor(pack);
-      expect(validateSource(`fixture${pack.extensions[0]}`, source, pack).overallStatus, pack.id).toBe("PASS");
+      expect(validateSource(`fixture${pack.extensions[0]}`, source, pack).overallStatus, pack.id).toBe(pack.id === "edi-820-008030" ? "UNSUPPORTED" : "PASS");
     }
   });
 

@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { expect, it } from "vitest";
 const historical = {
+  "docs/coverage/bai2-candidate-1.1.0.json": "373f124b1aee9d58eed3c66a407a843f3db0bcc114905f3abb4830da6321d6ea",
+  "docs/coverage/edi-ruleset-2.1.0.json": "a5e23619214805cea0648854962c3ebf3a2e2bce1edf2450a6de8936968fe78b",
   "docs/coverage/ach-candidates-1.0.0.json": "62a5b924f1c7f4e68cc14bd19fff80d3dad7ef54d2d2233dd916d8f275ca1c4f",
   "docs/coverage/bai2-candidate-1.0.0.json": "84b48dff16a035bfb9be35b28c1be4a05ba53ca6bb65c0c10e1daa69ce4d33e2",
   "docs/coverage/csv-wire-candidate-1.0.0.json": "0e49fc7c1841f302ffa0ce02037cca2f3b089e8eda4b9ccb8fcbfb1fe3115a2a",

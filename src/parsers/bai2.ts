@@ -1,4 +1,4 @@
-import { BAI2_DETAIL_CODES, BAI2_SUMMARY_CODES } from "../bai2-codes";
+import { BAI2_DETAIL_CODES, BAI2_STATUS_CODES, BAI2_SUMMARY_CODES } from "../bai2-codes";
 import { MAX_MODEL_NODES, MAX_SCALAR_UNITS, ResourceLimitError, UnsupportedInputError } from "../resource-policy";
 import type { FindingLocation, FormatPack, RuleResult, SourceSpan } from "../types";
 import type { ParserOutput } from "./iso";
@@ -18,7 +18,9 @@ interface Account { header: Logical; entries: Logical[]; trailer: Logical }
 interface Group { header: Logical; accounts: Account[]; trailer: Logical }
 
 const value = (record: Logical, index: number): string => record.fields[index]?.value.trim() ?? "";
-const integer = (text: string): bigint | null => /^-?\d{1,40}$/.test(text) ? BigInt(text) : null;
+type AmountClass = "status" | "nonnegative" | "control";
+const integer = (text: string, kind: AmountClass): bigint | null =>
+  (kind === "nonnegative" ? /^\+?\d{1,40}$/ : /^[+-]?\d{1,40}$/).test(text) ? BigInt(text) : null;
 const count = (text: string): bigint | null => /^\d{1,40}$/.test(text) ? BigInt(text) : null;
 const time = (text: string): boolean => text === "2400" || /^(?:[01]\d|2[0-3])[0-5]\d$/.test(text);
 // A disclosed 2000–2099 candidate interpretation, not a bank-confirmed century rule.
@@ -34,6 +36,7 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
   if (pack.id !== BAI2_PROFILE || pack.identifiers?.kind !== "BAI2" || pack.identifiers.profile !== BAI2_PROFILE)
     throw new UnsupportedInputError("The selected BAI2 profile is outside this candidate revision.");
   const results: RuleResult[] = [];
+  const notEvaluated = new Set<string>();
   const add = (id: string, ok: boolean, message: string, record?: Logical, field?: number): void => {
     if (results.length >= 5000) throw new ResourceLimitError();
     const token = field === undefined ? undefined : record?.fields[field];
@@ -164,15 +167,18 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
     if (/^[A-Z]{3}$/.test(text) && text !== "USD") throw new UnsupportedInputError("Only USD or an omitted currency is qualified by this Huntington BAI2 candidate.");
     add("currency", !text || text === "USD", "Currency must be omitted or USD in this candidate.", record, index);
   };
-  const codeCheck = (record: Logical, index: number, summary: boolean): void => {
+  const codeCheck = (record: Logical, index: number, summary: boolean): boolean => {
     const text = value(record, index), known = BAI2_SUMMARY_CODES.has(text) || BAI2_DETAIL_CODES.has(text);
     if (/^\d{3}$/.test(text) && !known) throw new UnsupportedInputError("An unqualified three-digit BAI2 type code was found. This candidate uses the frozen Huntington guide code list.");
-    add(summary ? "summary-code" : "detail-code", (summary ? BAI2_SUMMARY_CODES : BAI2_DETAIL_CODES).has(text),
+    const valid = (summary ? BAI2_SUMMARY_CODES : BAI2_DETAIL_CODES).has(text);
+    add(summary ? "summary-code" : "detail-code", valid,
       "Use a three-digit code listed at the correct summary/status or detail level in the candidate's Huntington source.", record, index);
+    return valid;
   };
-  const monetary = (record: Logical, index: number, required = false): bigint | null => {
-    const text = value(record, index), amount = integer(text);
-    add("amount", (!required && !text) || amount !== null, "Use an integer amount with no decimal point (candidate admits an optional minus sign and at most 40 digits).", record, index);
+  const monetary = (record: Logical, index: number, kind: AmountClass, required = false): bigint | null => {
+    const text = value(record, index), amount = integer(text, kind);
+    add("amount", (!required && !text) || amount !== null,
+      `Use an integer amount with at most 40 digits and no decimal point. ${kind === "nonnegative" ? "Summary/detail amounts permit an optional plus sign, never a minus sign." : "Status/control amounts permit an optional plus or minus sign."}`, record, index);
     return !text && !required ? 0n : amount;
   };
   if (layouts.get(fileHeader!)) {
@@ -184,8 +190,8 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
   }
   const physicalThrough = (start: Logical, end: Logical): bigint => BigInt(end.rows.at(-1)!.number - start.rows[0]!.number + 1);
   const trailer = (record: Logical): bigint | null => {
-    if (!layouts.get(record)) return null;
-    const total = monetary(record, 1, true);
+    if (!layouts.get(record)) { notEvaluated.add("bai2.amount"); return null; }
+    const total = monetary(record, 1, "control", true);
     for (let i = 2; i < record.fields.length; i++) add("trailer-fields", count(value(record, i)) !== null, "Trailer counts must be unsigned integers of at most 40 digits.", record, i);
     return total;
   };
@@ -202,32 +208,37 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
     for (const account of group.accounts) {
       const a = account.header;
       let accountSum = 0n, accountKnown = !!layouts.get(a);
+      if (!accountKnown) notEvaluated.add("bai2.amount");
       if (layouts.get(a)) {
         add("account-id", /^[1-9]\d*$/.test(value(a, 1)), "Use a populated numeric account identifier without leading zeros; surrounding field spaces are tolerated as in the guide sample.", a, 1);
         currency(a, 2);
         for (let i = 3; i < a.fields.length; i += 4) {
           if (a.fields.slice(i, i + 4).every(field => !field.value.trim())) continue;
-          codeCheck(a, i, true);
-          const amount = monetary(a, i + 1);
+          const validCode = codeCheck(a, i, true);
+          if (!validCode) notEvaluated.add("bai2.amount");
+          const amount = validCode ? monetary(a, i + 1, BAI2_STATUS_CODES.has(value(a, i)) ? "status" : "nonnegative") : null;
           if (amount === null) accountKnown = false; else accountSum += amount;
           add("summary-fields", (!value(a, i + 2) || /^0+$/.test(value(a, i + 2))), "A present summary item count must be zero in the Huntington guide scenario.", a, i + 2);
           if (value(a, i + 3)) throw new UnsupportedInputError("Nonempty funds availability fields are unqualified: Huntington's guide does not specify their additional-field grammar.");
         }
       }
       for (const detail of account.entries) {
-        if (!layouts.get(detail)) { accountKnown = false; continue; }
-        codeCheck(detail, 1, false);
-        const amount = monetary(detail, 2);
+        if (!layouts.get(detail)) { accountKnown = false; notEvaluated.add("bai2.amount"); continue; }
+        const validCode = codeCheck(detail, 1, false);
+        if (!validCode) notEvaluated.add("bai2.amount");
+        const amount = validCode ? monetary(detail, 2, "nonnegative") : null;
         if (amount === null) accountKnown = false; else accountSum += amount;
         if (value(detail, 3)) throw new UnsupportedInputError("Nonempty detail funds availability fields are outside the source-qualified candidate scenario.");
       }
       const declared = trailer(account.trailer);
       if (declared !== null && accountKnown) add("account-total", declared === accountSum, "Account control total must equal the sum of reported summary and detail amounts, including fields carried by 88 records, counted once.", account.trailer, 1);
+      else notEvaluated.add("bai2.account-total");
       if (layouts.get(account.trailer) && count(value(account.trailer, 2)) !== null) add("account-count", count(value(account.trailer, 2)) === physicalThrough(a, account.trailer), "Account record count must include 03, every attached 88 and 16, and 49 (including its continuations).", account.trailer, 2);
       if (declared === null) groupKnown = false; else groupSum += declared;
     }
     const declared = trailer(group.trailer);
     if (declared !== null && groupKnown) add("group-total", declared === groupSum, "Group control total must equal the sum of its account trailer control totals.", group.trailer, 1);
+    else notEvaluated.add("bai2.group-total");
     if (layouts.get(group.trailer)) {
       if (count(value(group.trailer, 2)) !== null) add("group-accounts", count(value(group.trailer, 2)) === BigInt(group.accounts.length), "Group account count must equal its number of 03 records.", group.trailer, 2);
       if (count(value(group.trailer, 3)) !== null) add("group-count", count(value(group.trailer, 3)) === physicalThrough(g, group.trailer), "Group record count must include 02 through 98 and all their continuations.", group.trailer, 3);
@@ -236,6 +247,7 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
   }
   const declared = trailer(fileTrailer!);
   if (declared !== null && fileKnown) add("file-total", declared === fileSum, "File control total must equal the sum of its group trailer control totals.", fileTrailer!, 1);
+  else notEvaluated.add("bai2.file-total");
   if (layouts.get(fileTrailer!)) {
     if (count(value(fileTrailer!, 2)) !== null) add("file-groups", count(value(fileTrailer!, 2)) === BigInt(groups.length), "File group count must equal its number of 02 records.", fileTrailer!, 2);
     if (count(value(fileTrailer!, 3)) !== null) add("file-count", count(value(fileTrailer!, 3)) === BigInt(physicalCount), "File record count must include every physical record, including 01, 99 and all continuations.", fileTrailer!, 3);
@@ -243,7 +255,7 @@ export function parseBai2(source: string, pack: FormatPack): ParserOutput {
   const notApplicable = accountDetailAbsent(groups) ? ["bai2.detail-code"] : [];
   if (groups.every(group => group.accounts.every(account => account.header.fields.slice(3).every(field => !field.value.trim()))))
     notApplicable.push("bai2.summary-code", "bai2.summary-fields");
-  return { context: { source, parserKind: "BAI2" }, results, notApplicable };
+  return { context: { source, parserKind: "BAI2" }, results, notApplicable, notEvaluated: [...notEvaluated] };
 }
 
 function accountDetailAbsent(groups: readonly Group[]): boolean {

@@ -9,6 +9,7 @@ import type { CoverageRule, FormatPack, RunProvenance } from "./types";
 import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
 export const ISO_RULESET_REVISION = "2.2.0";
+export const EDI_RULESET_REVISION = "2.1.0";
 export const EXCLUSIONS = Object.freeze([
   "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
   "No complete ISO schema validation or Huntington implementation-guide validation.",
@@ -28,8 +29,8 @@ const descriptions: Record<string, readonly [string, string]> = {
   "iso.message-id": ["Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.", "iso.group-header"],
   "iso.transaction-count-type": ["Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.", "iso.group-header"],
   "iso.payment-information": ["At least one direct PmtInf in the selected namespace.", "iso.message-container"],
-  "edi.fixed-header": ["ISA fixed separator positions and distinct element/component/segment delimiters.", "UTF-8 decoded source admitted"],
-  "edi.final-termination": ["Final segment terminator present (trailing whitespace permitted).", "edi.fixed-header"],
+  "edi.fixed-header": ["ISA fixed separator positions and distinct delimiters; standalone 005010 admits one-character CR/LF segment terminators.", "UTF-8 decoded source admitted"],
+  "edi.final-termination": ["Final segment terminator present; trailing space/CR/LF presentation characters cannot consume the selected terminator.", "edi.fixed-header"],
   "edi.envelope-nesting": ["One interchange; nonempty groups and transactions; every data segment owned by a transaction.", "edi.final-termination"],
   "edi.interchange-envelope": ["16 ISA fields and 2 IEA fields.", "edi.envelope-nesting"],
   "edi.group-count": ["IEA01 reconciles to actual groups.", "edi.envelope-nesting"],
@@ -37,7 +38,7 @@ const descriptions: Record<string, readonly [string, string]> = {
   "edi.transaction-count": ["Each GE01 reconciles to transactions in that group.", "edi.envelope-nesting"],
   "edi.transaction-set-envelope": ["Each ST has at least 2 fields and SE has 2 fields.", "edi.envelope-nesting"],
   "edi.transaction-set-code": ["Every ST01 is 820.", "edi.envelope-nesting"],
-  "edi.version": ["ISA12 and every GS08 match selected DEMO identifiers. ST03 is excluded pending an implementation guide.", "edi.envelope-nesting"],
+  "edi.version": ["004010/005010 ISA12 and every GS08 match selected DEMO identifiers; 008030 is unqualified and cannot receive version PASS. ST03 remains excluded.", "edi.envelope-nesting"],
   "edi.control-numbers": ["Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.", "edi.envelope-nesting"],
   "edi.segment-count": ["Each SE01 equals segments in its own ST–SE transaction.", "edi.envelope-nesting"],
   "edi.payment-remittance": ["DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.", "edi.envelope-nesting"],
@@ -61,8 +62,8 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
     severity: id === "demo.xml-declaration" ? "WARNING" : "ERROR",
     applicability: `Selected profile ${pack.id}, message version ${pack.version}; repeated envelopes evaluated individually where present.`,
     prerequisite: descriptions[id]?.[1] ?? "Trusted format context",
-    reference: ["iso.transaction-count-type", "demo.xml-declaration"].includes(id) ? "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence" : id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
-    evidence: "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance",
+    reference: ["iso.transaction-count-type", "demo.xml-declaration"].includes(id) ? "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence" : id.startsWith("edi.") ? "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim" : id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+    evidence: `${xml ? "" : "tests/edi-integrity.test.ts; "}tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance`,
   }));
 }
 export function provenanceFor(pack: FormatPack): RunProvenance {
@@ -77,7 +78,7 @@ export function provenanceFor(pack: FormatPack): RunProvenance {
     "HUNTINGTON_ACK": [ACK_RULESET_REVISION, ACK_GUIDE_REVISION, ACK_EXCLUSIONS],
   };
   const metadata = profileMetadata[pack.id] ?? profileMetadata[pack.parserKind];
-  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : RULESET_REVISION);
+  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : RULESET_REVISION);
   return Object.freeze({ schemaVersion: "4", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
     implementationGuideRevision: metadata?.[1] ?? (expanded ? NACHA_EXPANDED_GUIDE : nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated"), mode: pack.mode,
     rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}/report-4`,

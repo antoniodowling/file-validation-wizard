@@ -74,10 +74,10 @@ it("keeps candidate/public-source provenance and negative claims distinct from l
   expect(RULESET_REVISION).toBe("2.0.0");
   expect(EXCLUSIONS[0]).toContain("DEMO checks only");
 });
-it("matches the current combined DEMO provenance snapshot", () => {
-  const legacy = FORMAT_PACKS.filter(profile => profile.mode === "DEMO");
+it("preserves corrected ISO provenance while EDI uses its separate current snapshot", () => {
+  const legacy = FORMAT_PACKS.filter(profile => profile.parserKind === "ISO_XML");
   expect(legacy.map(profile => { const { buildRevision, ...snapshot } = provenanceFor(profile); return snapshot; }))
-    .toEqual(snapshots);
+    .toEqual(snapshots.filter(profile => profile.profileId.startsWith("pain-")));
 });
 
 it("pins registered NACHA coverage and schema-2 candidate exports with authoritative field locations", () => {

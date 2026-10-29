@@ -66,7 +66,7 @@ export function validateSource(fileName: string, source: string, pack: FormatPac
       const evaluated = frozenResults.filter(r => r.ruleId === rule.id);
       const incomplete = parsed.incompleteChecks?.find(check => check.ruleId === rule.id);
       return { ruleId: rule.id, state: evaluated.some(r => r.outcome !== "PASS") ? "failed" as const
-        : incomplete ? "not-evaluated" as const
+        : incomplete || parsed.notEvaluated?.includes(rule.id) ? "not-evaluated" as const
         : evaluated.length ? "passed" as const
         : parsed.notApplicable?.includes(rule.id) ? "not-applicable" as const : "not-evaluated" as const,
         ...(incomplete ? { reason: incomplete.reason } : {}),

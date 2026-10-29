@@ -47,7 +47,7 @@ describe("review regression boundaries", () => {
     const group = validEdi820.slice(106, validEdi820.indexOf("IEA"));
     const two = validEdi820.replace("IEA*1*", group + "IEA*2*");
     expect(validateSource("x.edi", two, ediPack()).overallStatus).toBe("PASS");
-    const wrong = two.replace(group + "IEA", group.replace("GS*RA*SENDER*RECEIVER*20260916*1200*1*X*005010", "GS*RA*SENDER*RECEIVER*20260916*1200*1*X*004010") + "IEA");
+    const wrong = two.replace(group + "IEA", group.replace("GS*RA*SENDER*RECEIVER*20260916*1200*1*X*005010", "GS*RA*SENDER*RECEIVER*20260916*1200*1*X*008030") + "IEA");
     expect(validateSource("x.edi", wrong, ediPack()).overallStatus).toBe("FAIL");
   });
   it("returns no verdict for unsupported XML declarations", () => {

@@ -7,7 +7,7 @@ import { syntheticSample } from "../src/samples";
 import { validateSource } from "../src/validation";
 import { isoPack } from "./helpers";
 import { demoSnapshots as snapshots } from "./current-coverage";
-import fixtures from "./fixtures/synthetic-provenance-4.0.0.json";
+import fixtures from "./fixtures/synthetic-provenance-integrated-4.0.0.json";
 it("keeps each published versioned coverage snapshot equivalent to runtime", () => {
   expect(FORMAT_PACKS.filter(pack => pack.mode === "DEMO").map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(snapshots);
 });
@@ -15,17 +15,25 @@ it("never passes a sample with promised checks left unevaluated", () => {
   for (const pack of FORMAT_PACKS) {
     const run = validateSource("synthetic", syntheticSample(pack, false), pack);
     expect(run.checks?.length).toBe(run.provenance?.coverage.length);
-    expect(run.checks?.every(check => check.state === "passed" || check.state === "not-applicable")).toBe(true);
+    if (pack.id === "edi-820-008030") {
+      expect(run.executionStatus).toBe("UNSUPPORTED");
+      expect(run.verdict).toBeNull();
+      expect(run.checks?.find(check => check.ruleId === "edi.version")?.state).toBe("not-evaluated");
+    } else {
+      expect(run.checks?.every(check => check.state === "passed" || check.state === "not-applicable")).toBe(true);
+    }
   }
 });
 it("pins synthetic evidence and rejects production approval without exact revisions", () => {
-  for (const fixture of fixtures) expect(createHash("sha256").update(readFileSync(`${process.cwd()}/${fixture.path}`)).digest("hex")).toBe(fixture.sha256);
+  for (const fixture of fixtures) {
+    expect(createHash("sha256").update(readFileSync(`${process.cwd()}/${fixture.path}`)).digest("hex")).toBe(fixture.sha256);
+  }
   const { releaseEvidence, ...unbound } = isoPack();
   expect(formatPackReleaseErrors(unbound)).toContain("revision-bound specification/ruleset/fixture/acceptance evidence");
 });
 
-it("keeps EDI on its historical revision while advancing ISO", () => {
+it("pins corrected ISO and EDI revisions", () => {
   for (const pack of FORMAT_PACKS.filter(p => p.mode === "DEMO")) {
-    expect(provenanceFor(pack).rulesetRevision).toBe(pack.parserKind === "ISO_XML" ? "2.2.0" : "2.0.0");
+    expect(provenanceFor(pack).rulesetRevision).toBe(pack.parserKind === "ISO_XML" ? "2.2.0" : "2.1.0");
   }
 });

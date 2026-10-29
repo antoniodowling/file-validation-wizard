@@ -176,7 +176,7 @@ describe("Huntington BAI2 candidate", () => {
     const report = validateSource("=SYNTHETIC.bai2", pass(), BAI2_PACK);
     expect(validationRunToCsv(report)).toContain("'=SYNTHETIC.bai2");
     const json = JSON.parse(validationRunToJson(report));
-    expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.rulesetRevision).toBe("huntington-bai2-candidate-1.0.0");
+    expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.rulesetRevision).toBe("huntington-bai2-candidate-1.1.0");
     expect(json.provenance.exclusions.join(" ")).toContain("CSV conversion");
     expect(JSON.parse(validationRunToJson(run(fixture("funds-unsupported.bai2")))).verdict).toBeNull();
   });
