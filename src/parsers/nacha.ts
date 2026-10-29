@@ -196,7 +196,8 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       if (expanded) {
         const entryType = ACH_ENTRY_TYPES[slice(current, 2, 3)];
         if (!entryType) {
-          incomplete("remittance-required"); incomplete("ctx-remittance");
+          incomplete("remittance-required");
+          if (sec === "CTX") incomplete("ctx-remittance");
         } else if (entryType.kind === "remittance" || (sec === "CTX" && entryType.kind !== "prenote")) {
           check("remittance-required", addenda > 0, "Required remittance addenda", "Zero-dollar remittance entries and live CTX entries require payment addenda; prenotes do not require associated live-entry addenda.", current, 79, 79);
         }

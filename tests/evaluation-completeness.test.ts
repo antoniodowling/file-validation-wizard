@@ -121,3 +121,14 @@ it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("keeps non-WEB unknown codes
     }
   }
 });
+
+it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("keeps non-CTX unknown codes inapplicable in $id", pack => {
+  for (const sec of ["CCD", "PPD", "WEB", "TEL"]) {
+    for (const codes of [["99", "22"], ["22", "99"]]) {
+      const run = ach(buildNacha([{sec, codes}]), pack);
+      expect(state(run, "nacha.ctx-remittance")).toBe("not-applicable");
+      expect(state(run, "nacha.remittance-required")).toBe("not-evaluated");
+      expect(run.verdict).toBe("FAIL");
+    }
+  }
+});
