@@ -8,7 +8,7 @@ import { NACHA_EXPANDED_RULE_IDS } from "../src/parsers/nacha";
 import { ctxX12Syntax } from "../src/parsers/ach-remittance";
 import { ResourceLimitError } from "../src/resource-policy";
 import { field } from "./nacha-builder";
-import snapshot from "../docs/coverage/nacha-expanded-public-1.1.0.json";
+import { expandedSnapshots as snapshot } from "./current-coverage";
 const pack = EXPANDED_NACHA_PACK;
 const fixture = (name: string) => readFileSync(`demo-files/nacha-expanded/${name}.ach`, "utf8");
 const run = (source: string) => validateSource("synthetic.ach", source, pack);
@@ -32,7 +32,8 @@ describe("expanded origination revision", () => {
   it("treats absent optional and unknown prerequisites distinctly", () => {
     const source = fixture("ccd-23-pass");
     expect(state(source, "remittance-required")).toBe("not-applicable"); expect(state(source, "ctx-remittance")).toBe("not-applicable");
-    for (const id of ["batch-credit", "batch-debit", "file-credit", "file-debit", "entry-amount", "sec-transaction", "web-credit-originator", "remittance-required"]) expect(state(change(source, 2, 2, 3, "99"), id), id).toBe("not-evaluated");
+    for (const id of ["batch-credit", "batch-debit", "file-credit", "file-debit", "entry-amount", "sec-transaction", "remittance-required"]) expect(state(change(source, 2, 2, 3, "99"), id), id).toBe("not-evaluated");
+    expect(state(change(source, 2, 2, 3, "99"), "web-credit-originator")).toBe("not-applicable");
     for (const id of ["batch-hash", "file-hash"]) expect(state(change(source, 2, 4, 11, "NOTRDFI!"), id)).toBe("not-evaluated");
     const ctx = fixture("ctx-54-pass");
     expect(state(change(ctx, 3, 2, 3, "99"), "ctx-remittance")).toBe("not-evaluated");

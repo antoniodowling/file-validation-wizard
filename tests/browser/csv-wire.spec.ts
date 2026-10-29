@@ -27,7 +27,7 @@ for (const mount of ["standalone", "ReadMe package"]) test(`CSV Wire local input
     if (file === "international-usd-pass.csv") {
       const download = page.waitForEvent("download"); await selector("export-json").click();
       const json = JSON.parse(readFileSync((await (await download).path())!, "utf8"));
-      expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.profileId).toBe("huntington-csv-wire-public-2026-r1");
+      expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.profileId).toBe("huntington-csv-wire-public-2026-r1");
       expect(json.provenance.exclusions.join(" ")).toContain("Non-USD timing");
       expect(json.checks.every((c: { state: string }) => ["passed", "not-applicable"].includes(c.state))).toBe(true);
     }
@@ -42,7 +42,7 @@ for (const mount of ["standalone", "ReadMe package"]) test(`CSV Wire local input
   await expect(page.locator("[data-file-explorer] .cm-finding-error").first()).toBeAttached();
   const csvDownload = page.waitForEvent("download"); await selector("export-csv").click();
   const csv = readFileSync((await (await csvDownload).path())!, "utf8");
-  expect(csv).toContain("wire.amount"); expect(csv).toContain("huntington-csv-wire-candidate-1.0.0");
+  expect(csv).toContain("wire.amount"); expect(csv).toContain("huntington-csv-wire-candidate-1.1.0");
   await testInfo.attach(`${mount}-csv-wire-finding`, { body: await page.screenshot(), contentType: "image/png" });
   await page.getByRole("button", { name: "Back to file" }).click();
   await selector("file-input").setInputFiles(resolve("demo-files/csv-wire/cad-unsupported.csv"));

@@ -9,7 +9,7 @@ import { validationRunToCsv, validationRunToJson } from "../src/csv";
 import { provenanceFor } from "../src/coverage";
 import { ResourceLimitError } from "../src/resource-policy";
 import manifest from "../demo-files/csv-wire/manifest.json";
-import snapshot from "../docs/coverage/csv-wire-candidate-1.0.0.json";
+import { wireSnapshots as snapshot } from "./current-coverage";
 
 const fixture = (file: string): string => readFileSync(`demo-files/csv-wire/${file}`, "utf8");
 const quote = (fields: readonly string[]): string => fields.map(v => `"${v.replaceAll('"', '""')}"`).join(",");
@@ -40,7 +40,7 @@ describe("CSV Wire guide candidate", () => {
   });
   it("freezes separate schema-3 coverage without changing historical profiles", () => {
     const { buildRevision, ...current } = provenanceFor(CSV_WIRE_PACK);
-    expect([current]).toEqual(snapshot); expect(current.schemaVersion).toBe("3");
+    expect([current]).toEqual(snapshot); expect(current.schemaVersion).toBe("4");
     expect(Object.values(CSV_WIRE_PACK.approval).some(Boolean)).toBe(false);
   });
   it("records a real date and admits exactly 30 UTC calendar days ahead", () => {
@@ -121,7 +121,7 @@ describe("CSV Wire guide candidate", () => {
   it("exports schema, coverage, reference date and safe cells for completed and unsupported runs", () => {
     const result = validateSource("=SYNTHETIC.csv", source(3, "3e2"), CSV_WIRE_PACK);
     const json = JSON.parse(validationRunToJson(result)); const csv = validationRunToCsv(result);
-    expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.profileId).toBe(CSV_WIRE_PACK.id);
+    expect(json.exportSchemaVersion).toBe("4"); expect(json.provenance.profileId).toBe(CSV_WIRE_PACK.id);
     expect(csv).toContain('"\'=SYNTHETIC.csv"'); expect(csv).toContain("wire.amount"); expect(csv).toContain("2026-10-14");
     expect(csv).not.toContain("99999999999");
     const unsupported = run(fixture("cad-unsupported.csv"));

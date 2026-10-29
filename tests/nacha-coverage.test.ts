@@ -7,8 +7,8 @@ import { NACHA_EXCLUSIONS, NACHA_RULESET_REVISION } from "../src/nacha-coverage"
 import { FORMAT_PACKS } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validationRunToCsv, validationRunToJson } from "../src/csv";
-import nachaSnapshots from "../docs/coverage/nacha-public-1.1.0.json";
-import snapshots from "../docs/coverage/ruleset-2.1.0.json";
+import { ordinarySnapshots as nachaSnapshots } from "./current-coverage";
+import { demoSnapshots as snapshots } from "./current-coverage";
 
 const nonEmpty: ValidationRule = {
   id: "nacha.non-empty-source", description: "The selected file contains data.", field: "File content", defaultLocator: "file",
@@ -62,7 +62,7 @@ it("keeps candidate/public-source provenance and negative claims distinct from l
   const provenance = provenanceFor(pack);
   expect(provenance.mode).toBe("CANDIDATE");
   expect(provenance.rulesetRevision).toBe(NACHA_RULESET_REVISION);
-  expect(provenance.coverageRevision).toBe(`${pack.id}@nacha-public-1.1.0`);
+  expect(provenance.coverageRevision).toBe(`${pack.id}@nacha-public-1.2.0/report-4`);
   expect(provenance.implementationGuideRevision).toContain("Public sources reviewed 2026-10-14");
   expect(provenance.implementationGuideRevision).toContain("full current Operating Rules comparison deferred");
   expect(provenance.exclusions).toEqual(NACHA_EXCLUSIONS);
@@ -92,7 +92,7 @@ it("pins registered NACHA coverage and schema-2 candidate exports with authorita
     expect(source.slice(routing.location.primary.span.start, routing.location.primary.span.end)).toHaveLength(9);
   }
   const json = JSON.parse(validationRunToJson(run));
-  expect(json.exportSchemaVersion).toBe("2");
+  expect(json.exportSchemaVersion).toBe("4");
   expect(json.provenance.mode).toBe("CANDIDATE");
   expect(json.provenance.rulesetRevision).toBe(NACHA_RULESET_REVISION);
   expect(json.results.find((result: {ruleId: string}) => result.ruleId === "nacha.routing").location).toEqual(routing.location);

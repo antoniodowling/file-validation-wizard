@@ -39,7 +39,7 @@ describe("ISO validation", () => {
       .replace("<PmtInf><PmtInfId>PAYMENT-1</PmtInfId></PmtInf>", "");
     const run = validateSource("payment.xml", source, isoPack());
     expect(run.overallStatus).toBe("FAIL");
-    expect(run.results).toHaveLength(1);
+    expect(run.results).toHaveLength(4);
     expect(run.results.find((result) => result.ruleId === "iso.namespace-version")?.outcome).toBe("ERROR");
     expect(run.results.find((result) => result.ruleId === "iso.namespace-version")?.message).toBe(
       "The XML namespace does not match the selected format version. Ensure the file format type/version you selected matches the file you uploaded.",
@@ -58,9 +58,9 @@ describe("ISO validation", () => {
 </Document>`;
     const run = validateSource("reversal.xml", pain007, pack);
     expect(run.overallStatus).toBe("FAIL");
-    expect(run.results).toHaveLength(1);
-    expect(run.results[0]?.ruleId).toBe("iso.namespace-version");
-    expect(run.results[0]?.outcome).toBe("ERROR");
+    expect(run.results).toHaveLength(4);
+    expect(run.results[3]?.ruleId).toBe("iso.namespace-version");
+    expect(run.results[3]?.outcome).toBe("ERROR");
   });
 
   it("continues structural checks when the selected namespace matches", () => {

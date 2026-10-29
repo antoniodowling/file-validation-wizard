@@ -4,6 +4,7 @@ import { result } from "./shared";
 import { children, parseXmlDocument, XmlSyntaxError, type XmlNode } from "./xml-adapter";
 
 export interface ParserOutput {
+  readonly incompleteChecks?: readonly { readonly ruleId: string; readonly reason: string }[];
   readonly reportedDisposition?: import("../types").ReportedDisposition;
   readonly notApplicable?: readonly string[];
   /** A promised occurrence could not run; retain other occurrence evidence without claiming complete evaluation. */
@@ -44,8 +45,9 @@ export function parseIso(source: string, pack: FormatPack): ParserOutput {
   if (root.local !== "Document") return { context: null, results };
   const ids = pack.identifiers as IsoVersionIdentifiers;
   if (root.uri !== ids.namespace) {
-    return { context: null, results: [{ ...result(0, "iso.namespace-version", "ERROR", "Message version", "/Document/@xmlns",
-      "The XML namespace does not match the selected format version. Ensure the file format type/version you selected matches the file you uploaded."), location: nodeLocation([], root) }] };
+    add("iso.namespace-version", false, "Message version", "/Document/@xmlns",
+      "The XML namespace does not match the selected format version. Ensure the file format type/version you selected matches the file you uploaded.", nodeLocation([], root));
+    return { context: null, results };
   }
   add("iso.namespace-version", true, "Message version", "/Document/@xmlns", "The XML namespace matches the selected message version; this does not establish conformance.");
   const path = `/Document/${ids.messageContainer}`;

@@ -40,9 +40,13 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   const originationR2 = profile === "origination-expanded-public-2026-r2";
   const expanded = originationR2 || profile === "origination-expanded-public-2026-r1";
   const checks = new Map<Id, Check>();
-  const incompleteR2Checks = new Set<Id>();
+  const incompleteChecks = new Map<Id, string>();
   const conditionalAbsent = new Set<Id>(["addenda-type", "addenda-sequence", "addenda-link", "web-credit-originator", ...(expanded ? ["reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const : [])]);
   if (originationR2) for (const id of ORIGINATION_R2_IDS) conditionalAbsent.add(id);
+  const incomplete = (id: Id, reason = "At least one applicable or potentially applicable entry has an uninterpretable prerequisite."): void => {
+    conditionalAbsent.delete(id);
+    if (!incompleteChecks.has(id)) incompleteChecks.set(id, reason);
+  };
   // Aggregate by rule, retain the first offending field, and count every violation.
   // Memory and output remain bounded even for a 25 MB file with repeated errors.
   const check = (id: Id, ok: boolean, field: string, message: string, row?: RecordRow, from = 1, to = 94, warning = false, findingLocation?: FindingLocation): void => {
@@ -59,9 +63,10 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     checks.set(id, { outcome: warning ? "WARNING" : "ERROR", count: 1, field, message, row, from, to, location: findingLocation });
   };
   const finish = (parseable: boolean): ParserOutput => ({
-    notApplicable: parseable ? [...conditionalAbsent].filter(id => !checks.has(id) && (id !== "web-credit-originator" || expanded || checks.get("transaction-code")?.outcome !== "ERROR")).map(id => `nacha.${id}`) : [],
+    incompleteChecks: [...incompleteChecks].map(([id, reason]) => ({ ruleId: `nacha.${id}`, reason })),
+    notApplicable: parseable ? [...conditionalAbsent].filter(id => !checks.has(id) && !incompleteChecks.has(id) && (id !== "web-credit-originator" || expanded || checks.get("transaction-code")?.outcome !== "ERROR")).map(id => `nacha.${id}`) : [],
     context: parseable ? ({ source, parserKind: "NACHA_FIXED" }) : null,
-    results: [...checks].filter(([id, c]) => c.outcome !== "PASS" || !incompleteR2Checks.has(id)).map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
+    results: [...checks].map(([id, c], ordinal) => Object.freeze({ ruleId: `nacha.${id}`, outcome: c.outcome,
       severity: c.outcome === "PASS" ? null : c.outcome, field: c.field,
       locator: c.row ? `Record ${c.row.number} / Columns ${c.from}-${c.to}` : "file",
       message: c.message + (c.count > 1 ? ` (${c.count} violations; first location shown.)` : ""),
@@ -133,7 +138,10 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const bc = batch.control;
     const sec = slice(bh, 51, 53);
     const service = slice(bh, 2, 4);
-    if (expanded && !["CCD", "PPD", "CTX", "WEB", "TEL"].includes(sec)) for (const id of ["web-credit-originator", "remittance-required", "ctx-remittance"] as const) conditionalAbsent.delete(id);
+    if (!["CCD", "PPD", "CTX", "WEB", "TEL"].includes(sec) || !supported.includes(sec)) {
+      incomplete("web-credit-originator");
+      if (expanded) { incomplete("remittance-required"); incomplete("ctx-remittance"); }
+    }
     check("service-class", ["200", "220", "225"].includes(service), "Service class", "Ordinary origination uses service class 200, 220, or 225.", bh, 2, 4);
     check("sec-code", ["CCD", "PPD", "CTX", "WEB", "TEL"].includes(sec) && supported.includes(sec), "Standard entry class", "This profile supports only CCD, PPD, CTX, WEB, and TEL batches.", bh, 51, 53);
     required(bh, 5, 20, "batch-required", "Company name");
@@ -157,6 +165,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const effective = date(slice(bh, 70, 75));
     check("effective-date", !!effective, "Effective entry date", "Effective entry date must be a real calendar date in YYMMDD format.", bh, 70, 75);
     if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
+    if (!effective) incomplete("effective-weekend", "At least one batch has an invalid effective date, so its weekend check was not evaluated.");
     const settlement = slice(bh, 76, 78);
     const julian = number(settlement);
     const settlementValid = settlement === "   " || (julian !== null && julian >= 1n && julian <= 366n);
@@ -187,12 +196,13 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       if (expanded) {
         const entryType = ACH_ENTRY_TYPES[slice(current, 2, 3)];
         if (!entryType) {
-          conditionalAbsent.delete("remittance-required"); conditionalAbsent.delete("ctx-remittance");
+          incomplete("remittance-required");
+          if (sec === "CTX") incomplete("ctx-remittance");
         } else if (entryType.kind === "remittance" || (sec === "CTX" && entryType.kind !== "prenote")) {
           check("remittance-required", addenda > 0, "Required remittance addenda", "Zero-dollar remittance entries and live CTX entries require payment addenda; prenotes do not require associated live-entry addenda.", current, 79, 79);
         }
         if (healthcare && sec === "CCD") {
-          if (!entryType) { conditionalAbsent.delete("healthcare-addenda"); conditionalAbsent.delete("healthcare-trn"); incompleteR2Checks.add("healthcare-addenda"); incompleteR2Checks.add("healthcare-trn"); }
+          if (!entryType) { incomplete("healthcare-addenda"); incomplete("healthcare-trn"); }
           else if (entryType.kind !== "prenote") {
             check("healthcare-addenda", indicator === "1" && addenda > 0, "Healthcare addenda", "Declared healthcare CCD entries require addenda and indicator 1, except prenotes.", current, 79, 79);
             if (addenda > 0 && payloadKnown) {
@@ -201,12 +211,12 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
               const trn = payload.join("").trimEnd();
               const elements = trn.slice(0, -1).split("*");
               check("healthcare-trn", /^TRN\*1\*[^*~\\]+\*[^*~\\]+(?:\*[^*~\\]*)?[~\\]$/.test(trn) && !!elements[2]?.trim() && !!elements[3]?.trim(), "Healthcare TRN segment", "Healthcare CCD payment addenda must contain a complete 835 reassociation TRN segment with trace type 1, trace number and originating company identifier. Full 835 business-guide conformance remains unverified.", payloadRows[0], 4, 83, false, payloadLocation());
-            } else { conditionalAbsent.delete("healthcare-trn"); incompleteR2Checks.add("healthcare-trn"); }
+            } else { incomplete("healthcare-trn"); }
           }
         }
         if (sec === "CTX" && addenda > 0) {
           if (payloadKnown) check("ctx-remittance", ctxX12Syntax(payload.join(""), pack), "CTX remittance syntax", "CTX X12 requires a complete transaction set with BPR or BPS and matching envelope references/counts. Complete X12 business-guide conformance is outside scope.", payloadRows[0], 4, 83, false, payloadLocation());
-          else conditionalAbsent.delete("ctx-remittance");
+          else incomplete("ctx-remittance");
         }
       }
       check("addenda-indicator", indicator === (addenda ? "1" : "0"), "Addenda indicator", "Addenda indicator must be 0 without addenda or 1 when addenda are present.", current, 79, 79);
@@ -238,16 +248,16 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
           (!expanded || !entryType?.loan || ["CCD", "CTX", "PPD"].includes(sec)),
           "SEC and service class transaction", expanded ? "Direction must match service class. Zero-dollar remittance is CCD/CTX only; loan types are qualified here only for CCD/CTX/PPD. TEL credits are checking/savings monetary reversals only." : "Entry direction must match service class; TEL permits debits only.", row, 2, 3);
       }
+      else incomplete("sec-transaction", "At least one entry lacks a known SEC, service class or transaction type for this check.");
       if (originationR2 && (payroll || purchase)) {
         if (entryType && secKnown) check("description-sec", payroll ? sec === "PPD" && entryType.direction === "credit" : ["WEB", "TEL"].includes(sec) && entryType.direction === "debit", "Declared descriptor SEC and direction", "Declared PAYROLL is a PPD credit; declared PURCHASE is a WEB or permitted TEL debit. Purpose and TEL standing authorization cannot be established from this file.", row, 2, 3);
-        else conditionalAbsent.delete("description-sec");
+        else incomplete("description-sec");
       }
       if (expanded && (reversal || code === "55")) {
         if (entryType) check("reversal-transaction", reversal && entryType.kind === "monetary", "Reversal entry type", "Reversal entries must be monetary and loan debit 55 requires the REVERSAL description. Original matching, purpose and deadlines are unverified.", row, 2, 3);
-        else conditionalAbsent.delete("reversal-transaction");
+        else incomplete("reversal-transaction");
       }
-      if (originationR2 && (payroll || purchase) && !entryType) { conditionalAbsent.delete("description-sec"); incompleteR2Checks.add("description-sec"); }
-      if (!entryType && expanded) conditionalAbsent.delete("web-credit-originator");
+      if (sec === "WEB" && (expanded ? !entryType : !credit && !debit)) incomplete("web-credit-originator");
       required(row, 13, 29, "entry-required", "Receiving account");
       required(row, sec === "CTX" ? 59 : 55, sec === "CTX" ? 74 : 76, "entry-required", "Receiving name");
       if (sec === "CTX") reserved(row, 75, 76);
@@ -255,6 +265,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       padding(row, [[13, 29], [40, 54], [sec === "CTX" ? 59 : 55, sec === "CTX" ? 74 : 76], [77, 78]]);
       const amount = number(slice(row, 30, 39));
       if (!expanded || entryType) check("entry-amount", amount !== null && (expanded && entryType?.kind !== "monetary" ? amount === 0n : amount > 0n), "Entry amount", expanded ? "Monetary entries require positive integer cents; prenotes and remittance-only codes require exactly zero cents in the ten-digit amount field." : "Ordinary monetary entries require a positive ten-digit amount in integer cents.", row, 30, 39);
+      if (expanded && !entryType) incomplete("entry-amount", "At least one entry has an unknown transaction type, so its type-specific amount requirement was not evaluated.");
       if (amount === null || (!credit && !debit)) batchAmountsKnown = false;
       if (amount !== null) { if (credit) bt.credit += amount; if (debit) bt.debit += amount; }
       const rdfi = slice(row, 4, 12);
@@ -275,6 +286,8 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     reserved(bc, 74, 79);
     for (const [id, from, to, expected] of [["batch-count", 5, 10, bt.count], ["batch-hash", 11, 20, bt.hash], ["batch-debit", 21, 32, bt.debit], ["batch-credit", 33, 44, bt.credit]] as const)
       if ((batchAmountsKnown || (id !== "batch-debit" && id !== "batch-credit")) && (!expanded || batchHashKnown || id !== "batch-hash")) check(id, number(slice(bc, from, to)) === expected, "Batch control total", "Batch control numeric count, routing hash, or integer-cent total must equal its entry detail records.", bc, from, to);
+    if (!batchAmountsKnown) for (const id of ["batch-debit", "batch-credit"] as const) incomplete(id, "At least one batch has an uninterpretable amount or transaction direction; its amount reconciliation was not evaluated.");
+    if (expanded && !batchHashKnown) incomplete("batch-hash", "At least one batch has an uninterpretable routing prefix; its hash reconciliation was not evaluated.");
     fileHashKnown = fileHashKnown && batchHashKnown;
     fileAmountsKnown = fileAmountsKnown && batchAmountsKnown;
     file.count += bt.count; file.hash = (file.hash + bt.hash) % HASH_MOD; file.debit += bt.debit; file.credit += bt.credit;
@@ -283,5 +296,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   reserved(fc, 56, 94);
   for (const [id, from, to, expected] of [["file-batches", 2, 7, BigInt(batches.length)], ["file-blocks", 8, 13, BigInt(Math.floor(rows.length / 10))], ["file-count", 14, 21, file.count], ["file-hash", 22, 31, file.hash], ["file-debit", 32, 43, file.debit], ["file-credit", 44, 55, file.credit]] as const)
     if ((fileAmountsKnown || (id !== "file-debit" && id !== "file-credit")) && (!expanded || fileHashKnown || id !== "file-hash")) check(id, number(slice(fc, from, to)) === expected && (id !== "file-blocks" || rows.length % 10 === 0), "File control total", "File control numeric count, block count, routing hash, or integer-cent total must equal the complete file records.", fc, from, to);
+  if (!fileAmountsKnown) for (const id of ["file-debit", "file-credit"] as const) incomplete(id, "File reconciliation requires interpretable amounts and directions in every entry.");
+  if (expanded && !fileHashKnown) incomplete("file-hash", "File hash reconciliation requires interpretable routing prefixes in every entry.");
   return finish(true);
 }

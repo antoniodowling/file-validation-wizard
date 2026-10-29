@@ -8,7 +8,7 @@ import { expandedNachaCoverageFor, NACHA_EXPANDED_REVISION, NACHA_EXPANDED_GUIDE
 import type { CoverageRule, FormatPack, RunProvenance } from "./types";
 import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
-export const ISO_RULESET_REVISION = "2.1.0";
+export const ISO_RULESET_REVISION = "2.2.0";
 export const EDI_RULESET_REVISION = "2.1.0";
 export const EXCLUSIONS = Object.freeze([
   "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
@@ -78,10 +78,10 @@ export function provenanceFor(pack: FormatPack): RunProvenance {
     "HUNTINGTON_ACK": [ACK_RULESET_REVISION, ACK_GUIDE_REVISION, ACK_EXCLUSIONS],
   };
   const metadata = profileMetadata[pack.id] ?? profileMetadata[pack.parserKind];
-  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : RULESET_REVISION);
-  return Object.freeze({ schemaVersion: metadata ? "3" : "2", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
+  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : RULESET_REVISION);
+  return Object.freeze({ schemaVersion: "4", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
     implementationGuideRevision: metadata?.[1] ?? (expanded ? NACHA_EXPANDED_GUIDE : nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated"), mode: pack.mode,
-    rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}`,
+    rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}/report-4`,
     buildRevision: typeof __BUILD_REVISION__ === "string" ? __BUILD_REVISION__ : "source-development",
     coverage: coverageFor(pack), exclusions: metadata?.[2] ?? (expanded ? NACHA_EXPANDED_EXCLUSIONS : nacha ? NACHA_EXCLUSIONS : EXCLUSIONS) });
 }

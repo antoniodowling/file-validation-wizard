@@ -13,12 +13,11 @@ try {
     `export { buildNacha, field } from ${JSON.stringify(resolve('tests/nacha-builder.ts'))};`,
     `export { FORMAT_PACKS } from ${JSON.stringify(resolve('src/format-packs.ts'))};`,
     `export { validateSource } from ${JSON.stringify(resolve('src/validation.ts'))};`,
-    `export { provenanceFor } from ${JSON.stringify(resolve('src/coverage.ts'))};`,
   ].join('\n'));
   const bundle = await rolldown({ input: entry });
   const output = join(scratch, 'fixtures.mjs');
   await bundle.write({ file: output, format: 'es' }); await bundle.close();
-  const { buildReturns, buildNacha, field, FORMAT_PACKS, validateSource, provenanceFor } = await import(pathToFileURL(output).href);
+  const { buildReturns, buildNacha, field, FORMAT_PACKS, validateSource } = await import(pathToFileURL(output).href);
   const fixtures = [];
   const add = (name, profileId, source, expectedStatus, explanation) => fixtures.push({ name, profileId, source, expectedStatus, explanation });
   const ack = 'huntington-ack-pipe-1.0-candidate-r1';
@@ -94,8 +93,7 @@ try {
     manifest.push({name:fixture.name,profileId:fixture.profileId,expectedStatus:fixture.expectedStatus,bytes:Buffer.byteLength(fixture.source),sha256:createHash('sha256').update(fixture.source).digest('hex'),explanation:fixture.explanation,expectedFindingIds:run.results.filter(r=>r.outcome!=='PASS').map(r=>r.ruleId),...(run.reportedDisposition?{reportedDisposition:run.reportedDisposition}: {})});
   }
   await writeFile('demo-files/ach-candidates/manifest.json',JSON.stringify(manifest,null,2)+'\n');
-  await mkdir('docs/coverage',{recursive:true});
-  const snapshots=FORMAT_PACKS.filter(pack=>[ack,returns,control,orig].includes(pack.id)).map(pack=>{ const {buildRevision,...snapshot}=provenanceFor(pack);return snapshot; });
-  await writeFile('docs/coverage/ach-candidates-1.0.0.json',JSON.stringify(snapshots,null,2)+'\n');
-  console.log(`Generated ${manifest.length} synthetic candidate fixtures and four versioned coverage snapshots.`);
+  // Historical coverage is immutable; current reports have a separate snapshot.
+  await import('./export-coverage.mjs');
+  console.log(`Generated ${manifest.length} synthetic candidate fixtures and current coverage.`);
 } finally { await rm(scratch,{recursive:true,force:true}); }

@@ -1,7 +1,7 @@
 import type { CoverageRule, FormatPack } from "./types";
 import { NACHA_RULE_IDS } from "./parsers/nacha";
 
-export const NACHA_RULESET_REVISION = "nacha-public-1.1.0";
+export const NACHA_RULESET_REVISION = "nacha-public-1.2.0";
 export const NACHA_GUIDE_REVISION = "Public sources reviewed 2026-10-14; reversal scope corrected 2026-10-29; origination-public-2026 subset; full current Operating Rules comparison deferred";
 export const NACHA_EXCLUSIONS = Object.freeze([
   "CANDIDATE public-source subset only. No production approval, full 2026 Operating Rules compliance, bank acceptance, funds availability, or execution guarantee.",

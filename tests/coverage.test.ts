@@ -6,12 +6,10 @@ import { provenanceFor } from "../src/coverage";
 import { syntheticSample } from "../src/samples";
 import { validateSource } from "../src/validation";
 import { isoPack } from "./helpers";
-import snapshots from "../docs/coverage/ruleset-2.1.0.json";
-import ediSnapshots from "../docs/coverage/edi-ruleset-2.1.0.json";
-import fixtures from "./fixtures/synthetic-provenance-integrated-2.1.0.json";
+import { demoSnapshots as snapshots } from "./current-coverage";
+import fixtures from "./fixtures/synthetic-provenance-integrated-4.0.0.json";
 it("keeps each published versioned coverage snapshot equivalent to runtime", () => {
-  expect(FORMAT_PACKS.filter(pack => pack.parserKind === "ISO_XML").map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(snapshots.filter(pack => pack.profileId.startsWith("pain-")));
-  expect(FORMAT_PACKS.filter(pack => pack.parserKind === "EDI_X12").map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(ediSnapshots);
+  expect(FORMAT_PACKS.filter(pack => pack.mode === "DEMO").map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(snapshots);
 });
 it("never passes a sample with promised checks left unevaluated", () => {
   for (const pack of FORMAT_PACKS) {
@@ -36,6 +34,6 @@ it("pins synthetic evidence and rejects production approval without exact revisi
 
 it("pins corrected ISO and EDI revisions", () => {
   for (const pack of FORMAT_PACKS.filter(p => p.mode === "DEMO")) {
-    expect(provenanceFor(pack).rulesetRevision).toBe("2.1.0");
+    expect(provenanceFor(pack).rulesetRevision).toBe(pack.parserKind === "ISO_XML" ? "2.2.0" : "2.1.0");
   }
 });

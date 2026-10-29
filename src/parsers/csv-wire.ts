@@ -30,6 +30,7 @@ export function parseCsvWire(source: string, pack: FormatPack): ParserOutput {
   if (pack.id !== CSV_WIRE_PROFILE || pack.identifiers?.kind !== "CSV_WIRE" || pack.identifiers.profile !== CSV_WIRE_PROFILE) unsupported("Unknown CSV Wire profile.");
   if (source.length > MAX_DECODED_UNITS) throw new ResourceLimitError();
   const results: RuleResult[] = [];
+  const incompleteChecks = new Map<string, string>();
   const checks = new Map<string, { ok: boolean; count: number; field: string; message: string; span?: SourceSpan; exact: boolean; row?: number }>();
   const check = (id: string, ok: boolean, field: string, message: string, row?: Row, cell?: Cell): void => {
     const old = checks.get(id);
@@ -41,7 +42,8 @@ export function parseCsvWire(source: string, pack: FormatPack): ParserOutput {
       locator: c.row ? `Row ${c.row}: ${c.field}` : "file", message: c.message + (c.count > 1 ? ` (${c.count} violations; first location shown.)` : ""),
       location: c.span ? { kind: "located", primary: { kind: c.exact ? "exact" : "context", label: c.field, span: c.span }, related: [] } : { kind: "file-wide", explanation: "This check concerns CSV Wire file admission." } });
     return { context: context ? { source, parserKind: "CSV_WIRE" } : null, results,
-      notApplicable: context ? CSV_WIRE_RULE_IDS.filter(id => !checks.has(id.slice(5))) : [] };
+      incompleteChecks: [...incompleteChecks].map(([ruleId, reason]) => ({ ruleId, reason })),
+      notApplicable: context ? CSV_WIRE_RULE_IDS.filter(id => !checks.has(id.slice(5)) && !incompleteChecks.has(id)) : [] };
   };
   check("characters", !/[^\x20-\x7e\r\n]/.test(source), "CSV Wire characters", "Candidate transport requires printable ASCII decoded as strict UTF-8; no BOM, tabs or control characters.");
   if (!checks.get("characters")!.ok) return output();
@@ -92,7 +94,15 @@ export function parseCsvWire(source: string, pack: FormatPack): ParserOutput {
     if (type !== "USWIRE" && type !== "INT") unsupported("Only USWIRE and INT payment rows are supported; headers/custom mappings are excluded.");
     const intl = type === "INT"; const layout = intl ? WIRE_LAYOUTS.INT : WIRE_LAYOUTS.USWIRE;
     check("layout", row.cells.length === layout.length, "CSV Wire layout", `Require exactly ${layout.length} fields for ${type}.`, row);
-    if (row.cells.length !== layout.length) continue;
+    if (row.cells.length !== layout.length) {
+      // A known payment row with an invalid layout has unknown dependent-field
+      // applicability. Preserve evaluated rows without claiming global success.
+      for (const ruleId of CSV_WIRE_RULE_IDS) {
+        if (["wire.characters", "wire.framing", "wire.layout"].includes(ruleId)) continue;
+        incompleteChecks.set(ruleId, "At least one payment row has an invalid field count; dependent field checks and their applicability could not be evaluated.");
+      }
+      continue;
+    }
     if (intl && f(5) && f(5) !== "USD") unsupported("Non-USD currency and CAD/other business-day scheduling require bank-calendar qualification.");
     if (intl && f(11) === "IBAN") unsupported("IBAN country/account rules and the guide's undefined S34 format are not qualified.");
     if (intl && WIRE_COUNTRIES.has(f(17)) && !["US", "CA"].includes(f(17))) unsupported("International beneficiary countries outside US/CA need qualified IBAN applicability rules.");
