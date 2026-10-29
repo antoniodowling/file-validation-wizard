@@ -1,7 +1,7 @@
 import type { FindingLocation, FormatPack, IsoVersionIdentifiers, RuleResult, ValidationContext } from "../types";
 import { findProhibitedDeclaration } from "../prohibited-declarations";
 import { result } from "./shared";
-import { children, parseXml, XmlSyntaxError, type XmlNode } from "./xml-adapter";
+import { children, parseXmlDocument, XmlSyntaxError, type XmlNode } from "./xml-adapter";
 
 export interface ParserOutput {
   readonly reportedDisposition?: import("../types").ReportedDisposition;
@@ -29,7 +29,8 @@ export function parseIso(source: string, pack: FormatPack): ParserOutput {
     prohibited ? { kind: "located", primary: { kind: "exact", label: "Prohibited declaration", span: { start: prohibited.index, end: prohibited.index + prohibited.length } }, related: [] } : undefined);
   if (prohibited) return { context: null, results };
   let root: XmlNode;
-  try { root = parseXml(source); } catch (error) {
+  let hasDeclaration: boolean;
+  try { ({ root, hasDeclaration } = parseXmlDocument(source)); } catch (error) {
     if (!(error instanceof XmlSyntaxError)) throw error;
     add("iso.well-formed", false, "XML document", "file", "The XML document is not well formed or has invalid namespace bindings. Dependent ISO checks were not evaluated.", {
       kind: "located", primary: { kind: "parser-position", label: "Parser stop; the cause may precede this position", span: { start: error.offset, end: error.offset } }, related: [],
@@ -57,9 +58,9 @@ export function parseIso(source: string, pack: FormatPack): ParserOutput {
     const messages = children(header, "MsgId", ids.namespace);
     add("iso.message-id", messages.length === 1 && messages[0]!.children.length === 0 && Boolean(messages[0]!.text.trim()), "Message ID", `${path}/GrpHdr/MsgId`, "Exactly one populated MsgId element is required; an attribute cannot satisfy it.", nodeLocation(messages, header));
     const counts = children(header, "NbOfTxs", ids.namespace);
-    add("iso.transaction-count-type", counts.length === 1 && counts[0]!.children.length === 0 && /^\d{1,15}$/.test(counts[0]!.text.trim()), "Number of transactions", `${path}/GrpHdr/NbOfTxs`, "Exactly one NbOfTxs element containing 1 to 15 digits is required.", nodeLocation(counts, header));
+    add("iso.transaction-count-type", counts.length === 1 && counts[0]!.children.length === 0 && /^\d{1,15}$/.test(counts[0]!.text), "Number of transactions", `${path}/GrpHdr/NbOfTxs`, "Exactly one NbOfTxs element containing 1 to 15 digits is required.", nodeLocation(counts, header));
   }
   const payments = children(container, "PmtInf", ids.namespace);
   add("iso.payment-information", payments.length > 0, "Payment information", `${path}/PmtInf`, "At least one payment information block in the selected namespace is required.", nodeLocation(payments, container));
-  return { context: { source, parserKind: "ISO_XML" }, results };
+  return { context: { source, parserKind: "ISO_XML", xml: { hasDeclaration } }, results };
 }

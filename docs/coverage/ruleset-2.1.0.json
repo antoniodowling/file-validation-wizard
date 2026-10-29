@@ -1,0 +1,1235 @@
+[
+  {
+    "schemaVersion": "2",
+    "profileId": "pain-001-03",
+    "messageVersion": "pain.001.001.03",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "pain-001-03@2.1.0",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Advisory: actual parser-observed XML declaration, not a processing instruction.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "pain-001-09",
+    "messageVersion": "pain.001.001.09",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "pain-001-09@2.1.0",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Advisory: actual parser-observed XML declaration, not a processing instruction.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-001-09, message version pain.001.001.09; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "pain-001-13",
+    "messageVersion": "pain.001.001.13",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "pain-001-13@2.1.0",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Advisory: actual parser-observed XML declaration, not a processing instruction.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-001-13, message version pain.001.001.13; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "pain-008-02",
+    "messageVersion": "pain.008.001.02",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "pain-008-02@2.1.0",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Advisory: actual parser-observed XML declaration, not a processing instruction.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-008-02, message version pain.008.001.02; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "pain-008-08",
+    "messageVersion": "pain.008.001.08",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "pain-008-08@2.1.0",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Advisory: actual parser-observed XML declaration, not a processing instruction.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-008-08, message version pain.008.001.08; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "pain-008-12",
+    "messageVersion": "pain.008.001.12",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "pain-008-12@2.1.0",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one nonblank scalar MsgId element; attributes do not satisfy this check.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Advisory: actual parser-observed XML declaration, not a processing instruction.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-008-12, message version pain.008.001.12; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "edi-820-004010",
+    "messageVersion": "004010",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.0.0",
+    "coverageRevision": "edi-820-004010@2.0.0",
+    "coverage": [
+      {
+        "id": "edi.fixed-header",
+        "description": "ISA fixed separator positions and distinct element/component/segment delimiters.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.final-termination",
+        "description": "Final segment terminator present (trailing whitespace permitted).",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.fixed-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.envelope-nesting",
+        "description": "One interchange; nonempty groups and transactions; every data segment owned by a transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.final-termination",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.interchange-envelope",
+        "description": "16 ISA fields and 2 IEA fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.group-count",
+        "description": "IEA01 reconciles to actual groups.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.functional-group-envelope",
+        "description": "Each GS has at least 8 fields and GE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-count",
+        "description": "Each GE01 reconciles to transactions in that group.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-envelope",
+        "description": "Each ST has at least 2 fields and SE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-code",
+        "description": "Every ST01 is 820.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.version",
+        "description": "ISA12 and every GS08 match selected DEMO identifiers. ST03 is excluded pending an implementation guide.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.control-numbers",
+        "description": "Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.segment-count",
+        "description": "Each SE01 equals segments in its own ST–SE transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.payment-remittance",
+        "description": "DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "edi-820-005010",
+    "messageVersion": "005010",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.0.0",
+    "coverageRevision": "edi-820-005010@2.0.0",
+    "coverage": [
+      {
+        "id": "edi.fixed-header",
+        "description": "ISA fixed separator positions and distinct element/component/segment delimiters.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.final-termination",
+        "description": "Final segment terminator present (trailing whitespace permitted).",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.fixed-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.envelope-nesting",
+        "description": "One interchange; nonempty groups and transactions; every data segment owned by a transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.final-termination",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.interchange-envelope",
+        "description": "16 ISA fields and 2 IEA fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.group-count",
+        "description": "IEA01 reconciles to actual groups.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.functional-group-envelope",
+        "description": "Each GS has at least 8 fields and GE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-count",
+        "description": "Each GE01 reconciles to transactions in that group.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-envelope",
+        "description": "Each ST has at least 2 fields and SE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-code",
+        "description": "Every ST01 is 820.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.version",
+        "description": "ISA12 and every GS08 match selected DEMO identifiers. ST03 is excluded pending an implementation guide.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.control-numbers",
+        "description": "Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.segment-count",
+        "description": "Each SE01 equals segments in its own ST–SE transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.payment-remittance",
+        "description": "DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "edi-820-008030",
+    "messageVersion": "008030",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.0.0",
+    "coverageRevision": "edi-820-008030@2.0.0",
+    "coverage": [
+      {
+        "id": "edi.fixed-header",
+        "description": "ISA fixed separator positions and distinct element/component/segment delimiters.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.final-termination",
+        "description": "Final segment terminator present (trailing whitespace permitted).",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.fixed-header",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.envelope-nesting",
+        "description": "One interchange; nonempty groups and transactions; every data segment owned by a transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.final-termination",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.interchange-envelope",
+        "description": "16 ISA fields and 2 IEA fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.group-count",
+        "description": "IEA01 reconciles to actual groups.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.functional-group-envelope",
+        "description": "Each GS has at least 8 fields and GE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-count",
+        "description": "Each GE01 reconciles to transactions in that group.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-envelope",
+        "description": "Each ST has at least 2 fields and SE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-code",
+        "description": "Every ST01 is 820.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.version",
+        "description": "ISA12 and every GS08 match selected DEMO identifiers. ST03 is excluded pending an implementation guide.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.control-numbers",
+        "description": "Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.segment-count",
+        "description": "Each SE01 equals segments in its own ST–SE transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.payment-remittance",
+        "description": "DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  }
+]

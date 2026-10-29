@@ -273,7 +273,7 @@ test("ReadMe expanded NACHA inline and modal presets use the new candidate indep
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-expanded-public-1.0.0");
+  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-expanded-public-1.1.0");
   await page.locator("#expanded-launch").click();
   const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
   await expect(dialog).toBeVisible();

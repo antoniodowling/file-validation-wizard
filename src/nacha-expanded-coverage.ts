@@ -1,7 +1,7 @@
 import type { CoverageRule, FormatPack } from "./types";
 import { nachaCoverageFor } from "./nacha-coverage";
-export const NACHA_EXPANDED_REVISION = "nacha-expanded-public-1.0.0";
-export const NACHA_EXPANDED_GUIDE = "Public sources reviewed 2026-10-14; origination-expanded-public-2026-r1; full current Operating Rules/UN-EDIFACT qualification deferred";
+export const NACHA_EXPANDED_REVISION = "nacha-expanded-public-1.1.0";
+export const NACHA_EXPANDED_GUIDE = "Public sources reviewed 2026-10-14; remittance payload locations corrected 2026-10-29; origination-expanded-public-2026-r1; full current Operating Rules/UN-EDIFACT qualification deferred";
 export const NACHA_EXPANDED_EXCLUSIONS = Object.freeze([
   "CANDIDATE public-source implementation only; no full 2026 Rules compliance, production approval, hosted ReadMe acceptance or bank acceptance.",
   "No account validity, routing-directory membership, authorization, real purpose/eligibility, funds availability, settlement, live windows or submission.",

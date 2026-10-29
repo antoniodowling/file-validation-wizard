@@ -33,8 +33,8 @@ const xmlDeclarationRule: ValidationRule = Object.freeze({
   field: "XML declaration",
   defaultLocator: "document",
   evaluate: (context: ValidationContext) => ({
-    outcome: context.source.trimStart().startsWith("<?xml") ? "PASS" as const : "WARNING" as const,
-    message: context.source.trimStart().startsWith("<?xml")
+    outcome: context.xml?.hasDeclaration === true ? "PASS" as const : "WARNING" as const,
+    message: context.xml?.hasDeclaration === true
       ? "An XML declaration is present."
       : "Add an XML declaration to make the document encoding explicit.",
   }),

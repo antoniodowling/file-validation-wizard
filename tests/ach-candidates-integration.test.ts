@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import fixtures from "../demo-files/ach-candidates/manifest.json";
+import r2Snapshot from "../docs/coverage/nacha-origination-r2-1.1.0.json";
 import snapshots from "../docs/coverage/ach-candidates-1.0.0.json";
 import { ACK_PACK, CONTROL_TOTAL_PACK, ORIGINATION_R2_PACK, RETURNS_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
@@ -25,7 +26,7 @@ describe("integrated ACH candidate revisions", () => {
     else expect(run.verdict).toBe(fixture.expectedStatus);
   });
   it("freezes separate new coverage without changing historical snapshots", () => {
-    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(snapshots);
+    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual([r2Snapshot[0], ...snapshots.slice(1)]);
   });
   it("exports bank-reported rejection independently of a passing validity verdict", () => {
     const run = validateSource("rejected.txt", source("ack-rejected-pass.txt"), ACK_PACK);

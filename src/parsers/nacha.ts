@@ -27,8 +27,9 @@ export const NACHA_EXPANDED_RULE_IDS: readonly string[] = Object.freeze([...NACH
 const ORIGINATION_R2_IDS = ["description-case", "description-sec", "healthcare-addenda", "healthcare-trn"] as const;
 export const NACHA_ORIGINATION_R2_RULE_IDS: readonly string[] = Object.freeze([...NACHA_EXPANDED_RULE_IDS, ...ORIGINATION_R2_IDS.map(id => `nacha.${id}`)]);
 type Id = typeof IDS[number] | typeof EXPANDED_IDS[number] | typeof ORIGINATION_R2_IDS[number];
-interface Check { outcome: RuleOutcome; count: number; field: string; message: string; row: RecordRow | undefined; from: number; to: number }
+interface Check { outcome: RuleOutcome; count: number; field: string; message: string; row: RecordRow | undefined; from: number; to: number; location: FindingLocation | undefined }
 function location(check: Check): FindingLocation {
+  if (check.location) return check.location;
   if (!check.row) return { kind: "file-wide", explanation: "This check applies to the entire ACH file." };
   return { kind: "located", primary: { kind: check.from === 1 && check.to === 94 || check.field === "Batch control identifiers" || check.field === "File header constants" ? "context" : "exact", label: `Record ${check.row.number}, columns ${check.from}-${check.to}`,
     span: { start: check.row.start + check.from - 1, end: Math.min(check.row.start + check.to, check.row.start + check.row.text.length) } }, related: [] };
@@ -44,18 +45,18 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   if (originationR2) for (const id of ORIGINATION_R2_IDS) conditionalAbsent.add(id);
   // Aggregate by rule, retain the first offending field, and count every violation.
   // Memory and output remain bounded even for a 25 MB file with repeated errors.
-  const check = (id: Id, ok: boolean, field: string, message: string, row?: RecordRow, from = 1, to = 94, warning = false): void => {
+  const check = (id: Id, ok: boolean, field: string, message: string, row?: RecordRow, from = 1, to = 94, warning = false, findingLocation?: FindingLocation): void => {
     const previous = checks.get(id);
     if (ok) {
-      if (!previous) checks.set(id, { outcome: "PASS", count: 0, field, message: "The checked fields meet this profile's requirement.", row, from, to });
+      if (!previous) checks.set(id, { outcome: "PASS", count: 0, field, message: "The checked fields meet this profile's requirement.", row, from, to, location: findingLocation });
       return;
     }
     if (previous && previous.outcome !== "PASS") {
-      if (previous.outcome === "WARNING" && !warning) checks.set(id, { outcome: "ERROR", count: previous.count + 1, field, message, row, from, to });
+      if (previous.outcome === "WARNING" && !warning) checks.set(id, { outcome: "ERROR", count: previous.count + 1, field, message, row, from, to, location: findingLocation });
       else previous.count += 1;
       return;
     }
-    checks.set(id, { outcome: warning ? "WARNING" : "ERROR", count: 1, field, message, row, from, to });
+    checks.set(id, { outcome: warning ? "WARNING" : "ERROR", count: 1, field, message, row, from, to, location: findingLocation });
   };
   const finish = (parseable: boolean): ParserOutput => ({
     notApplicable: parseable ? [...conditionalAbsent].filter(id => !checks.has(id) && (id !== "web-credit-originator" || expanded || checks.get("transaction-code")?.outcome !== "ERROR")).map(id => `nacha.${id}`) : [],
@@ -138,9 +139,10 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     required(bh, 5, 20, "batch-required", "Company name");
     required(bh, 41, 50, "batch-required", "Company identification");
     required(bh, 54, 63, "batch-required", "Company entry description");
-    if (!expanded) check("batch-required", slice(bh, 54, 63).trim() !== "REVERSAL", "Company entry description", "Reversal batches are outside this ordinary origination profile.", bh, 54, 63);
     const description = slice(bh, 54, 63);
     const upperDescription = description.toUpperCase();
+    // Case-insensitive admission is conservative tool policy, not case normalization.
+    if (!expanded && upperDescription.includes("REVERSAL")) throw new UnsupportedInputError("Declared reversal markers, including malformed-case variants, are outside the ordinary origination profile. Select an expanded profile; no format verdict is issued.");
     const payroll = originationR2 && upperDescription.includes("PAYROLL");
     const purchase = originationR2 && upperDescription.includes("PURCHASE");
     const healthcare = originationR2 && upperDescription === "HCCLAIMPMT";
@@ -173,6 +175,11 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     let current: RecordRow | undefined;
     let addenda = 0;
     let payload: string[] = [];
+    let payloadRows: RecordRow[] = [];
+    const payloadLocation = (): FindingLocation => {
+      const targets = payloadRows.map(row => ({ kind: "context" as const, label: `Payment-related addenda payload: record ${row.number}, columns 4-83`, span: { start: row.start + 3, end: row.start + 83 } }));
+      return { kind: "located", primary: targets[0]!, related: targets.slice(1), relatedTruncated: addenda > targets.length };
+    };
     let payloadKnown = true;
     const finishEntry = (): void => {
       if (!current) return;
@@ -193,12 +200,12 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
               // This checks a whole TRN segment, not the complete ASC X12 5010 835 guide.
               const trn = payload.join("").trimEnd();
               const elements = trn.slice(0, -1).split("*");
-              check("healthcare-trn", /^TRN\*1\*[^*~]+\*[^*~]+(?:\*[^*~]*)?~$/.test(trn) && !!elements[2]?.trim() && !!elements[3]?.trim(), "Healthcare TRN segment", "Healthcare CCD payment addenda must contain a complete 835 reassociation TRN segment with trace type 1, trace number and originating company identifier. Full 835 business-guide conformance remains unverified.", current, 79, 79);
+              check("healthcare-trn", /^TRN\*1\*[^*~\\]+\*[^*~\\]+(?:\*[^*~\\]*)?[~\\]$/.test(trn) && !!elements[2]?.trim() && !!elements[3]?.trim(), "Healthcare TRN segment", "Healthcare CCD payment addenda must contain a complete 835 reassociation TRN segment with trace type 1, trace number and originating company identifier. Full 835 business-guide conformance remains unverified.", payloadRows[0], 4, 83, false, payloadLocation());
             } else { conditionalAbsent.delete("healthcare-trn"); incompleteR2Checks.add("healthcare-trn"); }
           }
         }
         if (sec === "CTX" && addenda > 0) {
-          if (payloadKnown) check("ctx-remittance", ctxX12Syntax(payload.join(""), pack), "CTX remittance syntax", "CTX X12 requires a complete transaction set with BPR or BPS and matching envelope references/counts. Complete X12 business-guide conformance is outside scope.", current, 55, 58);
+          if (payloadKnown) check("ctx-remittance", ctxX12Syntax(payload.join(""), pack), "CTX remittance syntax", "CTX X12 requires a complete transaction set with BPR or BPS and matching envelope references/counts. Complete X12 business-guide conformance is outside scope.", payloadRows[0], 4, 83, false, payloadLocation());
           else conditionalAbsent.delete("ctx-remittance");
         }
       }
@@ -210,13 +217,13 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       bt.count += 1n;
       if (row.text[0] === "7") {
         addenda += 1;
-        if (expanded && (sec === "CTX" || (healthcare && sec === "CCD"))) { payload.push(slice(row, 4, 83)); payloadKnown = payloadKnown && slice(row, 2, 3) === "05"; }
+        if (expanded && (sec === "CTX" || (healthcare && sec === "CCD"))) { payload.push(slice(row, 4, 83)); if (payloadRows.length < 33) payloadRows.push(row); payloadKnown = payloadKnown && slice(row, 2, 3) === "05"; }
         check("addenda-type", slice(row, 2, 3) === "05", "Addenda type", "Only payment-related addenda type 05 is supported; return and notification addenda are outside this profile.", row, 2, 3);
         check("addenda-sequence", number(slice(row, 84, 87)) === BigInt(addenda), "Addenda sequence", "Addenda sequence must begin at 0001 and increase consecutively for each entry.", row, 84, 87);
         check("addenda-link", !!current && digits(slice(row, 88, 94)) && slice(row, 88, 94) === slice(current, 88, 94), "Addenda entry sequence", "Addenda entry sequence must match the final seven digits of its preceding entry trace.", row, 88, 94);
         continue;
       }
-      finishEntry(); current = row; addenda = 0; payload = []; payloadKnown = true;
+      finishEntry(); current = row; addenda = 0; payload = []; payloadRows = []; payloadKnown = true;
       const code = slice(row, 2, 3);
       const entryType = expanded ? ACH_ENTRY_TYPES[code] : undefined;
       if (expanded && entryType?.loan && ["WEB", "TEL"].includes(sec)) throw new UnsupportedInputError("Loan account combinations with WEB/TEL are not source-qualified in this candidate. No format verdict is issued.");
