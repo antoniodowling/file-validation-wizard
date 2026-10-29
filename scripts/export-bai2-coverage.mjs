@@ -13,5 +13,6 @@ try {
   const { BAI2_PACK } = await import(pathToFileURL(join(directory, 'packs.mjs')).href);
   const { provenanceFor } = await import(pathToFileURL(join(directory, 'coverage.mjs')).href);
   const { buildRevision, ...snapshot } = provenanceFor(BAI2_PACK);
-  await writeFile('docs/coverage/bai2-candidate-1.0.0.json', JSON.stringify([snapshot], null, 2) + '\n');
+  // Published 1.0.0 remains historical evidence; never rewrite it for new semantics.
+  await writeFile('docs/coverage/bai2-candidate-1.1.0.json', JSON.stringify([snapshot], null, 2) + '\n');
 } finally { await rm(directory, { recursive: true, force: true }); }

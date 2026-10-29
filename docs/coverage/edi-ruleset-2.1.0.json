@@ -1,0 +1,473 @@
+[
+  {
+    "schemaVersion": "2",
+    "profileId": "edi-820-004010",
+    "messageVersion": "004010",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "edi-820-004010@2.1.0",
+    "coverage": [
+      {
+        "id": "edi.fixed-header",
+        "description": "ISA fixed separator positions and distinct delimiters; standalone 005010 admits one-character CR/LF segment terminators.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.final-termination",
+        "description": "Final segment terminator present; trailing space/CR/LF presentation characters cannot consume the selected terminator.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.fixed-header",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.envelope-nesting",
+        "description": "One interchange; nonempty groups and transactions; every data segment owned by a transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.final-termination",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.interchange-envelope",
+        "description": "16 ISA fields and 2 IEA fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.group-count",
+        "description": "IEA01 reconciles to actual groups.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.functional-group-envelope",
+        "description": "Each GS has at least 8 fields and GE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-count",
+        "description": "Each GE01 reconciles to transactions in that group.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-envelope",
+        "description": "Each ST has at least 2 fields and SE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-code",
+        "description": "Every ST01 is 820.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.version",
+        "description": "004010/005010 ISA12 and every GS08 match selected DEMO identifiers; 008030 is unqualified and cannot receive version PASS. ST03 remains excluded.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.control-numbers",
+        "description": "Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.segment-count",
+        "description": "Each SE01 equals segments in its own ST–SE transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.payment-remittance",
+        "description": "DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-004010, message version 004010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "edi-820-005010",
+    "messageVersion": "005010",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "edi-820-005010@2.1.0",
+    "coverage": [
+      {
+        "id": "edi.fixed-header",
+        "description": "ISA fixed separator positions and distinct delimiters; standalone 005010 admits one-character CR/LF segment terminators.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.final-termination",
+        "description": "Final segment terminator present; trailing space/CR/LF presentation characters cannot consume the selected terminator.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.fixed-header",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.envelope-nesting",
+        "description": "One interchange; nonempty groups and transactions; every data segment owned by a transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.final-termination",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.interchange-envelope",
+        "description": "16 ISA fields and 2 IEA fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.group-count",
+        "description": "IEA01 reconciles to actual groups.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.functional-group-envelope",
+        "description": "Each GS has at least 8 fields and GE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-count",
+        "description": "Each GE01 reconciles to transactions in that group.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-envelope",
+        "description": "Each ST has at least 2 fields and SE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-code",
+        "description": "Every ST01 is 820.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.version",
+        "description": "004010/005010 ISA12 and every GS08 match selected DEMO identifiers; 008030 is unqualified and cannot receive version PASS. ST03 remains excluded.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.control-numbers",
+        "description": "Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.segment-count",
+        "description": "Each SE01 equals segments in its own ST–SE transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.payment-remittance",
+        "description": "DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-005010, message version 005010; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  },
+  {
+    "schemaVersion": "2",
+    "profileId": "edi-820-008030",
+    "messageVersion": "008030",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.1.0",
+    "coverageRevision": "edi-820-008030@2.1.0",
+    "coverage": [
+      {
+        "id": "edi.fixed-header",
+        "description": "ISA fixed separator positions and distinct delimiters; standalone 005010 admits one-character CR/LF segment terminators.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.final-termination",
+        "description": "Final segment terminator present; trailing space/CR/LF presentation characters cannot consume the selected terminator.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.fixed-header",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.envelope-nesting",
+        "description": "One interchange; nonempty groups and transactions; every data segment owned by a transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.final-termination",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.interchange-envelope",
+        "description": "16 ISA fields and 2 IEA fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.group-count",
+        "description": "IEA01 reconciles to actual groups.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.functional-group-envelope",
+        "description": "Each GS has at least 8 fields and GE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-count",
+        "description": "Each GE01 reconciles to transactions in that group.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-envelope",
+        "description": "Each ST has at least 2 fields and SE has 2 fields.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.transaction-set-code",
+        "description": "Every ST01 is 820.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.version",
+        "description": "004010/005010 ISA12 and every GS08 match selected DEMO identifiers; 008030 is unqualified and cannot receive version PASS. ST03 remains excluded.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.control-numbers",
+        "description": "Populated ISA13/IEA02, GS06/GE02, ST02/SE02 match within their own envelopes.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.segment-count",
+        "description": "Each SE01 equals segments in its own ST–SE transaction.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "edi.payment-remittance",
+        "description": "DEMO expectation: exactly one BPR inside each transaction; no full 820 content validation.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "edi.envelope-nesting",
+        "reference": "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "The admitted source contains non-whitespace text.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile edi-820-008030, message version 008030; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+        "evidence": "tests/edi-integrity.test.ts; tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  }
+]

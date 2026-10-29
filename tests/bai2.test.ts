@@ -9,7 +9,7 @@ import { validationRunToCsv, validationRunToJson } from "../src/csv";
 import { ResourceLimitError } from "../src/resource-policy";
 import { parseBai2 } from "../src/parsers/bai2";
 import { provenanceFor } from "../src/coverage";
-import coverageSnapshot from "../docs/coverage/bai2-candidate-1.0.0.json";
+import coverageSnapshot from "../docs/coverage/bai2-candidate-1.1.0.json";
 
 const fixture = (name: string): string => readFileSync(`demo-files/bai2/${name}`, "utf8");
 const pass = (): string => fixture("balances-pass.bai2");
@@ -176,7 +176,7 @@ describe("Huntington BAI2 candidate", () => {
     const report = validateSource("=SYNTHETIC.bai2", pass(), BAI2_PACK);
     expect(validationRunToCsv(report)).toContain("'=SYNTHETIC.bai2");
     const json = JSON.parse(validationRunToJson(report));
-    expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.rulesetRevision).toBe("huntington-bai2-candidate-1.0.0");
+    expect(json.exportSchemaVersion).toBe("3"); expect(json.provenance.rulesetRevision).toBe("huntington-bai2-candidate-1.1.0");
     expect(json.provenance.exclusions.join(" ")).toContain("CSV conversion");
     expect(JSON.parse(validationRunToJson(run(fixture("funds-unsupported.bai2")))).verdict).toBeNull();
   });

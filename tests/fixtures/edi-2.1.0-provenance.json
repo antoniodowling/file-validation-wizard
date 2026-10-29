@@ -1,0 +1,10 @@
+[
+  {
+    "path": "tests/hardening.test.ts",
+    "sha256": "0f25f0ffc3b133309ba44127c502984ab919291624da759e82c47b6c015823ec",
+    "previousSha256": "f6395f6689cff20e4f9f7b1f27b81b5f74882e3c59e1f2e41545694d51d88b04",
+    "sourceRevision": "edi-ruleset-2.1.0",
+    "change": "The disallowed newer-group negative control replaces the now explicitly unsupported older-group variant. Historical synthetic-provenance.json is unchanged.",
+    "intendedClaim": "synthetic structural regression only; not complete X12 or bank conformance"
+  }
+]

@@ -55,7 +55,8 @@ export interface IsoVersionIdentifiers {
 
 export interface EdiVersionIdentifiers {
   readonly kind: "EDI_X12";
-  readonly isa12: string;
+  readonly isa12?: string;
+  readonly unqualifiedReason?: string;
   readonly gs08: string;
   readonly st03?: string;
 }
