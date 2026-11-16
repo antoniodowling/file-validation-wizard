@@ -16,8 +16,8 @@ async function runWorker(failMapping = false, includeExplorer = false) {
   const { locateFindings } = await import("../src/finding-locations");
   if (failMapping) vi.mocked(locateFindings).mockImplementationOnce(() => { throw new Error("PRIVATE-SOURCE-TEXT"); });
   await import("../src/validation.worker");
-  const source = validPain001.replace("pain.001.001.99", "pain.001.001.09").replace("<NbOfTxs>1", "<NbOfTxs>bad");
-  const request: WorkerRequest = { type: "validate", fileName: "test.xml", packId: "pain-001-09", bytes: new TextEncoder().encode(source).buffer, snapshotId: 12, includeFindingLines: true, includeExplorer };
+  const source = validPain001.replace("pain.001.001.99", "pain.001.001.03").replace("<NbOfTxs>1", "<NbOfTxs>bad");
+  const request: WorkerRequest = { type: "validate", fileName: "test.xml", packId: "pain-001-03", bytes: new TextEncoder().encode(source).buffer, snapshotId: 12, includeFindingLines: true, includeExplorer };
   worker.dispatchEvent(new MessageEvent("message", { data: request }));
   return worker.postMessage.mock.calls.map(([response]) => response);
 }
