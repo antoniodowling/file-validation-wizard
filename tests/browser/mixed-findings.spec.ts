@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const scenarios = [
