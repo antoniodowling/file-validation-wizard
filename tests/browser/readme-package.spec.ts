@@ -299,7 +299,7 @@ test("a retired ACK modal deep link opens with no executable preset", async ({ p
   const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Continue" })).toBeDisabled();
-  await expect(dialog.locator('input[type="file"]')).toBeDisabled();
+  await expect(dialog.locator('[id$="step-2-panel"]')).toBeHidden();
   await expect(dialog.getByRole("combobox", { name: "File format" })).toBeEnabled();
 });
 
