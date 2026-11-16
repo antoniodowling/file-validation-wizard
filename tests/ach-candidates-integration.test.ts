@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import fixtures from "../demo-files/ach-candidates/manifest.json";
 
-import snapshots from "./current-coverage";
+import activeSnapshots from "./current-coverage";
+import publishedSnapshots from "../docs/coverage/report-schema-4.0.0.json";
 import { ACK_PACK, CONTROL_TOTAL_PACK, ORIGINATION_R2_PACK, RETURNS_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validateWorkerRequest } from "../src/worker-request";
@@ -26,7 +27,8 @@ describe("integrated ACH candidate revisions", () => {
     else expect(run.verdict).toBe(fixture.expectedStatus);
   });
   it("freezes separate new coverage without changing historical snapshots", () => {
-    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(packs.map(pack => snapshots.find(s => s.profileId === pack.id)));
+    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(packs.map(pack =>
+      [...activeSnapshots, ...publishedSnapshots].find(s => s.profileId === pack.id)));
   });
   it("exports bank-reported rejection independently of a passing validity verdict", () => {
     const run = validateSource("rejected.txt", source("ack-rejected-pass.txt"), ACK_PACK);
@@ -41,13 +43,22 @@ describe("integrated ACH candidate revisions", () => {
     const csv = validationRunToCsv(validateSource("formula.txt", source("ack-formula-qualifier-pass.txt"), ACK_PACK));
     expect(csv).toContain('"\'=SUM(1)"');
   });
-  it.each([ACK_PACK, CONTROL_TOTAL_PACK, RETURNS_PACK])("retains forbidden BOM input for $id in worker decoding", pack => {
+  it.each([ACK_PACK, CONTROL_TOTAL_PACK, RETURNS_PACK])("retains forbidden BOM semantics but hides retired $id from worker dispatch", pack => {
     const name = pack === ACK_PACK ? "ack-received-pass.txt" : pack === CONTROL_TOTAL_PACK ? "totals-pass.txt" : "returns-ccd-pass.ach";
-    const text = source(name);
-    const response = validateWorkerRequest({type:"validate",packId:pack.id,fileName:name,bytes:new TextEncoder().encode("\uFEFF"+text).buffer,includeExplorer:true});
-    expect(response.type).toBe("complete");
-    if (response.type === "complete") { expect(response.source).toBe("\uFEFF"+text); expect(response.run.overallStatus).toBe("FAIL"); expect(response.run.reportedDisposition).toBeUndefined(); }
+    const bomSource = "\uFEFF" + source(name);
+    const archivedRun = validateSource(name, bomSource, pack);
+    expect(archivedRun.overallStatus).toBe("FAIL");
+    expect(archivedRun.reportedDisposition).toBeUndefined();
+    const response = validateWorkerRequest({ type: "validate", packId: pack.id, fileName: name,
+      bytes: new TextEncoder().encode(bomSource).buffer, includeExplorer: true });
+    if (pack === CONTROL_TOTAL_PACK) {
+      expect(response.type).toBe("complete");
+      if (response.type === "complete") expect(response.source).toBe(bomSource);
+    } else {
+      expect(response).toEqual({ type: "error", code: "PROFILE_UNAVAILABLE" });
+    }
   });
+
   it("keeps authoritative schema-4 finding spans for explorer navigation", () => {
     const text=source("totals-date-fail.txt"); const run=validateSource("bad.txt",text,CONTROL_TOTAL_PACK);
     const finding=locateFindings(text,CONTROL_TOTAL_PACK,run).find(location=>run.results.find(result=>result.ordinal===location.ordinal)?.ruleId==="ach-totals.transmission-date")!;
