@@ -156,7 +156,9 @@ describe("validation lifecycle", () => {
       q("#format-search").dispatchEvent(new Event("input")); q('[role="option"]').click();
     }
     if (action === "version") {
-      q<HTMLSelectElement>("#version-select").value = "pain.001.001.03";
+      // V3 is the only retained ISO version; clearing the selection now
+      // exercises the same cancellation boundary as changing versions.
+      q<HTMLSelectElement>("#version-select").value = "";
       q("#version-select").dispatchEvent(new Event("change"));
     }
     if (action === "unmount") unmount();
