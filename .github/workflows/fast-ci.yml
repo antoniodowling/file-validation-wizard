@@ -13,7 +13,7 @@ jobs:
     name: Fast source validation
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -45,19 +45,6 @@ jobs:
         if: steps.scope.outputs.build == 'true'
       - run: npm run build
         if: steps.scope.outputs.build == 'true'
-      - name: Temporary PR 66 full retirement unit and ReadMe generation qualification
-        if: github.event.pull_request.number == 66 && steps.scope.outputs.build == 'true'
-        run: |
-          npm run test
-          npm run test:stress-files
-          npm run build:readme
-          npm run test:readme-package
-      - name: Temporary PR 66 ReadMe drift and three-browser regression
-        if: github.event.pull_request.number == 66 && steps.scope.outputs.build == 'true'
-        run: |
-          npm run check:readme-drift
-          npx playwright install --with-deps chromium firefox webkit
-          npm run test:e2e -- --workers=2 --reporter=list
       - name: Validate synthetic fixture families
         if: steps.scope.outputs.fixtures == 'true'
         run: >-
