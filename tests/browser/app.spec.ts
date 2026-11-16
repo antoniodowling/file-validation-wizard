@@ -160,7 +160,7 @@ test("opens the retained NACHA R2 profile and removes unsupported catalog format
 
 test("validates mixed NACHA files, warnings and errors with exact source navigation and CSV", async ({ page }) => {
   await page.goto("/");
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Continue" }).click();
   const upload = async (file: string) => {
     await page.locator("#file-input").setInputFiles(demoFile(`nacha/${file}`));
@@ -450,7 +450,7 @@ test("paginates filtered validation results in groups of 25", async ({ page }) =
   await expect(page.locator("#results-pagination")).toBeHidden();
 });
 
-test("shows the intended PASS and FAIL presentations for the PAIN.001.001.09 demo files", async ({ page }) => {
+test("shows V3 PASS and FAIL while preserving historical PAIN.001 source files", async ({ page }) => {
   await page.goto("/");
   await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles(v3XmlFixture("pain.001.001.09-pass.xml"));
