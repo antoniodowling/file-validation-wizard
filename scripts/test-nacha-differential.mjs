@@ -139,4 +139,3 @@ test('real Wizard R2 runtime loads through Vite SSR and validates a known passin
     assert.equal(report.rulesetRevision, 'nacha-origination-public-2026-r2.2');
   } finally { await runner.close(); }
 });
-
