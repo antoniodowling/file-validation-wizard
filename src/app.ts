@@ -1015,8 +1015,6 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     requiredElement<HTMLElement>("#result-basis").textContent = executionStatus === "COMPLETED"
       ? `${completedSummary} Passing these checks does not guarantee payment acceptance or processing.`
       : `${executionStatus === "UNSUPPORTED" ? "This file is not supported." : "Validation could not be completed."} ${runController.acceptedRun.executionReason ?? ""}`.trim();
-      requiredElement<HTMLElement>("#result-basis").textContent += " Public specification profile: file fields, addenda relationships, counts, hashes, and amounts. Holidays, cutoffs, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance.";
-    }
     if (runController.acceptedRun.formatId === "nacha-origination-expanded-public-2026-r2") requiredElement<HTMLElement>("#result-basis").textContent += " Expanded public-source candidate; original matching, real purpose, deadlines and complete remittance business guides are unverified. See coverage for source gates.";
     const reported = runController.acceptedRun.reportedDisposition;
     const dispositionNode = requiredElement<HTMLElement>("#reported-disposition");
