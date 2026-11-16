@@ -18,7 +18,7 @@ async function scan(page: Page, info: TestInfo): Promise<void> {
 const v3Fixture = (fixture: string) => ({
   name: `pain.001.001.03-${fixture}.xml`,
   mimeType: "application/xml",
-  buffer: Buffer.from(readFileSync(v3Fixture(fixture), "utf8")
+  buffer: Buffer.from(readFileSync(resolve(process.cwd(), "demo-files", `pain.001.001.09-${fixture}.xml`), "utf8")
     .replaceAll("pain.001.001.09", "pain.001.001.03")),
 });
 
@@ -46,7 +46,7 @@ for (const [fixture, outcome] of [
 ] as const) {
   test(`accessibility: results ${fixture}`, async ({ page }, info) => {
     await uploadStep(page);
-    await page.locator("#file-input").setInputFiles(resolve(process.cwd(), "demo-files", `pain.001.001.09-${fixture}.xml`));
+    await page.locator("#file-input").setInputFiles(v3Fixture(fixture));
     await page.getByRole("button", { name: "Validate file" }).click();
     await expect(page.locator("#results-title")).toHaveText(outcome);
     await expect(page.locator(".cm-content")).toBeVisible();
