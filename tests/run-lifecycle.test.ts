@@ -31,7 +31,7 @@ vi.mock("bootstrap-icons/icons/exclamation-triangle.svg?raw", () => ({ default: 
 let root: HTMLDivElement;
 let unmount: () => void;
 const q = <T extends HTMLElement = HTMLElement>(selector: string): T => root.querySelector<T>(selector)!;
-const bytes = () => new TextEncoder().encode(validPain001.replace("pain.001.001.99", "pain.001.001.09")).buffer;
+const bytes = () => new TextEncoder().encode(validPain001.replace("pain.001.001.99", "pain.001.001.03")).buffer;
 function chooseFile(name: string, read: () => Promise<ArrayBuffer> = async () => bytes()) {
   const file = new File(["synthetic"], name);
   Object.defineProperty(file, "arrayBuffer", { value: read });
@@ -48,7 +48,7 @@ function expectIncomplete() {
 function selectPainProfile() {
   q<HTMLInputElement>("#format-search").value = "pain.001";
   q("#format-search").dispatchEvent(new Event("input")); q('[role="option"]').click();
-  q<HTMLSelectElement>("#version-select").value = "pain.001.001.09";
+  q<HTMLSelectElement>("#version-select").value = "pain.001.001.03";
   q("#version-select").dispatchEvent(new Event("change")); q("#format-continue").click();
 }
 
@@ -68,7 +68,7 @@ afterEach(() => { unmount(); root.remove(); vi.clearAllTimers(); vi.useRealTimer
 
 describe("validation lifecycle", () => {
   it("shows line numbers in a compact mount and clears them when the file is replaced", async () => {
-    const source = validPain001.replace("pain.001.001.99", "pain.001.001.09").replace("<NbOfTxs>1", "<NbOfTxs>bad");
+    const source = validPain001.replace("pain.001.001.99", "pain.001.001.03").replace("<NbOfTxs>1", "<NbOfTxs>bad");
     chooseFile("same.xml", async () => new TextEncoder().encode(source).buffer);
     await start();
     const worker = control.workers[0]!;
@@ -80,7 +80,7 @@ describe("validation lifecycle", () => {
     expect(root.querySelector("[data-file-explorer]")).toBeNull();
     const row = Array.from(root.querySelectorAll("#finding-rows tr")).find(row => row.textContent?.includes("Number of transactions"))!;
     expect(row.querySelector(".finding-line")!.textContent).toBe("Locating…");
-    const locations = locateFindings(source, findEnabledFormatPack("pain-001-09")!, completion.run);
+    const locations = locateFindings(source, findEnabledFormatPack("pain-001-03")!, completion.run);
     const response: WorkerResponse = { type: "explorer-ready", snapshotId: worker.requests[0]!.snapshotId!, locations: [], lines: findingLines(source, locations) };
     worker.respond(response);
     expect(Array.from(root.querySelectorAll("#finding-rows tr")).find(row => row.textContent?.includes("Number of transactions"))!.querySelector(".finding-line")!.textContent).toBe("4");
@@ -232,7 +232,7 @@ describe("validation lifecycle", () => {
   it("preserves finding-action focus when enrichment updates its label", async () => {
     remountWithExplorer();
     const warningSource = validPain001
-      .replace("pain.001.001.99", "pain.001.001.09")
+      .replace("pain.001.001.99", "pain.001.001.03")
       .replace(/^<\?xml[^>]+>\n/u, "");
     chooseFile("warning.xml", async () => new TextEncoder().encode(warningSource).buffer);
     await start();
