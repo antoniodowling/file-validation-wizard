@@ -68,6 +68,12 @@ jobs:
                       "chunk": source[offset:offset + 2000]
                   }, ensure_ascii=True))
           PY
+      - name: Temporary PR 66 ReadMe drift and Chromium browser regression
+        if: github.event.pull_request.number == 66 && steps.scope.outputs.build == 'true'
+        run: |
+          npm run check:readme-drift
+          npx playwright install --with-deps chromium
+          npm run test:e2e -- --project=chromium --workers=2 --reporter=list
       - name: Validate synthetic fixture families
         if: steps.scope.outputs.fixtures == 'true'
         run: >-
