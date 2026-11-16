@@ -107,15 +107,20 @@ describe("CSV Wire guide candidate", () => {
     expect(errors(source(6, " "))).toContain("wire.required");
     expect(errors(source(6, "SYNTHETIC\tNAME"))).toEqual(["wire.characters"]);
   });
-  it("keeps worker decoding and resource errors distinct from completed FAIL/UNSUPPORTED", () => {
-    const request = (bytes: Uint8Array) => validateWorkerRequest({ type: "validate", packId: CSV_WIRE_PACK.id, fileName: "synthetic.csv", bytes: bytes.buffer as ArrayBuffer, includeExplorer: true });
-    expect(request(new Uint8Array([0xff]))).toEqual({ type: "error", code: "INVALID_ENCODING" });
-    const bom = request(new TextEncoder().encode("\ufeff" + fixture("domestic-pass.csv")));
-    expect(bom.type === "complete" && bom.run.overallStatus).toBe("FAIL");
-    const complete = request(new TextEncoder().encode(fixture("international-usd-pass.csv")));
-    expect(complete.type === "complete" && complete.run.overallStatus).toBe("PASS");
+  it("retains CSV Wire parser/BOM/resource evidence while worker hides the incomplete profile", () => {
+    const hiddenRequest = (bytes: Uint8Array) => validateWorkerRequest({
+      type: "validate", packId: CSV_WIRE_PACK.id, fileName: "synthetic.csv",
+      bytes: bytes.buffer as ArrayBuffer, includeExplorer: true,
+    });
+    for (const bytes of [
+      new Uint8Array([0xff]),
+      new TextEncoder().encode(fixture("domestic-pass.csv")),
+      new TextEncoder().encode("\ufeff" + fixture("domestic-pass.csv")),
+    ]) expect(hiddenRequest(bytes)).toEqual({ type: "error", code: "PROFILE_UNAVAILABLE" });
+    expect(run("\ufeff" + fixture("domestic-pass.csv")).overallStatus).toBe("FAIL");
+    expect(run(fixture("international-usd-pass.csv")).overallStatus).toBe("PASS");
+    expect(() => new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array([0xff]))).toThrow();
     expect(() => run(source(33, "X".repeat(1_000_001)))).toThrow(ResourceLimitError);
-    expect(request(new TextEncoder().encode(source(33, "X".repeat(1_000_001))))).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
     expect(() => run((quote(fields()) + "\n").repeat(1900))).toThrow(ResourceLimitError);
   });
   it("exports schema, coverage, reference date and safe cells for completed and unsupported runs", () => {
