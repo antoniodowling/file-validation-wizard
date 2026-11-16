@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { findEnabledFormatPack } from "../src/format-packs";
+import { ALL_FORMAT_PACKS } from "../src/format-packs";
 import { locateFindings } from "../src/finding-locations";
 import { NACHA_EXPANDED_RULE_IDS } from "../src/parsers/nacha";
 import { validateSource } from "../src/validation";
@@ -14,7 +14,7 @@ const manifest = JSON.parse(readFileSync(resolve(directory, "manifest.json"), "u
 
 describe("synthetic public NACHA origination fixtures", () => {
   it.each(manifest.fixtures)("validates $file with its intended outcome and navigable findings", (fixture) => {
-    const pack = findEnabledFormatPack("nacha-origination-expanded-public-2026-r1");
+    const pack = ALL_FORMAT_PACKS.find(pack => pack.id === "nacha-origination-expanded-public-2026-r1");
     expect(pack).toBeTruthy();
     if (!pack) return;
     const source = readFileSync(resolve(directory, fixture.file), "utf8");
@@ -42,7 +42,7 @@ describe("synthetic public NACHA origination fixtures", () => {
   it("covers every implemented rule's ERROR or WARNING branch in a named fixture", () => {
     const namedCoverage = new Set(manifest.fixtures.flatMap(fixture => fixture.expectedRuleIds));
     expect(NACHA_EXPANDED_RULE_IDS.filter(id => !namedCoverage.has(id))).toEqual([]);
-    const pack = findEnabledFormatPack("nacha-origination-expanded-public-2026-r1");
+    const pack = ALL_FORMAT_PACKS.find(pack => pack.id === "nacha-origination-expanded-public-2026-r1");
     expect(pack).toBeTruthy();
     if (!pack) return;
     const actualCoverage = new Set(manifest.fixtures.flatMap(fixture => validateSource(fixture.file,
