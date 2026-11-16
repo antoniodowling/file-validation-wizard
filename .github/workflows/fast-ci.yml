@@ -45,6 +45,13 @@ jobs:
         if: steps.scope.outputs.build == 'true'
       - run: npm run build
         if: steps.scope.outputs.build == 'true'
+      - name: Temporary PR 66 full retirement unit and ReadMe generation qualification
+        if: github.event.pull_request.number == 66 && steps.scope.outputs.build == 'true'
+        run: |
+          npm run test
+          npm run test:stress-files
+          npm run build:readme
+          npm run test:readme-package
       - name: Validate synthetic fixture families
         if: steps.scope.outputs.fixtures == 'true'
         run: >-
