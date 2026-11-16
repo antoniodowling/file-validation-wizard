@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 
-const failingXmlSample = readFileSync(resolve("demo-files/pain.001.001.09-pass.xml"), "utf8").replace("DEMO-PASS-001", "");
+const failingXmlSample = readFileSync(resolve("demo-files/pain.001.001.09-pass.xml"), "utf8").replaceAll("pain.001.001.09", "pain.001.001.03").replace("DEMO-PASS-001", "");
 
 test("generated pane reflow, sample upload, full source, focus and portable provenance", async ({ page }, info) => {
   await page.goto("/");
@@ -19,7 +19,7 @@ test("generated pane reflow, sample upload, full source, focus and portable prov
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
   await search.fill("pain.001"); await page.getByRole("option", {name:/pain\.001/i}).click();
-  await page.getByLabel("Version",{exact:true}).selectOption("pain.001.001.09");
+  await page.getByLabel("Version",{exact:true}).selectOption("pain.001.001.03");
   await search.fill("MT940");
   await expect(page.getByRole("button",{name:"Continue"})).toBeDisabled();
   await page.getByLabel("Version",{exact:true}).focus();
@@ -75,10 +75,10 @@ test("generated pane reflow, sample upload, full source, focus and portable prov
 test("browser measurements: pathological target, repeated runs and DOM release", async ({ page }, info) => {
   await page.goto("/");
   await page.locator("#format-search").fill("pain.001"); await page.getByRole("option",{name:/pain\.001/i}).click();
-  await page.locator("#version-select").selectOption("pain.001.001.09"); await page.getByRole("button",{name:"Continue"}).click();
+  await page.locator("#version-select").selectOption("pain.001.001.03"); await page.getByRole("button",{name:"Continue"}).click();
   const rows: unknown[] = [];
   for (const size of [100, 300_000, 100]) {
-    const source = `<?xml version="1.0"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"><CstmrCdtTrfInitn><GrpHdr><MsgId>${" ".repeat(size)}</MsgId><NbOfTxs>1</NbOfTxs></GrpHdr><PmtInf/></CstmrCdtTrfInitn></Document>`;
+    const source = `<?xml version="1.0"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"><CstmrCdtTrfInitn><GrpHdr><MsgId>${" ".repeat(size)}</MsgId><NbOfTxs>1</NbOfTxs></GrpHdr><PmtInf/></CstmrCdtTrfInitn></Document>`;
     await page.locator("#file-input").setInputFiles({name:"synthetic.xml",mimeType:"application/xml",buffer:Buffer.from(source)});
     await page.evaluate(() => {
       const state = { last: performance.now(), maxGapMs: 0, timer: 0 };
@@ -110,7 +110,7 @@ test("full-source explorer reaches findings and file end beyond 12000 characters
   await page.goto("/");
   await page.locator("#format-search").fill("pain.001");
   await page.getByRole("option", { name: /pain\.001/i }).click();
-  await page.locator("#version-select").selectOption("pain.001.001.09");
+  await page.locator("#version-select").selectOption("pain.001.001.03");
   await page.getByRole("button", { name: "Continue" }).click();
   const source = failingXmlSample.replace("<Document", `<!--${"source context\n".repeat(2000)}-->\n<Document`);
   await page.locator("#file-input").setInputFiles({ name: "large.xml", mimeType: "application/xml", buffer: Buffer.from(source) });
