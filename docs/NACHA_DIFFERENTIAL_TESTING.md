@@ -70,4 +70,3 @@ npm run compare:nacha -- --help
 ## Privacy and safe handling
 
 Do **not** commit customer NACHA files, derived reports, or Garrett's original HTML to GitHub. Prefer synthetic or expressly authorized test files; real origination files may contain bank account and personal information. If asking ChatGPT to review a directory, a local directory path by itself does not provide remote filesystem access. Upload an authorized ZIP of files or provide them through a connected file source; the CLI can always run directly against your own local directory without uploading its contents.
-
