@@ -52,6 +52,22 @@ jobs:
           npm run test:stress-files
           npm run build:readme
           npm run test:readme-package
+      - name: Capture generated ReadMe source for review-only transport
+        if: github.event.pull_request.number == 66 && steps.scope.outputs.build == 'true'
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in sorted(Path("readme-package").iterdir()):
+              if not path.is_file():
+                  continue
+              source = path.read_text(encoding="utf-8")
+              for offset in range(0, len(source), 2000):
+                  print("READMEBUNDLE_V1:" + json.dumps({
+                      "file": str(path), "index": offset // 2000,
+                      "chunk": source[offset:offset + 2000]
+                  }, ensure_ascii=True))
+          PY
       - name: Validate synthetic fixture families
         if: steps.scope.outputs.fixtures == 'true'
         run: >-
