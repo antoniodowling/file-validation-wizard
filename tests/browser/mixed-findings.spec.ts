@@ -1,9 +1,10 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const scenarios = [
-  { query: "pain.001", version: "pain.001.001.09", file: "pain.001.001.09-fail-with-warnings.xml" },
+  { query: "pain.001", version: "pain.001.001.03", file: "pain.001.001.09-fail-with-warnings.xml" },
   { query: "NACHA", version: "origination-expanded-public-2026-r2", file: "nacha-r2-fail-with-warnings.ach" },
 ];
 for (const scenario of scenarios) test(`${scenario.query} keeps mixed warning/error findings under overall FAIL`, async ({ page }) => {
@@ -12,7 +13,9 @@ for (const scenario of scenarios) test(`${scenario.query} keeps mixed warning/er
   await page.getByRole("option", { name: scenario.query === "NACHA" ? /ACH Payment Instructions/ : /Customer Credit Transfer Initiation/ }).click();
   await page.getByLabel("Version", { exact: true }).selectOption(scenario.version);
   await page.locator("#format-continue").click();
-  await page.locator("#file-input").setInputFiles(resolve(`demo-files/mixed-findings/${scenario.file}`));
+  const fixture = readFileSync(resolve(`demo-files/mixed-findings/${scenario.file}`));
+  const source = scenario.query === "NACHA" ? fixture : Buffer.from(fixture.toString("utf8").replaceAll("pain.001.001.09", "pain.001.001.03"));
+  await page.locator("#file-input").setInputFiles({name: scenario.file, mimeType: "text/plain", buffer: source});
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("FAIL");
   await expect(page.locator("#error-count")).toHaveText("1");
