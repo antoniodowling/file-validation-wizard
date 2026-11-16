@@ -17,10 +17,12 @@
     "export:coverage": "node scripts/export-coverage.mjs",
     "export:nacha-coverage": "node scripts/export-nacha-coverage.mjs",
     "test:e2e": "playwright test",
-    "validate:core": "npm run test && npm run test:stress-files && npm run build && npm run build:readme && npm run test:readme-package",
+    "validate:core": "npm run test && npm run test:nacha-diff && npm run test:stress-files && npm run build && npm run build:readme && npm run test:readme-package",
     "validate": "npm run validate:core && npm run test:e2e",
     "check:readme-drift": "node scripts/check-readme-drift.mjs",
-    "generate:ach-candidate-files": "node scripts/generate-ach-candidates.mjs"
+    "generate:ach-candidate-files": "node scripts/generate-ach-candidates.mjs",
+    "compare:nacha": "node scripts/nacha-differential.mjs",
+    "test:nacha-diff": "node --test scripts/test-nacha-differential.mjs"
   },
   "dependencies": {
     "@codemirror/state": "^6.7.5",

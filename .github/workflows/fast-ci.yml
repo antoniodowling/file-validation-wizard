@@ -45,6 +45,9 @@ jobs:
         if: steps.scope.outputs.build == 'true'
       - run: npm run build
         if: steps.scope.outputs.build == 'true'
+      - name: Test NACHA differential batch harness
+        if: steps.scope.outputs.build == 'true'
+        run: npm run test:nacha-diff
       - name: Validate synthetic fixture families
         if: steps.scope.outputs.fixtures == 'true'
         run: >-
