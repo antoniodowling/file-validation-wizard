@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { findingLines } from "../src/finding-lines";
 import { locateFindings } from "../src/finding-locations";
-import { findEnabledFormatPack } from "../src/format-packs";
+import { ALL_FORMAT_PACKS } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import type { FindingLocationEntry, SourceTargetKind } from "../src/types";
 import { validPain001, validEdi820 } from "./helpers";
@@ -12,7 +12,7 @@ function entry(start: number, end: number, kind: SourceTargetKind = "exact"): Fi
   return { ordinal: 0, location: { kind: "located", primary: { span: { start, end }, kind, label: "Test field" }, related: [] } };
 }
 function mapped(source: string, packId: string, ruleId: string) {
-  const pack = findEnabledFormatPack(packId)!;
+  const pack = ALL_FORMAT_PACKS.find(profile => profile.id === packId)!;
   const run = validateSource("test", source, pack);
   const ordinal = run.results.find((finding) => finding.ruleId === ruleId)!.ordinal;
   return findingLines(source, locateFindings(source, pack, run)).find((line) => line.ordinal === ordinal)!;

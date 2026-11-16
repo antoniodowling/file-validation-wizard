@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMAT_PACKS } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS } from "../src/format-packs";
 import type { EdiVersionIdentifiers, FormatPack, IsoVersionIdentifiers } from "../src/types";
 import { validateSource } from "../src/validation";
 import { ediPack, isoPack, validEdi820, validPain001 } from "./helpers";

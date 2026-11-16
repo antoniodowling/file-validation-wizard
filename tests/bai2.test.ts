@@ -163,14 +163,17 @@ describe("Huntington BAI2 candidate", () => {
     expect(() => run("88,x/\n".repeat(100001))).not.toThrow(); // Stops on invalid ownership immediately.
   });
 
-  it("worker retains a BOM for rejection and rejects invalid UTF-8 before parsing", () => {
-    const request = (bytes: Uint8Array) => validateWorkerRequest({ type: "validate", packId: BAI2_PACK.id, fileName: "synthetic.bai2", bytes: bytes.buffer as ArrayBuffer, includeExplorer: true, snapshotId: 7 });
-    const response = request(new TextEncoder().encode(pass()));
-    expect(response.type).toBe("complete");
-    if (response.type === "complete") { expect(response.run.overallStatus).toBe("PASS"); expect(response.source).toBe(pass()); }
-    const bom = request(new TextEncoder().encode("\uFEFF" + pass()));
-    if (bom.type === "complete") expect(bom.run.overallStatus).toBe("FAIL"); else throw new Error("Expected completed BOM rejection");
-    expect(request(new Uint8Array([0xff]))).toEqual({ type: "error", code: "INVALID_ENCODING" });
+  it("preserves historical BAI2 BOM/UTF-8 checks while denying retired public worker dispatch", () => {
+    const request = (bytes: Uint8Array) => validateWorkerRequest({
+      type: "validate", packId: BAI2_PACK.id, fileName: "synthetic.bai2",
+      bytes: bytes.buffer as ArrayBuffer, includeExplorer: true, snapshotId: 7,
+    });
+    expect(run(pass()).overallStatus).toBe("PASS");
+    expect(run("\uFEFF" + pass()).overallStatus).toBe("FAIL");
+    expect(() => new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array([0xff]))).toThrow();
+    for (const bytes of [new TextEncoder().encode(pass()), new TextEncoder().encode("\uFEFF" + pass()), new Uint8Array([0xff])]) {
+      expect(request(bytes)).toEqual({ type: "error", code: "PROFILE_UNAVAILABLE" });
+    }
   });
   it("exports version-bound coverage, unsupported state and formula-neutralized filenames", () => {
     const report = validateSource("=SYNTHETIC.bai2", pass(), BAI2_PACK);

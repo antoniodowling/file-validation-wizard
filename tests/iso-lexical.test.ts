@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMAT_PACKS } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import type { FormatPack, IsoVersionIdentifiers } from "../src/types";
 

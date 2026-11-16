@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { FORMAT_PACKS } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS } from "../src/format-packs";
 import { syntheticSample } from "../src/samples";
 import { validateSource } from "../src/validation";
 it("generates scoped positive and failing wiring fixtures for selectable versions", () => {

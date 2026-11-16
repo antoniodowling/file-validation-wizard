@@ -1,8 +1,19 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
 
 const demoFile = (name: string): string => resolve(process.cwd(), "demo-files", name);
+// Archived .09 files are immutable. Rebase their synthetic namespace only in-memory
+// when exercising the retained V3 browser UI; never rewrite historical fixtures.
+function v3XmlFixture(name: string, expectedMismatch = false) {
+  const original = readFileSync(demoFile(name), "utf8");
+  const source = expectedMismatch
+    ? original.replaceAll("pain.001.001.03", "pain.001.001.09")
+    : original.replaceAll("pain.001.001.09", "pain.001.001.03");
+  return { name: "synthetic-v3.xml", mimeType: "application/xml", buffer: Buffer.from(source) };
+
+}
 
 async function chooseFormat(page: Page, query: string, optionName: RegExp, version: string): Promise<void> {
   const search = page.locator("#format-search");
@@ -11,7 +22,7 @@ async function chooseFormat(page: Page, query: string, optionName: RegExp, versi
   await page.locator("#version-select").selectOption(version);
 }
 
-async function openXmlUpload(page: Page, code: "pain.001" | "pain.008", version: string): Promise<void> {
+async function openXmlUpload(page: Page, code: "pain.001", version: string): Promise<void> {
   await chooseFormat(page, code, new RegExp(code.replace(".", "\\."), "i"), version);
   await page.getByRole("button", { name: "Continue" }).click();
 }
@@ -55,7 +66,7 @@ test("starts with format search and keeps later-step messaging inside its step",
   await page.locator("#format-search").focus();
   await expect(page.locator("#format-search")).toHaveCSS("outline-style", "none");
   await expect(page.locator("#format-search")).toHaveCSS("box-shadow", /rgb\(3, 79, 84\).*inset/);
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(9);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(3);
   await expect(page.locator(".format-list-header")).toHaveText("FormatCodeStandard");
   await expect(page.locator(".support-badge")).toHaveCount(0);
   await expect(page.locator('#format-listbox [role="option"]').first().locator("span")).toHaveCount(3);
@@ -69,11 +80,11 @@ test("supports keyboard search and dependent version selection", async ({ page }
   await search.press("Enter");
   await expect(search).toHaveValue(/pain\.001/);
   await expect(page.locator("#version-select")).toBeEnabled();
-  await expect(page.locator("#version-select option")).toHaveCount(4);
+  await expect(page.locator("#version-select option")).toHaveCount(2);
   await expect(page.getByText("Choose a version to see accepted extensions.")).toHaveCount(0);
   await expect(page.getByText("Search ISO 20022, SWIFT MT, ASC X12, and Nacha ACH formats.")).toHaveCount(0);
 
-  await page.locator("#version-select").selectOption("pain.001.001.13");
+  await page.locator("#version-select").selectOption("pain.001.001.03");
   await expect(page.locator("#format-selection-help")).toHaveText("See General family guide and sample file");
   await expect(page.locator("#format-selection-help")).not.toContainText("Accepted extensions");
   await expect(page.getByRole("link", { name: "General family guide", exact: true })).toHaveAttribute(
@@ -118,7 +129,7 @@ test("supports keyboard search and dependent version selection", async ({ page }
   await expect(page.locator(".notice-icon")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator(".notice-icon")).toHaveCSS("color", "rgb(109, 89, 10)");
   await expect(page.locator(".notice-icon svg.bi-exclamation-triangle")).toHaveCount(1);
-  await expect(page.locator("#upload-title")).toHaveText("Upload your pain.001.001.13 file");
+  await expect(page.locator("#upload-title")).toHaveText("Upload your pain.001.001.03 file");
   await expect(page.locator("#accepted-extensions + .helper")).toHaveText("Maximum size: 25MB");
   await expect(page.getByRole("button", { name: /Change format/ })).toContainText("←");
   await expect(page.getByRole("button", { name: /Validate file/ })).toContainText("→");
@@ -126,7 +137,7 @@ test("supports keyboard search and dependent version selection", async ({ page }
 
 test("format controls fit and stack in the narrow explorer pane", async ({ page }) => {
   await page.goto("/");
-  await chooseFormat(page, "pain.001", /pain\.001/i, "pain.001.001.13");
+  await chooseFormat(page, "pain.001", /pain\.001/i, "pain.001.001.03");
   const geometry = await page.evaluate(() => ["#format-search", "#version-select", "#format-continue"].map(selector => {
     const element = document.querySelector(selector)!; const box = element.getBoundingClientRect();
     return { width: box.width, left: box.left, right: box.right, top: box.top };
@@ -136,11 +147,11 @@ test("format controls fit and stack in the narrow explorer pane", async ({ page 
   expect(Math.max(...geometry.map(box => box.right)) - Math.min(...geometry.map(box => box.right))).toBeLessThan(2);
 });
 
-test("opens the NACHA public profile and removes unsupported catalog formats", async ({ page }) => {
+test("opens the retained NACHA R2 profile and removes unsupported catalog formats", async ({ page }) => {
   await page.goto("/");
   await page.locator("#format-search").fill("MT940");
   await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(0);
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await expect(page.getByText("Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.locator("#upload-title")).toHaveText("Upload your NACHA / ACH file");
@@ -149,18 +160,18 @@ test("opens the NACHA public profile and removes unsupported catalog formats", a
 
 test("validates mixed NACHA files, warnings and errors with exact source navigation and CSV", async ({ page }) => {
   await page.goto("/");
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Continue" }).click();
   const upload = async (file: string) => {
-    await page.locator("#file-input").setInputFiles(demoFile(`nacha/${file}`));
+    await page.locator("#file-input").setInputFiles(demoFile(`nacha-expanded/${file}`));
     await page.getByRole("button", { name: "Validate file" }).click();
   };
-  await upload("mixed-five-sec-pass.ach");
+  await upload("mixed-entry-types-pass.ach");
   await expect(page.locator("#results-title")).toHaveText("PASS");
-  await expect(page.locator("#result-basis")).toContainText("Passing does not establish full Nacha Rules compliance or bank acceptance.");
+  await expect(page.locator("#result-basis")).toContainText("Expanded public-source candidate");
   const download = page.waitForEvent("download");
   await page.locator("#export-csv").click();
-  expect((await download).suggestedFilename()).toContain("nacha-origination-public-2026");
+  expect((await download).suggestedFilename()).toContain("nacha-origination-expanded-public-2026-r2");
   await page.locator('[data-open-step="2"].button').click();
   await upload("effective-weekend-warning.ach");
   await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
@@ -174,78 +185,67 @@ test("validates mixed NACHA files, warnings and errors with exact source navigat
   await expect(page.locator("[data-file-explorer] [data-detail-message]")).toContainText("check digit");
 });
 
-test("offers only formats and versions with enabled validators", async ({ page }) => {
+test("offers only active formats and rejects retired and hidden searches", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Browse all format references" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Show executable DEMO validators" })).toHaveCount(0);
-
   const search = page.locator("#format-search");
   await search.focus();
   const options = page.locator('#format-listbox [role="option"]');
-  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "pain.008", "820", "NACHA", "ACH Returns", "ACH Control Totals", "File Received ACK", "BAI2", "CSV Wire"]);
-  for (const query of ["MT940", "camt", "821"]) {
-    await search.fill(query);
-    await expect(options).toHaveCount(0);
-    await expect(page.getByText("No formats match your search.")).toBeVisible();
+  await expect(options.locator("span:nth-child(2)")).toHaveText(["pain.001", "NACHA", "ACH Control Totals"]);
+  for (const retired of ["PAIN.008", "EDI 820", "BAI2", "CSV Wire", "ACH Returns", "File Received ACK"]) {
+    await search.fill(retired);
+    await expect(options, retired).toHaveCount(0);
   }
-
-  for (const [query, versions] of [
-    ["pain.001", ["pain.001.001.03", "pain.001.001.09", "pain.001.001.13"]],
-    ["pain.008", ["pain.008.001.02", "pain.008.001.08", "pain.008.001.12"]],
-    ["820", ["004010", "005010", "008030"]],
-    ["NACHA", ["origination-public-2026", "origination-expanded-public-2026-r1", "origination-expanded-public-2026-r2"]],
-    ["ACH Returns", ["returns-network-public-2026-r1"]],
-    ["ACH Control Totals", ["control-total-public-2026-r1"]],
-    ["File Received ACK", ["pipe-1.0-candidate-r1"]],
+  for (const [query, version] of [
+    ["pain.001", "pain.001.001.03"],
+    ["NACHA", "origination-expanded-public-2026-r2"],
+    ["Control Totals", "control-total-public-2026-r1"],
   ] as const) {
     await search.fill(query);
     await (query === "NACHA" ? options.filter({hasText:"ACH Payment Instructions"}) : options).click();
-    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version === "origination-expanded-public-2026-r1" ? "Expanded entry types — public-source candidate (2026 r1)" : version === "origination-expanded-public-2026-r2" ? "Expanded entries and declared healthcare — candidate (2026 r2)" : version === "returns-network-public-2026-r1" ? "General network returns — public-source candidate (2026 r1)" : version === "control-total-public-2026-r1" ? "58-column standalone candidate (2026 r1)" : version === "pipe-1.0-candidate-r1" ? "Single pipe-delimited scenario — candidate (1.0 r1)" : version)]);
-    for (const version of versions) {
-      await page.locator("#version-select").selectOption(version);
-      await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
-    }
+    await expect(page.locator("#version-select option")).toHaveCount(2);
+    await page.locator("#version-select").selectOption(version);
+    await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
   }
 });
 
 test("enforces extensions dynamically and preserves a valid file after an invalid replacement", async ({ page }) => {
   await page.goto("/");
-  await chooseFormat(page, "820", /ASC X12.*820.*Payment Order/i, "005010");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByText("Accepted file types: EDI, X12, 820, TXT")).toBeVisible();
+  await expect(page.getByText("Accepted file types: ACH, TXT")).toBeVisible();
 
   await page.locator("#file-input").setInputFiles({
     name: "wrong.xml",
     mimeType: "application/xml",
     buffer: Buffer.from("<Document/>")
   });
-  await expect(page.getByRole("alert")).toContainText("Choose EDI, X12, 820, TXT");
+  await expect(page.getByRole("alert")).toContainText("Choose ACH, TXT");
   await expect(page.locator("#selected-file")).toBeHidden();
 
   await page.locator("#file-input").setInputFiles({
-    name: "payment.edi",
+    name: "payment.ach",
     mimeType: "text/plain",
     buffer: Buffer.from("demo")
   });
-  await expect(page.locator("#file-name")).toHaveText("payment.edi");
-  await expect(page.locator("#file-extension")).toHaveText(".EDI");
+  await expect(page.locator("#file-name")).toHaveText("payment.ach");
+  await expect(page.locator("#file-extension")).toHaveText(".ACH");
 
   await page.locator("#file-input").setInputFiles({
     name: "replacement.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.from("not valid")
   });
-  await expect(page.locator("#file-name")).toHaveText("payment.edi");
+  await expect(page.locator("#file-name")).toHaveText("payment.ach");
 });
 
 test("validates a matching PAIN profile and opens Results", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.13");
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles({
     name: "credit-transfer.xml",
     mimeType: "application/xml",
     buffer: Buffer.from(`<?xml version="1.0"?>
-      <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.13">
+      <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
         <CstmrCdtTrfInitn>
           <GrpHdr><MsgId>DEMO-1</MsgId><NbOfTxs>1</NbOfTxs></GrpHdr>
           <PmtInf><PmtInfId>PAY-1</PmtInfId></PmtInf>
@@ -278,7 +278,7 @@ test("validates a matching PAIN profile and opens Results", async ({ page }) => 
 
 test("retains prerequisite passes with one format/version error for a mismatched PAIN message", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.09");
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles({
     name: "pain.007.001.09.xml",
     mimeType: "application/xml",
@@ -301,7 +301,7 @@ test("retains prerequisite passes with one format/version error for a mismatched
 
 test("opens labeled namespace context in the read-only file explorer", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.09");
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles({
     name: "wrong-version.xml",
     mimeType: "application/xml",
@@ -333,8 +333,8 @@ test("opens labeled namespace context in the read-only file explorer", async ({ 
 
 test("shows PASS WITH WARNINGS for a valid PAIN file without an XML declaration", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.09");
-  await page.locator("#file-input").setInputFiles(demoFile("pain.001.001.09-pass-with-warnings.xml"));
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
+  await page.locator("#file-input").setInputFiles(v3XmlFixture("pain.001.001.09-pass-with-warnings.xml"));
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
   await expect(page.locator("#result-basis")).toHaveText("Warnings were found. Review them below. Passing these checks does not guarantee payment acceptance or processing.");
@@ -402,7 +402,7 @@ test("paginates filtered validation results in groups of 25", async ({ page }) =
                 fileName: "pagination.xml",
                 formatId: "pain-001-09",
                 formatLabel: "ISO 20022 PAIN.001 — Customer Credit Transfer Initiation",
-                version: "pain.001.001.09",
+                version: "pain.001.001.03",
                 results,
                 errorCount: 0,
                 warningCount: 0,
@@ -419,7 +419,7 @@ test("paginates filtered validation results in groups of 25", async ({ page }) =
   });
 
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.09");
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles({
     name: "pagination.xml",
     mimeType: "application/xml",
@@ -450,10 +450,10 @@ test("paginates filtered validation results in groups of 25", async ({ page }) =
   await expect(page.locator("#results-pagination")).toBeHidden();
 });
 
-test("shows the intended PASS and FAIL presentations for the PAIN.001.001.09 demo files", async ({ page }) => {
+test("shows V3 PASS and FAIL while preserving historical PAIN.001 source files", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.09");
-  await page.locator("#file-input").setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
+  await page.locator("#file-input").setInputFiles(v3XmlFixture("pain.001.001.09-pass.xml"));
   await expect(page.locator("#file-extension")).toHaveText(".XML");
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("PASS");
@@ -462,7 +462,7 @@ test("shows the intended PASS and FAIL presentations for the PAIN.001.001.09 dem
   await expect(page.locator("#pass-count")).toHaveText("11");
 
   await page.locator('[data-open-step="2"]').first().click();
-  await page.locator("#file-input").setInputFiles(demoFile("pain.001.001.09-fail.xml"));
+  await page.locator("#file-input").setInputFiles(v3XmlFixture("pain.001.001.09-fail.xml", true));
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("FAIL");
   await expect(page.locator("#error-count")).toHaveText("1");
@@ -481,9 +481,9 @@ test("shows the intended PASS and FAIL presentations for the PAIN.001.001.09 dem
 
 test("turns malformed XML into a FAIL result instead of a worker error", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.008", "pain.008.001.12");
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles({
-    name: "bad-direct-debit.xml",
+    name: "malformed-v3.xml",
     mimeType: "application/xml",
     buffer: Buffer.from("<Document>"),
   });
@@ -495,16 +495,16 @@ test("turns malformed XML into a FAIL result instead of a worker error", async (
 
 test("changing the format clears downstream file and result state", async ({ page }) => {
   await page.goto("/");
-  await openXmlUpload(page, "pain.001", "pain.001.001.09");
+  await openXmlUpload(page, "pain.001", "pain.001.001.03");
   await page.locator("#file-input").setInputFiles({
     name: "selected.xml",
     mimeType: "application/xml",
     buffer: Buffer.from("<Document/>"),
   });
   await page.getByRole("button", { name: /Change format/ }).click();
-  await chooseFormat(page, "pain.008", /pain\.008.*Customer Direct Debit/i, "pain.008.001.08");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await expect(page.locator("#selected-file")).toBeHidden();
-  await expect(page.locator("#upload-title")).toHaveText("Upload your pain.008.001.08 file");
+  await expect(page.locator("#upload-title")).toHaveText("Upload your NACHA / ACH file");
   await expect(page.locator("#validate-file")).toBeDisabled();
 });
 
@@ -565,11 +565,11 @@ test("uses the embedded portal presentation and has no detectable accessibility 
 });
 
 
-test("expanded NACHA candidate runs locally, exports its coverage, navigates a failure and clears stale verdicts", async ({ page }) => {
+test("NACHA R2 candidate runs locally, exports its coverage, navigates a failure and clears stale verdicts", async ({ page }) => {
   const sourcePosts: string[] = [];
   page.on("request", request => { if (request.postData()?.includes("SYNTHETIC")) sourcePosts.push(request.url()); });
   await page.goto("/");
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r1");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await expect(page.locator("#format-selection-help")).toContainText("monetary, prenote, zero-dollar remittance and reversal");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
@@ -577,9 +577,9 @@ test("expanded NACHA candidate runs locally, exports its coverage, navigates a f
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#result-basis")).toContainText("Expanded public-source candidate");
   const csvDownload = page.waitForEvent("download"); await page.locator("#export-csv").click();
-  const csv = await csvDownload; expect(csv.suggestedFilename()).toContain("origination-expanded-public-2026-r1");
+  const csv = await csvDownload; expect(csv.suggestedFilename()).toContain("origination-expanded-public-2026-r2");
   const jsonDownload = page.waitForEvent("download"); await page.locator("#export-json").click();
-  const json = await jsonDownload; expect(json.suggestedFilename()).toContain("origination-expanded-public-2026-r1");
+  const json = await jsonDownload; expect(json.suggestedFilename()).toContain("origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Back to file" }).click();
   await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/prenote-amount-fail.ach"));
   await page.getByRole("button", { name: "Validate file" }).click();
@@ -599,9 +599,7 @@ test("expanded NACHA candidate runs locally, exports its coverage, navigates a f
 });
 
 for (const scenario of [
-  {query:"ACK", option:/File Received ACK/i, version:"pipe-1.0-candidate-r1", pass:"ack-rejected-pass.txt", fail:"ack-date-fail.txt"},
   {query:"Control Totals", option:/ACH Control Totals/i, version:"control-total-public-2026-r1", pass:"totals-pass.txt", fail:"totals-date-fail.txt"},
-  {query:"ACH Returns", option:/ACH Returns/i, version:"returns-network-public-2026-r1", pass:"returns-ccd-pass.ach", fail:"returns-trace-fail.ach"},
   {query:"NACHA", option:/NACHA.*ACH Payment Instructions/i, version:"origination-expanded-public-2026-r2", pass:"origination-healthcare-pass.ach", fail:"origination-healthcare-trn-fail.ach"},
 ]) test(`candidate ${scenario.version} validates locally and navigates malformed fields`, async ({page}) => {
   const posts:string[]=[]; page.on("request",request=>{if(request.postData()?.includes("SYNTHETIC"))posts.push(request.url());});
@@ -610,13 +608,11 @@ for (const scenario of [
   await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.pass}`));
   await page.getByRole("button",{name:"Validate file"}).click();
   await expect(page.locator("#results-title")).toHaveText("PASS");
-  if(scenario.query==="ACK") await expect(page.locator("#reported-disposition")).toContainText("REJECTED");
-  else await expect(page.locator("#reported-disposition")).toBeHidden();
+  await expect(page.locator("#reported-disposition")).toBeHidden();
   const download=page.waitForEvent("download"); await page.locator("#export-json").click();
   const report=await download; const file=await report.path();
   const {readFileSync}=await import("node:fs"); const json=JSON.parse(readFileSync(file!,"utf8"));
   expect(json.exportSchemaVersion).toBe("4"); expect(json.verdict).toBe("PASS");
-  if(scenario.query==="ACK")expect(json.reportedDisposition.file.status).toBe("REJECTED");
   await page.getByRole("button",{name:"Back to file"}).click();
   await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.fail}`));
   await page.getByRole("button",{name:"Validate file"}).click();
@@ -628,40 +624,14 @@ for (const scenario of [
   expect(posts).toEqual([]);
 });
 
-test("ACK disposition is safe text and clears on unsupported replacement", async ({page}) => {
-  await page.goto("/"); await chooseFormat(page,"ACK",/File Received ACK/i,"pipe-1.0-candidate-r1");
-  await page.getByRole("button",{name:"Continue"}).click();
-  await page.locator("#file-input").setInputFiles(demoFile("ach-candidates/ack-html-qualifier-pass.txt"));
-  await page.getByRole("button",{name:"Validate file"}).click();
-  await expect(page.locator("#results-title")).toHaveText("PASS");
-  await expect(page.locator("#reported-disposition")).toContainText("<img src=SYNTHETIC");
-  await expect(page.locator("#reported-disposition img")).toHaveCount(0);
-  await page.getByRole("button",{name:"Back to file"}).click();
-  await page.locator("#file-input").setInputFiles(demoFile("ach-candidates/ack-status-unsupported.txt"));
-  await page.getByRole("button",{name:"Validate file"}).click();
-  await expect(page.locator("#results-title")).toHaveText("UNSUPPORTED");
-  await expect(page.locator("#reported-disposition")).toBeHidden();
-  await expect(page.locator("#reported-disposition")).toHaveText("");
-});
-
-
-test("large ACK disposition summaries stay bounded while exports retain all reported values", async ({page}) => {
-  const {readFileSync}=await import("node:fs");
-  const original=readFileSync(demoFile("ach-candidates/ack-received-pass.txt"),"utf8");
-  const batches=Array.from({length:20},(_,i)=>`BAT|${i+1}|BatchRef|SYNTHETIC-${i+1}|RecordCount|1\nSTA|BATCH|ACCEPTED|${"B".repeat(1000)}`).join("\n");
-  const text=original.replace("AcceptedForParsing","A".repeat(1000)).replace("CTL|",batches+"\nCTL|");
-  await page.setViewportSize({width:375,height:800}); await page.goto("/");
-  await chooseFormat(page,"ACK",/File Received ACK/i,"pipe-1.0-candidate-r1");
-  await page.getByRole("button",{name:"Continue"}).click();
-  await page.locator("#file-input").setInputFiles({name:"synthetic-large-ack.txt",mimeType:"text/plain",buffer:Buffer.from(text)});
-  await page.getByRole("button",{name:"Validate file"}).click();
-  await expect(page.locator("#results-title")).toHaveText("PASS");
-  await expect(page.locator("#reported-disposition")).toContainText("12 more batches");
-  expect((await page.locator("#reported-disposition").textContent())!.length).toBeLessThan(1500);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
-  const download=page.waitForEvent("download"); await page.locator("#export-json").click();
-  const file=await (await download).path(); const json=JSON.parse(readFileSync(file!,"utf8"));
-  expect(json.reportedDisposition.file.qualifier).toHaveLength(1000);
-  expect(json.reportedDisposition.batches).toHaveLength(20);
-  expect(json.reportedDisposition.batches[19].qualifier).toHaveLength(1000);
+test("retired and hidden worker-only profiles cannot be chosen from the browser", async ({ page }) => {
+  await page.goto("/");
+  const search = page.locator("#format-search");
+  for (const query of ["pain.008", "820", "BAI2", "CSV Wire", "ACK", "ACH Returns"]) {
+    await search.fill(query);
+    await expect(page.locator('#format-listbox [role="option"]'), query).toHaveCount(0);
+  }
+  await search.fill("pain.001");
+  await page.getByRole("option", { name: /pain\.001/i }).click();
+  await expect(page.locator("#version-select option")).toHaveText(["Select a version", "pain.001.001.03"]);
 });

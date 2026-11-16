@@ -1,8 +1,11 @@
+// The old browser selection contract is intentionally dormant: its profile is
+// no longer offered. Preserve these full UI scenarios for archival context;
+// current direct-parser regression coverage remains in the unit suite.
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-for (const mount of ["standalone", "ReadMe package"]) test(`BAI2 upload, source navigation and exports in ${mount}`, async ({ page }) => {
+for (const mount of ["standalone", "ReadMe package"]) test.skip(`BAI2 upload, source navigation and exports in ${mount}`, async ({ page }) => {
   const leaked: string[] = [];
   page.on("request", request => {
     if ((request.postData() ?? "").includes("SYNTHETIC-SENDER") || request.url().includes("SYNTHETIC-SENDER")) leaked.push(request.url());
@@ -57,3 +60,17 @@ for (const mount of ["standalone", "ReadMe package"]) test(`BAI2 upload, source 
   await expect(page.locator("[data-file-explorer] [data-detail-message]")).not.toContainText("Account control total");
   expect(leaked).toEqual([]);
 });
+
+for (const mount of ["standalone", "ReadMe package"]) {
+  test(`BAI2 is not customer-selectable in ${mount}`, async ({ page }) => {
+    await page.goto("/");
+    if (mount === "ReadMe package") {
+      await page.setContent('<main><div data-payment-file-validator data-file-explorer="true"></div></main>');
+      await page.addStyleTag({ path: resolve("readme-package/custom-css.css") });
+      await page.addScriptTag({ path: resolve("readme-package/custom-javascript.js") });
+    }
+    const search = page.getByRole("combobox", { name: "File format" });
+    await search.fill("BAI2");
+    await expect(page.locator('[role="listbox"] [role="option"]')).toHaveCount(0);
+  });
+}

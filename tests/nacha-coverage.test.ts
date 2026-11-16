@@ -4,11 +4,11 @@ import type { FormatPack, ValidationRule } from "../src/types";
 import { coverageFor, provenanceFor, RULESET_REVISION, EXCLUSIONS } from "../src/coverage";
 import { NACHA_RULE_IDS } from "../src/parsers/nacha";
 import { NACHA_EXCLUSIONS, NACHA_RULESET_REVISION } from "../src/nacha-coverage";
-import { FORMAT_PACKS } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validationRunToCsv, validationRunToJson } from "../src/csv";
 import { ordinarySnapshots as nachaSnapshots } from "./current-coverage";
-import { demoSnapshots as snapshots } from "./current-coverage";
+import { historicalDemoSnapshots as snapshots } from "./current-coverage";
 
 const nonEmpty: ValidationRule = {
   id: "nacha.non-empty-source", description: "The selected file contains data.", field: "File content", defaultLocator: "file",

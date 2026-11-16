@@ -56,7 +56,7 @@ describe("review regression boundaries", () => {
   });
   it("bounds validation source complexity", () => {
     const bytes = new TextEncoder().encode("<x>".repeat(140) + "</x>".repeat(140)).buffer;
-    expect(validateWorkerRequest({type:"validate",packId:"pain-001-09",fileName:"x.xml",bytes})).toEqual({type:"error",code:"RESOURCE_LIMIT"});
+    expect(validateWorkerRequest({type:"validate",packId:"pain-001-03",fileName:"x.xml",bytes})).toEqual({type:"error",code:"RESOURCE_LIMIT"});
   });
 });
 

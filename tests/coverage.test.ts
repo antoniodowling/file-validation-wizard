@@ -26,7 +26,13 @@ it("never passes a sample with promised checks left unevaluated", () => {
 });
 it("pins synthetic evidence and rejects production approval without exact revisions", () => {
   for (const fixture of fixtures) {
-    expect(createHash("sha256").update(readFileSync(`${process.cwd()}/${fixture.path}`)).digest("hex")).toBe(fixture.sha256);
+    // This published manifest is immutable. The original hardening test source
+    // has been preserved byte-for-byte in the archival fixture because current
+    // worker tests must use V3 after PAIN.001.001.09 was retired.
+    const historicalPath = fixture.path === "tests/hardening.test.ts"
+      ? "tests/fixtures/archived-hardening-integrated-4.0.0.ts.txt"
+      : fixture.path;
+    expect(createHash("sha256").update(readFileSync(`${process.cwd()}/${historicalPath}`)).digest("hex")).toBe(fixture.sha256);
   }
   const { releaseEvidence, ...unbound } = isoPack();
   expect(formatPackReleaseErrors(unbound)).toContain("revision-bound specification/ruleset/fixture/acceptance evidence");

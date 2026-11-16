@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { findEnabledFormatPack } from "../src/format-packs";
+import { ALL_FORMAT_PACKS } from "../src/format-packs";
 import { locateFindings } from "../src/finding-locations";
 import { sourceLineColumnAtOffset } from "../src/source-coordinates";
 import { validateSource } from "../src/validation";
@@ -15,8 +15,8 @@ const fixtures = [
   ["pain.001.001.09-multiple-errors-resolved.xml", "PASS", 0, 0],
 ] as const;
 
-describe("PAIN.001.001.09 browser demo files", () => {
-  const pack = findEnabledFormatPack("pain-001-09");
+describe("PAIN.001.001.09 preserved historical fixture tests", () => {
+  const pack = ALL_FORMAT_PACKS.find(profile => profile.id === "pain-001-09");
 
   it.each(fixtures)("produces the intended result for %s", (fileName, status, errors, warnings) => {
     expect(pack).toBeTruthy();

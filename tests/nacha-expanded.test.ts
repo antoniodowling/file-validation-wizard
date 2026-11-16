@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EXPANDED_NACHA_PACK } from "../src/format-packs";
+import { EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validateWorkerRequest } from "../src/worker-request";
 import { coverageFor, provenanceFor } from "../src/coverage";
@@ -61,11 +61,18 @@ describe("expanded origination revision", () => {
       const result = run(fixture(name)); expect(result.overallStatus).toBe("UNSUPPORTED"); expect(result.verdict).toBeNull(); expect(result.results).toEqual([]);
     }
   });
-  it("enforces BOM/encoding admission through the worker and decoded resource bounds", () => {
-    const bytes = new TextEncoder().encode("\uFEFF" + fixture("mixed-entry-types-pass")).buffer;
-    const response = validateWorkerRequest({ type: "validate", packId: pack.id, fileName: "synthetic.ach", bytes });
-    expect(response.type).toBe("complete"); if (response.type === "complete") expect(response.run.overallStatus).toBe("FAIL");
-    expect(validateWorkerRequest({ type: "validate", packId: pack.id, fileName: "bad.ach", bytes: Uint8Array.of(0xff).buffer })).toEqual({ type: "error", code: "INVALID_ENCODING" });
+  it("retains historical R1 BOM behavior while the active worker validates only R2", () => {
+    const source = "\uFEFF" + fixture("mixed-entry-types-pass");
+    expect(run(source).overallStatus).toBe("FAIL");
+    const retired = validateWorkerRequest({ type: "validate", packId: pack.id, fileName: "synthetic.ach",
+      bytes: new TextEncoder().encode(source).buffer });
+    expect(retired).toEqual({ type: "error", code: "PROFILE_UNAVAILABLE" });
+    const current = validateWorkerRequest({ type: "validate", packId: ORIGINATION_R2_PACK.id, fileName: "synthetic.ach",
+      bytes: new TextEncoder().encode(source).buffer });
+    expect(current.type).toBe("complete");
+    if (current.type === "complete") expect(current.run.overallStatus).toBe("FAIL");
+    expect(validateWorkerRequest({ type: "validate", packId: ORIGINATION_R2_PACK.id, fileName: "bad.ach",
+      bytes: Uint8Array.of(0xff).buffer })).toEqual({ type: "error", code: "INVALID_ENCODING" });
     expect(() => run("x".repeat(8_000_001))).toThrow(ResourceLimitError);
   });
   it("uses any X12 transaction set with BPR/BPS and rejects malformed references/counts, not only 820", () => {

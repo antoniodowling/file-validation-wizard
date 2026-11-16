@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
 
 async function scan(page: Page, info: TestInfo): Promise<void> {
   // The embedding page owns the h1. All remaining rules, including contrast,
@@ -12,11 +13,20 @@ async function scan(page: Page, info: TestInfo): Promise<void> {
   expect(report.violations).toEqual([]);
 }
 
+// Preserve SHA-pinned historical fixture bytes. Rebase the synthetic XML
+// namespace in memory to exercise the retained PAIN.001 V3 browser profile.
+const v3Fixture = (fixture: string) => ({
+  name: `pain.001.001.03-${fixture}.xml`,
+  mimeType: "application/xml",
+  buffer: Buffer.from(readFileSync(resolve(process.cwd(), "demo-files", `pain.001.001.09-${fixture}.xml`), "utf8")
+    .replaceAll("pain.001.001.09", "pain.001.001.03")),
+});
+
 async function uploadStep(page: Page): Promise<void> {
   await page.goto("/");
   await page.locator("#format-search").fill("pain.001");
   await page.getByRole("option", { name: /pain\.001/i }).click();
-  await page.locator("#version-select").selectOption("pain.001.001.09");
+  await page.locator("#version-select").selectOption("pain.001.001.03");
   await page.getByRole("button", { name: "Continue" }).click();
 }
 
@@ -36,7 +46,7 @@ for (const [fixture, outcome] of [
 ] as const) {
   test(`accessibility: results ${fixture}`, async ({ page }, info) => {
     await uploadStep(page);
-    await page.locator("#file-input").setInputFiles(resolve(process.cwd(), "demo-files", `pain.001.001.09-${fixture}.xml`));
+    await page.locator("#file-input").setInputFiles(v3Fixture(fixture));
     await page.getByRole("button", { name: "Validate file" }).click();
     await expect(page.locator("#results-title")).toHaveText(outcome);
     await expect(page.locator(".cm-content")).toBeVisible();
@@ -46,7 +56,7 @@ for (const [fixture, outcome] of [
 
 test("accessibility: worker startup failure", async ({ page }, info) => {
   await uploadStep(page);
-  await page.locator("#file-input").setInputFiles(resolve(process.cwd(), "demo-files/pain.001.001.09-pass.xml"));
+  await page.locator("#file-input").setInputFiles(v3Fixture("pass"));
   await page.evaluate(() => { window.Worker = class { constructor() { throw new Error("Synthetic blocked worker"); } } as unknown as typeof Worker; });
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.getByRole("alert")).toBeVisible();

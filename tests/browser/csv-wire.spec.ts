@@ -1,8 +1,11 @@
+// The old browser selection contract is intentionally dormant: its profile is
+// no longer offered. Preserve these full UI scenarios for archival context;
+// current direct-parser regression coverage remains in the unit suite.
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-for (const mount of ["standalone", "ReadMe package"]) test(`CSV Wire local input, findings and exports in ${mount}`, async ({ page }, testInfo) => {
+for (const mount of ["standalone", "ReadMe package"]) test.skip(`CSV Wire local input, findings and exports in ${mount}`, async ({ page }, testInfo) => {
   const leaked: string[] = [];
   page.on("request", request => { if (/SYNTHETIC|99999999999/.test(request.url() + (request.postData() ?? ""))) leaked.push(request.url()); });
   await page.goto("/");
@@ -56,3 +59,17 @@ for (const mount of ["standalone", "ReadMe package"]) test(`CSV Wire local input
   await expect(selector("upload-error")).toContainText(/UTF-8/);
   expect(leaked).toEqual([]);
 });
+
+for (const mount of ["standalone", "ReadMe package"]) {
+  test(`CSV Wire is not customer-selectable in ${mount}`, async ({ page }) => {
+    await page.goto("/");
+    if (mount === "ReadMe package") {
+      await page.setContent('<main><div data-payment-file-validator data-file-explorer="true"></div></main>');
+      await page.addStyleTag({ path: resolve("readme-package/custom-css.css") });
+      await page.addScriptTag({ path: resolve("readme-package/custom-javascript.js") });
+    }
+    const search = page.getByRole("combobox", { name: "File format" });
+    await search.fill("CSV Wire");
+    await expect(page.locator('[role="listbox"] [role="option"]')).toHaveCount(0);
+  });
+}

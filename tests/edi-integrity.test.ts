@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMAT_PACKS } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS } from "../src/format-packs";
 import { parseEdi } from "../src/parsers/edi";
 import { scanEdiSegments } from "../src/parsers/edi-source";
 import { validateSource } from "../src/validation";

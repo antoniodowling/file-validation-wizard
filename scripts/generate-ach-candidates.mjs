@@ -11,7 +11,7 @@ try {
   await writeFile(entry, [
     `export { buildReturns } from ${JSON.stringify(resolve('tests/nacha-returns-builder.ts'))};`,
     `export { buildNacha, field } from ${JSON.stringify(resolve('tests/nacha-builder.ts'))};`,
-    `export { FORMAT_PACKS } from ${JSON.stringify(resolve('src/format-packs.ts'))};`,
+    `export { ALL_FORMAT_PACKS as FORMAT_PACKS } from ${JSON.stringify(resolve('src/format-packs.ts'))};`,
     `export { validateSource } from ${JSON.stringify(resolve('src/validation.ts'))};`,
   ].join('\n'));
   const bundle = await rolldown({ input: entry });

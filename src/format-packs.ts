@@ -90,6 +90,29 @@ const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>
     rules: Object.freeze([nonEmptyRule]),
   });
 
+// Shared rule and version-neutral structural metadata. The active R2 profile
+// must never inherit configuration from the retired original or R1 packs.
+const nachaNonEmptyRule: ValidationRule = Object.freeze({
+  id: "nacha.non-empty-source",
+  description: "The selected ACH file contains records.",
+  field: "File content",
+  defaultLocator: "file",
+  evaluate: (context: ValidationContext) => ({
+    outcome: context.source.length > 0 ? "PASS" as const : "ERROR" as const,
+    message: context.source.length > 0 ? "The ACH file contains records." : "The ACH file is empty.",
+  }),
+});
+const NACHA_ORIGINATION_BASE = Object.freeze({
+  family: "NACHA" as const,
+  parserKind: "NACHA_FIXED" as const,
+  extensions: Object.freeze([".ach", ".txt"]),
+  guideUrl: NACHA_GUIDE_URL,
+  enabled: true,
+  mode: "CANDIDATE" as const,
+  approval: noApprovals,
+  rules: Object.freeze([nachaNonEmptyRule]),
+});
+
 const LEGACY_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
   isoPack("pain-001-03", "PAIN.001", "pain.001.001.03", "CstmrCdtTrfInitn"),
   isoPack("pain-001-09", "PAIN.001", "pain.001.001.09", "CstmrCdtTrfInitn"),
@@ -116,16 +139,7 @@ const LEGACY_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
       secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]),
     }),
     approval: noApprovals,
-    rules: Object.freeze([Object.freeze({
-      id: "nacha.non-empty-source",
-      description: "The selected ACH file contains records.",
-      field: "File content",
-      defaultLocator: "file",
-      evaluate: (context: ValidationContext) => ({
-        outcome: context.source.length > 0 ? "PASS" as const : "ERROR" as const,
-        message: context.source.length > 0 ? "The ACH file contains records." : "The ACH file is empty.",
-      }),
-    })]),
+    rules: Object.freeze([nachaNonEmptyRule]),
   } as FormatPack),
 ]);
 
@@ -138,7 +152,7 @@ export const EXPANDED_NACHA_PACK: FormatPack = Object.freeze({
 });
 
 export const ORIGINATION_R2_PACK: FormatPack = Object.freeze({
-  ...EXPANDED_NACHA_PACK,
+  ...NACHA_ORIGINATION_BASE,
   id: "nacha-origination-expanded-public-2026-r2",
   label: "NACHA / ACH — expanded entries and declared healthcare (2026 r2 candidate)",
   version: "origination-expanded-public-2026-r2",
@@ -168,7 +182,24 @@ export const CSV_WIRE_PACK: FormatPack = Object.freeze({
   label: "CSV Wire — Huntington public-guide candidate",
   extensions: Object.freeze([".csv", ".txt"]),
 });
-export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK, CSV_WIRE_PACK]);
+/** Complete archived construction inventory, NOT available through the customer UI or worker. */
+export const ALL_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK, CSV_WIRE_PACK]);
+/** Retired profiles are retained solely for direct historical regression/evidence reproduction. */
+export const RETIRED_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
+  ...LEGACY_FORMAT_PACKS.filter(pack => pack.id !== "pain-001-03"),
+  EXPANDED_NACHA_PACK,
+  RETURNS_PACK,
+  ACK_PACK,
+  BAI2_PACK,
+]);
+/** Incomplete CSV Wire is hidden, not retired: its pack and independent tests remain intact. */
+export const HIDDEN_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([CSV_WIRE_PACK]);
+/** Only these profiles may be selected or resolved by the public validation worker. */
+export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
+  LEGACY_FORMAT_PACKS.find(pack => pack.id === "pain-001-03")!,
+  ORIGINATION_R2_PACK,
+  CONTROL_TOTAL_PACK,
+]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.enabled) return [];
@@ -207,6 +238,7 @@ export function assertFormatPackRegistry(packs: readonly FormatPack[]): void {
   }
 }
 
+assertFormatPackRegistry(ALL_FORMAT_PACKS);
 assertFormatPackRegistry(FORMAT_PACKS);
 
 export const enabledFormatPacks = (): readonly FormatPack[] =>

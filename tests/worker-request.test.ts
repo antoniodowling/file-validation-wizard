@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_DECODED_UNITS } from "../src/resource-policy";
 import { MAX_FILE_BYTES, type WorkerRequest } from "../src/types";
+import { RETIRED_FORMAT_PACKS, HIDDEN_FORMAT_PACKS } from "../src/format-packs";
 import { validateWorkerRequest } from "../src/worker-request";
 import { validateSource } from "../src/validation";
 import { validPain001 } from "./helpers";
@@ -11,7 +12,7 @@ vi.mock("../src/validation", async (original) => {
   const actual = await original<typeof import("../src/validation")>();
   return { ...actual, validateSource: vi.fn(actual.validateSource) };
 });
-const request = (bytes: ArrayBuffer, packId = "pain-001-09"): WorkerRequest =>
+const request = (bytes: ArrayBuffer, packId = "pain-001-03"): WorkerRequest =>
   ({ type: "validate", packId, fileName: "test.xml", bytes });
 const encoded = (source: string): ArrayBuffer => new TextEncoder().encode(source).buffer;
 
@@ -24,7 +25,7 @@ describe("worker input and failure boundaries", () => {
     expect(validateSource).not.toHaveBeenCalled();
   });
   it("permits the exact byte limit through the size gate", () => {
-    const source = validPain001.replace("pain.001.001.99", "pain.001.001.09");
+    const source = validPain001.replace("pain.001.001.99", "pain.001.001.03");
     const response = validateWorkerRequest(request(encoded(source.padEnd(MAX_FILE_BYTES, " "))));
     expect(response).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
     expect(validateSource).toHaveBeenCalledOnce();
@@ -36,13 +37,22 @@ describe("worker input and failure boundaries", () => {
       .toEqual({ type: "error", code: "INVALID_ENCODING" });
     expect(validateSource).not.toHaveBeenCalled();
   });
+  it("rejects all retired and hidden profile IDs before validation or decoding", () => {
+    const unavailable = [...RETIRED_FORMAT_PACKS, ...HIDDEN_FORMAT_PACKS];
+    expect(unavailable).toHaveLength(14);
+    for (const pack of unavailable) {
+      expect(validateWorkerRequest(request(encoded("synthetic"), pack.id)), pack.id)
+        .toEqual({ type: "error", code: "PROFILE_UNAVAILABLE" });
+    }
+    expect(validateSource).not.toHaveBeenCalled();
+  });
   it("keeps malformed XML as a completed FAIL, not an engine failure", () => {
     const response = validateWorkerRequest(request(encoded("<Document>")));
     expect(response.type).toBe("complete");
     if (response.type === "complete") expect(response.run.overallStatus).toBe("FAIL");
   });
   it("uses the decoded post-BOM string as the explorer coordinate source", () => {
-    const body = validPain001.replace("pain.001.001.99", "pain.001.001.09");
+    const body = validPain001.replace("pain.001.001.99", "pain.001.001.03");
     const encodedBody = new TextEncoder().encode(body);
     const bytes = new Uint8Array(encodedBody.length + 3);
     bytes.set([0xef, 0xbb, 0xbf]);
@@ -61,14 +71,14 @@ describe("worker input and failure boundaries", () => {
       .toEqual({ type: "error", code: "ENGINE_ERROR" });
   });
   it("validates NACHA in the worker and preserves a forbidden BOM for completed rejection", () => {
-    const source = readFileSync(resolve(process.cwd(), "demo-files/nacha/mixed-five-sec-pass.ach"), "utf8");
-    const response = validateWorkerRequest({ ...request(encoded(source), "nacha-origination-public-2026"), fileName: "mixed.ach", includeExplorer: true, snapshotId: 9 });
+    const source = readFileSync(resolve(process.cwd(), "demo-files/nacha-expanded/mixed-entry-types-pass.ach"), "utf8");
+    const response = validateWorkerRequest({ ...request(encoded(source), "nacha-origination-expanded-public-2026-r2"), fileName: "mixed.ach", includeExplorer: true, snapshotId: 9 });
     expect(response.type).toBe("complete");
     if (response.type === "complete") {
       expect(response.run.overallStatus).toBe("PASS");
       expect(response.source).toBe(source);
     }
-    const withBom = validateWorkerRequest(request(encoded("\uFEFF" + source), "nacha-origination-public-2026"));
+    const withBom = validateWorkerRequest(request(encoded("\uFEFF" + source), "nacha-origination-expanded-public-2026-r2"));
     expect(withBom.type).toBe("complete");
     if (withBom.type === "complete") expect(withBom.run.overallStatus).toBe("FAIL");
   });
@@ -76,7 +86,7 @@ describe("worker input and failure boundaries", () => {
 });
 
 it("does not produce a NACHA verdict or exportable run above the decoded resource limit", () => {
-  const response = validateWorkerRequest(request(encoded("9".repeat(MAX_DECODED_UNITS + 1)), "nacha-origination-public-2026"));
+  const response = validateWorkerRequest(request(encoded("9".repeat(MAX_DECODED_UNITS + 1)), "nacha-origination-expanded-public-2026-r2"));
   expect(response).toEqual({ type: "error", code: "RESOURCE_LIMIT" });
   expect(response).not.toHaveProperty("run");
 });
