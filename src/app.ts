@@ -652,15 +652,11 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
         sampleLink.rel = "noopener noreferrer";
         sampleLink.textContent = "sample file";
         if (format.id === "nacha") helper.append("See ", guideLink, ". Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.");
-        else if (format.id.startsWith("huntington") || format.id === "nacha-returns") helper.append("See ", guideLink, ". ");
+        else if (format.id.startsWith("huntington")) helper.append("See ", guideLink, ". ");
         else helper.append("See ", guideLink, " and ", sampleLink);
-        if (["nacha-origination-expanded-public-2026-r1", "nacha-origination-expanded-public-2026-r2"].includes(version.validationProfileId)) helper.append(" Expanded candidate: monetary, prenote, zero-dollar remittance and reversal entries. CTX X12 syntax is checked; UN/EDIFACT, opt-in XML and WEB/TEL loan combinations remain unavailable pending qualification.");
+        if (version.validationProfileId === "nacha-origination-expanded-public-2026-r2") helper.append(" Expanded candidate: monetary, prenote, zero-dollar remittance and reversal entries. CTX X12 syntax is checked; UN/EDIFACT, opt-in XML and WEB/TEL loan combinations remain unavailable pending qualification.");
         if (version.validationProfileId === "nacha-origination-expanded-public-2026-r2") helper.append(" Includes declared healthcare CCD TRN and standardized description checks; actual payment purpose remains unverified.");
-        if (format.id === "nacha-returns") helper.append("Standalone network Returns and NOCs candidate. Unqualified specialized variants receive no verdict; original matching is excluded.");
         if (format.id === "huntington-control-totals") helper.append("Standalone 58-column candidate: one record, field syntax and date checks. Companion-file matching is excluded.");
-        if (format.id === "huntington-ack") helper.append("Single pipe-delimited ACK 1.0 candidate. Format validity is separate from the reported file or batch disposition.");
-        if (format.id === "csv-wire") helper.append("CSV Wire candidate: quoted 54-field domestic and 58-field international USD rows. International beneficiaries are limited to US/CA OTHER accounts; non-USD timing, IBAN and intermediary SWIFT layouts receive no verdict. See coverage for limits.");
-        if (format.id === "bai2") helper.append("BAI2 candidate: line-based USD balance reporting, continuations and trailer controls. Funds availability layouts, CSV conversion and other unqualified scenarios receive no verdict; see coverage for limits.");
       } else {
         helper.textContent = "File Format Guide unavailable.";
       }
@@ -1019,17 +1015,16 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
     requiredElement<HTMLElement>("#result-basis").textContent = executionStatus === "COMPLETED"
       ? `${completedSummary} Passing these checks does not guarantee payment acceptance or processing.`
       : `${executionStatus === "UNSUPPORTED" ? "This file is not supported." : "Validation could not be completed."} ${runController.acceptedRun.executionReason ?? ""}`.trim();
-    if (runController.acceptedRun.formatId === "nacha-origination-public-2026") {
       requiredElement<HTMLElement>("#result-basis").textContent += " Public specification profile: file fields, addenda relationships, counts, hashes, and amounts. Holidays, cutoffs, and remittance content are not verified. Passing does not establish full Nacha Rules compliance or bank acceptance.";
     }
-    if (["nacha-origination-expanded-public-2026-r1", "nacha-origination-expanded-public-2026-r2"].includes(runController.acceptedRun.formatId)) requiredElement<HTMLElement>("#result-basis").textContent += " Expanded public-source candidate; original matching, real purpose, deadlines and complete remittance business guides are unverified. See coverage for source gates.";
+    if (runController.acceptedRun.formatId === "nacha-origination-expanded-public-2026-r2") requiredElement<HTMLElement>("#result-basis").textContent += " Expanded public-source candidate; original matching, real purpose, deadlines and complete remittance business guides are unverified. See coverage for source gates.";
     const reported = runController.acceptedRun.reportedDisposition;
     const dispositionNode = requiredElement<HTMLElement>("#reported-disposition");
     dispositionNode.hidden = !reported;
     const shortText = (value: string, limit = 160): string => value.length > limit ? value.slice(0, limit) + "…" : value;
     const batchSummary = reported?.batches.slice(0, 8).map(batch => `${shortText(batch.batchNumber, 32)}: ${batch.status} (${shortText(batch.qualifier, 80)})`).join("; ") ?? "";
     dispositionNode.textContent = reported ? `Reported file disposition: ${reported.file.status} (${shortText(reported.file.qualifier)}).${batchSummary ? " Batch dispositions: " + batchSummary + "." : ""}${reported.batches.length > 8 ? ` ${reported.batches.length - 8} more batches.` : ""} These are bank-reported statuses, independent of format validity. Full reported values are available in exports.` : "";
-    if (["HUNTINGTON_ACK", "ACH_CONTROL_FIXED", "NACHA_RETURN_FIXED", "BAI2", "CSV_WIRE"].includes(findEnabledFormatPack(runController.acceptedRun.formatId)?.parserKind ?? "")) requiredElement<HTMLElement>("#result-basis").textContent += " Candidate checks only; see the coverage details for scenario limits and exclusions.";
+    if (["ACH_CONTROL_FIXED"].includes(findEnabledFormatPack(runController.acceptedRun.formatId)?.parserKind ?? "")) requiredElement<HTMLElement>("#result-basis").textContent += " Candidate checks only; see the coverage details for scenario limits and exclusions.";
     const coverage = requiredElement<HTMLElement>("#coverage-snapshot");
     coverage.textContent = JSON.stringify({ provenance: runController.acceptedRun.provenance, checks: runController.acceptedRun.checks }, null, 2);
     const passCount = runController.acceptedRun.results.filter((result) => result.outcome === "PASS").length;
