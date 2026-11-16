@@ -31,7 +31,7 @@ npm run compare:nacha -- \
   --expected-garrett-sha256 89d1da7c7f747c0fb0e302095d32c89c3b786c4801966547cdb0858aad4303b0
 ```
 
-Only `--input` and `--garrett` are required. `--report` defaults to `nacha-differential-report.md` in the current directory. The input directory is scanned **recursively**, in deterministic filename order, for `.ach`, `.nacha`, `.txt`, and `.dat` files (case-insensitive). Files with other extensions can be included with `--all-files` or restrict to the top level with `--no-recursive`. Symlinks are not followed.
+Only `--input` and `--garrett` are required when no default Garrett path is configured. For a one-time setup, use `export NACHA_GARRETT_HTML='/path/to/Garretts NACHA Validator ORIGINAL.html'` in your shell configuration, then just run `npm run compare:nacha -- --input /path/to/nacha-directory`. This avoids repeatedly specifying the HTML path. `--report` defaults to `nacha-differential-report.md` in the current directory. The input directory is scanned **recursively**, in deterministic filename order, for `.ach`, `.nacha`, `.txt`, and `.dat` files (case-insensitive). Files with other extensions can be included with `--all-files` or restrict to the top level with `--no-recursive`. Symlinks are not followed.
 
 The default maximum is **250 files**, **25 MB per file**, and a **2-second per-file time limit for Garrett's JavaScript**. All limits can be overridden within explicit bounds with `--max-files`, `--max-mb`, and `--timeout-ms`. Files are processed sequentially, so a malformed or unsupported file does not stop the batch.
 
@@ -47,6 +47,8 @@ The Markdown report contains:
 4. A heuristic comparison of finding *themes* (e.g., routing, addenda, control totals). Themes are **not** assertions that the two validators implement an identical rule.
 
 **SAME VERDICT means only headline agreement.** Garrett's errors/warnings count reported **occurrences**; Wizard's counts refer to **failed rules**. The counts must not be treated as interchangeable. A file can fail both validators for entirely different reasons. The report preserves enough provenance to investigate differences without claiming either engine is an oracle. For expected correctness, independently authored and source-backed assertions are still required.
+
+**SEC OUTSIDE R2** means at least one apparent batch header uses a SEC code outside CCD/PPD/CTX/WEB/TEL. The Wizard may presently return FAIL for that SEC check, but this is a **scope distinction**, not evidence the file is malformed. The classification is heuristic because batch-header tokens are not independently validated.
 
 **WIZARD UNSUPPORTED** means the selected profile has no validity verdict for that file; it is **not** equivalent to a failed ACH transaction. R2 currently supports CCD, PPD, CTX, WEB and TEL originations with deeper checks. Garrett's wider SEC recognition is useful for comparing format coverage but is not proof of complete SEC-specific compliance. A file can also contain several SECs; reported tokens are an aid, not independent format verification.
 
