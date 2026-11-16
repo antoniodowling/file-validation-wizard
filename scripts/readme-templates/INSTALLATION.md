@@ -1,6 +1,8 @@
 # ReadMe installation
 
-This package supports two independent dedicated-page demos, inline Guide components, and link-triggered modals. It retains nine executable ISO/X12 profiles across PAIN.001, PAIN.008, and EDI 820, plus six ACH candidates across four families: three origination revisions, ordinary network Returns/COR, standalone control totals and the single-scenario ACK. Other catalog placeholders have been removed. Profiles remain unapproved for production; embedding does not change that status. NACHA validates ordinary CCD, PPD, CTX, WEB, and TEL batches, including mixed files. These candidates do not claim a complete 2026 Operating Rules implementation.
+This package provides the File Validation Wizard and optional File Explorer in two dedicated pages, inline Guide components, and link-triggered modals. **Only three profiles are currently customer-selectable**: PAIN.001 V3 (`pain.001.001.03`), NACHA origination R2 (`origination-expanded-public-2026-r2`), and Huntington's separate Control Total candidate (`control-total-public-2026-r1`). The Control Total is optional; NACHA validates its own control records independently.
+
+The older PAIN.001 versions, PAIN.008, standalone EDI 820, original/R1 NACHA, network Returns, File Received ACK, and BAI2 are **retired**, not offered as current validator selections. CSV Wire remains **hidden and incomplete, not retired**; its implementation, tests and coverage are preserved internally. Historical results, fixtures, and published coverage snapshots remain available in the repository, but retired IDs cannot initiate a new customer-facing validation. NACHA R2 supports CCD, PPD, CTX, WEB and TEL batches and retains CTX X12 remittance syntax checks. All profiles are unapproved for production; embedding does not change that status.
 
 ## Shared installation
 
@@ -42,17 +44,17 @@ Create a component in **Settings → Custom Components**, using `PaymentFileVali
 
 <PaymentFileValidator
   format="PAIN.001"
-  version="pain.001.001.09"
+  version="pain.001.001.03"
   lockSelection
 />
 ```
 
-The wrapper passes settings to the shared bundle. A supported version starts at Upload; users can review the selected format in step 1. `lockSelection` disables changing a recognized, executable preset. Unknown settings remain editable and cannot enable unsupported validation. Use `format="NACHA"` and `version="origination-public-2026"` for the historical public NACHA candidate. The preserved expanded candidate uses `version="origination-expanded-public-2026-r1"`; the new declared-healthcare revision uses `version="origination-expanded-public-2026-r2"`. Other executable presets are `format="ACH Returns"`, `version="returns-network-public-2026-r1"`; `format="ACH Control Totals"`, `version="control-total-public-2026-r1"`; and `format="File Received ACK"`, `version="pipe-1.0-candidate-r1"`. Candidate source/scenario limits remain visible in coverage. ACK reported disposition is separate from validity, and new profiles export schema 3 while historical profiles retain schema 2. Multiple inline instances keep independent file state and unique control IDs.
+The wrapper passes settings to the shared bundle. An active version starts at Upload; users can review the selected format in step 1. `lockSelection` prevents changing a recognized, executable preset. Unknown, retired, or hidden format/version settings **never enable validation or silently fall back to another version**. NACHA uses `format="NACHA"` and `version="origination-expanded-public-2026-r2"`; the optional Control Total profile uses `format="ACH Control Totals"` and `version="control-total-public-2026-r1"`. Multiple instances have independent file state and unique control IDs. Coverage and exports retain the ruleset and guide revisions and exclusions.
 
 For an HTML mount instead of MDX, use:
 
 ```html
-<div data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.09" data-lock-selection="true"></div>
+<div data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.03" data-lock-selection="true"></div>
 ```
 
 ## Modal links on portal pages
@@ -62,7 +64,7 @@ Use a normal link to the wizard-only page with the reserved fragment:
 ```markdown
 [Validate your payment file](/page/payment-file-validator#payment-file-validator)
 
-[Validate a PAIN.001 file](/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.09&lockSelection=true)
+[Validate a PAIN.001 file](/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.03&lockSelection=true)
 ```
 
 An ordinary click on a same-origin link with this fragment opens the compact wizard modal on any portal page that loads the shared bundle. The bundle intercepts the reserved fragment before ReadMe's client-side router; page authors need only add the link. This fragment is reserved for modal triggers regardless of the link's path, so point modal links at the wizard-only page for the matching fallback. Use the direct explorer link above when the full two-pane demo is intended.
