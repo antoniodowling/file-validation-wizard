@@ -1,6 +1,11 @@
 # File Format Validation Wizard: developer handoff
 
-Updated 2026-10-14. This guide covers the current code, profiles, and developer workflow. Historical test results apply to their recorded checkpoints. Actual ReadMe integration, manual accessibility, standards conformance, and production approval still need separate verification.
+Updated 2026-10-14 (historical implementation checkpoint).
+
+> **Active retirement in progress, 2026-11-16 ([issue #65](https://github.com/antoniodowling/file-validation-wizard/issues/65)):** The customer catalog and worker now admit only PAIN.001 `pain.001.001.03` (V3), NACHA `origination-expanded-public-2026-r2`, and Huntington standalone `control-total-public-2026-r1`. Thirteen other prior profiles are retired from active execution but still available in `ALL_FORMAT_PACKS` for historical direct-engine regression. CSV Wire is hidden/incomplete and retained in `HIDDEN_FORMAT_PACKS`. R2 no longer spreads the retired origination packs; shared ISO parsing, CTX X12 scanning, NACHA internal control arithmetic and the optional separate Control Total parser all remain intact. See [active three-profile coverage](coverage/active-profiles-2026-11-16.json) versus [unchanged 17-profile published snapshot](coverage/report-schema-4.0.0.json). The checked-in ReadMe bundle **must be regenerated and tested before release**; unqualified local source changes are not acceptance.
+
+Historical notes below describe past checkpoints, not current customer availability.
+ This guide covers the current code, profiles, and developer workflow. Historical test results apply to their recorded checkpoints. Actual ReadMe integration, manual accessibility, standards conformance, and production approval still need separate verification.
 
 ## What to use
 
@@ -29,7 +34,7 @@ Use Node.js 22.12 or newer and run `npm ci` from the repository root. `npm run d
 3. Regenerate `readme-package/` when source or template changes affect it, and commit those outputs with the change. Keep `dist/`, dependencies, and test reports out of Git.
 4. For portal changes, follow [ReadMe installation](../readme-package/INSTALLATION.md) and verify the package in an unpublished draft before publishing it.
 
-## Current scope and acceptance
+## Historical scope and acceptance (2026-10-14)
 
 The catalog has nine format families and seventeen executable profiles: nine ISO/X12 DEMO profiles, six ACH CANDIDATE profiles, one BAI2 CANDIDATE profile and one CSV Wire CANDIDATE profile. PAIN.001, PAIN.008, and EDI 820 each offer three versions. The candidate profiles are:
 
@@ -62,7 +67,7 @@ Roles identify responsibilities, not an assigned successor or approval. Passing 
 
 ## Demo and test files
 
-Use the [README starter set](../README.md#starter-demos) for a manual walkthrough. It lists exact browser selections and expected results for small XML, EDI, ACH, BAI2 and CSV Wire examples.
+For the current browser select only the [three-profile manual examples](../README.md#current-manual-examples). The earlier PAIN.001 .09, EDI, ACH Returns, ACK, BAI2 and CSV Wire upload kits are archival regression inputs; do not advertise them as executable public choices.
 
 The larger kits are regression fixtures: [original NACHA](../demo-files/nacha/README.md) has 69 files, [expanded r1](../demo-files/nacha-expanded/README.md) has 159, and [the latest four ACH candidates](../demo-files/ach-candidates/README.md) have 57. Six PAIN.001 XML files sit directly in `demo-files/`. Their expected results and hashes are preserved in tests and manifests. The [BAI2 kit](../demo-files/bai2/README.md) adds 21 synthetic fixtures and one preserved public guide sample, bound to [its separate coverage revision](coverage/bai2-candidate-1.0.0.json).
 
@@ -100,7 +105,7 @@ Use synthetic files only in examples, tests, and issues. Never commit customer p
 
 Use [IMPLEMENTATION_EVIDENCE.md](IMPLEMENTATION_EVIDENCE.md) for hardening history and [coverage/README.md](coverage/README.md) for report semantics. Read the [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) alongside the current profile documents; some of its planned ACH work now has executable candidates. The [September receipt](evidence/ruleset-2/receipt.json) records its original bundle hashes; do not overwrite it to represent later builds. Coverage exporters prepare named revisions and are not routine build steps. Rule changes that alter validation behavior require new revisions and snapshots; preserve published snapshots and fixture bytes.
 
-The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remain DEMO and the six ACH profiles, the BAI2 profile and the CSV Wire profile remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
+At the 2026-10-14 historical checkpoint, the checked-in ReadMe package was self-contained. The nine ISO/X12 profiles remained DEMO and the six ACH profiles, the BAI2 profile and the CSV Wire profile remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
 
 ## Maintenance tools and conventions
 
