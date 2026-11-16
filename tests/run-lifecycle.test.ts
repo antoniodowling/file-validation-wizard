@@ -48,7 +48,7 @@ function expectIncomplete() {
 function selectPainProfile() {
   q<HTMLInputElement>("#format-search").value = "pain.001";
   q("#format-search").dispatchEvent(new Event("input")); q('[role="option"]').click();
-  q<HTMLSelectElement>("#version-select").value = "pain.001.001.03";
+  q<HTMLSelectElement>("#version-select").value = ""; // Retained .03 is the sole active ISO version; deselect to invalidate
   q("#version-select").dispatchEvent(new Event("change")); q("#format-continue").click();
 }
 
