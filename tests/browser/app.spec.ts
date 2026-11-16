@@ -163,7 +163,7 @@ test("validates mixed NACHA files, warnings and errors with exact source navigat
   await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Continue" }).click();
   const upload = async (file: string) => {
-    await page.locator("#file-input").setInputFiles(demoFile(`nacha/${file}`));
+    await page.locator("#file-input").setInputFiles(demoFile(`nacha-expanded/${file}`));
     await page.getByRole("button", { name: "Validate file" }).click();
   };
   await upload("mixed-five-sec-pass.ach");
