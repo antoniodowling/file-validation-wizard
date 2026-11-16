@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import manifest from "../demo-files/mixed-findings/manifest.json";
-import { findEnabledFormatPack } from "../src/format-packs";
+import { ALL_FORMAT_PACKS, findEnabledFormatPack } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validateWorkerRequest } from "../src/worker-request";
 import { locateFindings } from "../src/finding-locations";
@@ -14,7 +14,7 @@ it.each(manifest.fixtures)("preserves mixed ERROR/WARNING findings with overall 
   expect(bytes.byteLength).toBe(fixture.bytes);
   expect(createHash("sha256").update(bytes).digest("hex")).toBe(fixture.sha256);
   expect(createHash("sha256").update(readFileSync(fixture.derivedFrom)).digest("hex")).toBe(fixture.derivedFromSha256);
-  const pack = findEnabledFormatPack(fixture.profileId)!;
+  const pack = ALL_FORMAT_PACKS.find(pack => pack.id === fixture.profileId)!;
   expect(pack).toBeDefined();
   const run = validateSource(fixture.file, source, pack);
   expect(run.executionStatus).toBe("COMPLETED");
@@ -33,9 +33,15 @@ it.each(manifest.fixtures)("preserves mixed ERROR/WARNING findings with overall 
     }
   }
   const response = validateWorkerRequest({ type: "validate", packId: pack.id, fileName: fixture.file, bytes: new TextEncoder().encode(source).buffer, includeExplorer: true });
-  expect(response.type).toBe("complete");
-  if (response.type === "complete") {
-    expect(response.run).toEqual(run); expect(response.source).toBe(source);
+  if (findEnabledFormatPack(pack.id)) {
+    expect(response.type).toBe("complete");
+    if (response.type === "complete") {
+      expect(response.run).toEqual(run); expect(response.source).toBe(source);
+    }
+  } else {
+    // Historical PAIN.001.001.09 keeps its report/locations intact, but public
+    // worker requests using its retired ID must fail closed.
+    expect(response).toEqual({ type: "error", code: "PROFILE_UNAVAILABLE" });
   }
   const report = JSON.parse(validationRunToJson(run));
   expect(report.overallStatus).toBe("FAIL"); expect(report.errorCount).toBe(1); expect(report.warningCount).toBe(1);
