@@ -1,4 +1,8 @@
-# Current report contract: schema 4 (issue #51)
+# Active validation coverage and historical schema-4 evidence
+
+As of the retirement tracked in [issue #65](https://github.com/antoniodowling/file-validation-wizard/issues/65), the customer-facing worker resolves **three profiles only**. [Active coverage](active-profiles-2026-11-16.json) captures PAIN.001 V3 (11 checks), NACHA R2 (52 checks) and optional Huntington Control Total (8 checks). `npm run export:coverage` regenerates this active-only snapshot; it **must not overwrite** the published [17-profile schema-4 snapshot](report-schema-4.0.0.json), which remains immutable historical evidence. No existing report, check ID, revision or archived fixture is retroactively renamed. The archived 13 profiles are unavailable to new worker requests; CSV Wire is retained internally and hidden pending completion.
+
+The original pre-retirement contract is preserved below for interpreting previously exported results. Its wording about 17 selectable profiles describes the **historical state**, not the current user interface.
 
 All 17 selectable profiles now emit schema 4. [Current coverage](report-schema-4.0.0.json) freezes their coverage, exclusions and revisions; `npm run export:coverage` and the format-specific exporter aliases regenerate only this new snapshot. Earlier JSON snapshots below are immutable historical contracts. ISO is `2.2.0`, ordinary ACH `nacha-public-1.2.0`, expanded ACH `nacha-expanded-public-1.2.0`, origination r2 `nacha-origination-public-2026-r2.2`, and CSV Wire `huntington-csv-wire-candidate-1.1.0`. EDI is `2.1.0` and BAI2 is `huntington-bai2-candidate-1.1.0`; other ruleset revisions are unchanged; all coverage revisions include `/report-4`.
 
