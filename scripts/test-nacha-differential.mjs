@@ -52,6 +52,9 @@ test('classifications never confuse unsupported with pass or fail', () => {
   assert.equal(compareVerdicts({status:'WARNINGS'}, {status:'PASS_WITH_WARNINGS'}), 'SAME VERDICT');
   assert.equal(compareVerdicts({status:'FAIL'}, {status:'FAIL'}), 'SAME VERDICT');
   assert.equal(compareVerdicts(null, {status:'FAIL'}), 'RUN ERROR');
+  assert.equal(compareVerdicts({status:'PASS'}, {status:'FAIL'}, ['IAT']), 'SEC OUTSIDE R2');
+  assert.equal(compareVerdicts({status:'FAIL'}, {status:'FAIL'}, ['CCD','ARC']), 'SEC OUTSIDE R2');
+  assert.equal(compareVerdicts({status:'FAIL'}, {status:'FAIL'}, ['CCD']), 'SAME VERDICT');
 });
 
 test('SEC scanner handles line-delimited, CRLF and concatenated fixed-width records', () => {
@@ -101,6 +104,23 @@ test('batch runner writes a readable private Markdown report and optional machin
   assert.doesNotMatch(doc,/ACCOUNT-SECRET|1234567890123456/);
   assert.doesNotMatch(JSON.stringify(structured),/ACCOUNT-SECRET|1234567890123456/);
   assert.equal(structured.files[2].errors[0],'File: invalid UTF-8 or unexpected input type');
+}));
+
+test('batch handles dozens of inputs and visibly flags observed SEC gaps', async () => fixture(async root => {
+  const inputs = join(root, 'inputs'); await mkdir(inputs);
+  const batchHeader = (sec) => '5'.padEnd(50, ' ') + sec + ' '.repeat(41);
+  for (let i=0; i<60; i++) {
+    const sec = i % 15 === 0 ? 'ARC' : 'CCD';
+    await writeFile(join(inputs, `fixture-${String(i).padStart(3,'0')}.ach`), batchHeader(sec) + '\n');
+  }
+  const garrett = join(root, 'garrett.html'); await writeFile(garrett, fakeHtml);
+  const md = join(root, 'results.md');
+  const result = await runBatch({input:inputs, garrett, report:md}, {wizardFactory:fakeWizard()});
+  assert.equal(result.files.length, 60);
+  assert.equal(result.files.filter(f => f.comparison === 'SEC OUTSIDE R2').length, 4);
+  const report = await readFile(md, 'utf8');
+  assert.match(report, /\| SEC OUTSIDE R2 \| 4 \|/);
+  assert.equal((report.match(/^### `fixture-/gm) ?? []).length, 60);
 }));
 
 test('same outcome can have different finding themes and report does not imply parity', () => {
