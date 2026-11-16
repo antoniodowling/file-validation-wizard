@@ -1,3 +1,6 @@
+// The old browser selection contract is intentionally dormant: its profile is
+// no longer offered. Preserve these full UI scenarios for archival context;
+// current direct-parser regression coverage remains in the unit suite.
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -5,7 +8,7 @@ import { validEdi820 } from "../helpers";
 
 for (const mount of ["standalone", "ReadMe package"]) {
   for (const terminator of ["~", "\n", "\r"]) {
-    test(`005010 terminator ${JSON.stringify(terminator)} in ${mount}`, async ({ page }) => {
+    test.skip(`005010 terminator ${JSON.stringify(terminator)} in ${mount}`, async ({ page }) => {
       await page.goto("/");
       if (mount === "ReadMe package") {
         await page.setContent('<main><div data-payment-file-validator data-file-explorer="true"></div></main>');
@@ -29,7 +32,7 @@ for (const mount of ["standalone", "ReadMe package"]) {
   }
 }
 
-test("008030 containment displays and exports no verdict with its qualification reason", async ({ page }) => {
+test.skip("008030 containment displays and exports no verdict with its qualification reason", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("combobox", { name: "File format" }).fill("820");
   await page.getByRole("option", { name: /ASC X12.*820.*Payment Order/i }).click();
@@ -46,3 +49,17 @@ test("008030 containment displays and exports no verdict with its qualification 
   expect(report.executionReason).toContain("008030");
   expect(report.provenance.rulesetRevision).toBe("2.1.0");
 });
+
+for (const mount of ["standalone", "ReadMe package"]) {
+  test(`EDI 820 is not customer-selectable in ${mount}`, async ({ page }) => {
+    await page.goto("/");
+    if (mount === "ReadMe package") {
+      await page.setContent('<main><div data-payment-file-validator data-file-explorer="true"></div></main>');
+      await page.addStyleTag({ path: resolve("readme-package/custom-css.css") });
+      await page.addScriptTag({ path: resolve("readme-package/custom-javascript.js") });
+    }
+    const search = page.getByRole("combobox", { name: "File format" });
+    await search.fill("EDI 820");
+    await expect(page.locator('[role="listbox"] [role="option"]')).toHaveCount(0);
+  });
+}
