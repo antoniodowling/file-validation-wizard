@@ -67,7 +67,7 @@ describe("retirement invariants (#65)", () => {
     expect(snapshot).toEqual(published.find(p => p.profileId === CSV_WIRE_PACK.id));
     const run = validateSource("synthetic.csv", syntheticSample(CSV_WIRE_PACK, false), CSV_WIRE_PACK);
     expect(run.overallStatus).toBe("PASS");
-    expect(run.provenance.coverage.length).toBeGreaterThan(0);
+    expect(run.provenance?.coverage.length).toBeGreaterThan(0);
   });
 
   it("retains PAIN.001 V3 and the ISO parser without enabling .09/.13", () => {
