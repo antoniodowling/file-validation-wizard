@@ -13,5 +13,5 @@ try {
   const { provenanceFor } = await import(pathToFileURL(join(directory,'coverage.mjs')).href);
   await mkdir('docs/coverage', { recursive:true });
   const profiles = FORMAT_PACKS.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; });
-  await writeFile('docs/coverage/report-schema-4.0.0.json', JSON.stringify(profiles,null,2)+'\n');
+  await writeFile('docs/coverage/active-profiles-2026-11-16.json', JSON.stringify(profiles,null,2)+'\n');
 } finally { await rm(directory,{recursive:true,force:true}); }
