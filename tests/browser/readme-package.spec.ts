@@ -224,12 +224,12 @@ test("ReadMe inline NACHA preset validates the mixed retained R2 fixture", async
   await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r2" data-lock-selection="true"></div></main>');
   const root = page.locator("[data-payment-file-validator]");
   await expect(root.getByRole("heading", { name: "Upload your NACHA / ACH file" })).toBeVisible();
-  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/mixed-five-sec-pass.ach"));
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
   await expect(root.locator('[id$="result-basis"]')).toContainText(/expanded public-source candidate/i);
   await root.getByRole("button", { name: "Back to file" }).click();
-  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/routing-check-digit-fail.ach"));
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/routing-check-digit-fail.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("FAIL");
   const routing = root.locator('[id$="finding-rows"] tr').filter({ hasText: "Receiving routing number" });
