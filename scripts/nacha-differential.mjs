@@ -10,6 +10,7 @@ import vm from 'node:vm';
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const DEFAULT_PROFILE = 'nacha-origination-expanded-public-2026-r2';
 const FILE_EXTENSIONS = new Set(['.ach', '.nacha', '.txt', '.dat']);
+const R2_SEC_CODES = new Set(['CCD', 'PPD', 'CTX', 'WEB', 'TEL']);
 const DEFAULT_MAX_FILES = 250;
 const DEFAULT_MAX_BYTES = 25_000_000;
 const REPORT_MAX_ROWS = 40;
@@ -121,8 +122,11 @@ export function observedSecCodes(source) {
     .map(x => x.slice(50, 53)).filter(x => /^[A-Z0-9]{3}$/.test(x)))].sort();
 }
 
-export function compareVerdicts(legacy, wizard) {
+export function compareVerdicts(legacy, wizard, observedSecs = []) {
   if (!legacy || !wizard) return 'RUN ERROR';
+  // An unknown SEC is a coverage difference even if R2 returns FAIL via nacha.sec-code.
+  // The batch-header tokens are observations, not proof of a correctly formed SEC.
+  if (observedSecs.some(sec => !R2_SEC_CODES.has(sec))) return 'SEC OUTSIDE R2';
   if (wizard.status === 'UNSUPPORTED') return 'WIZARD UNSUPPORTED';
   if (wizard.status === 'INCOMPLETE') return 'WIZARD INCOMPLETE';
   const legacyStatus = legacy.status;
@@ -186,7 +190,7 @@ export async function runBatch({ input, garrett, report = 'nacha-differential-re
         try { item.legacy = legacyRun(source); } catch (e) { item.errors.push(`Garrett: ${readError(e)}`); }
         try { item.wizard = await wizard.run(item.file, source); } catch (e) { item.errors.push(`Wizard: ${readError(e)}`); }
       } catch (e) { item.errors.push(`File: ${readError(e)}`); }
-      item.comparison = compareVerdicts(item.legacy, item.wizard);
+      item.comparison = compareVerdicts(item.legacy, item.wizard, item.secCodes);
       results.push(item);
     }
   } finally { await wizard.close(); }
@@ -224,7 +228,7 @@ export function renderMarkdown(batch) {
     '- **Interpretation:** SAME VERDICT means only that headline outcomes agree; it does **not** establish complete validation parity or correctness. Garrett counts issue occurrences, while Wizard counts failed rules.',
     '', '## Summary', '',
     '| Comparison | Files |', '|---|---:|',
-    ...['SAME VERDICT','DIFFERENT VERDICT','WIZARD UNSUPPORTED','WIZARD INCOMPLETE','RUN ERROR'].map(k => `| ${k} | ${counts.get(k) ?? 0} |`),
+    ...['SAME VERDICT','DIFFERENT VERDICT','SEC OUTSIDE R2','WIZARD UNSUPPORTED','WIZARD INCOMPLETE','RUN ERROR'].map(k => `| ${k} | ${counts.get(k) ?? 0} |`),
     '', '## File results', '',
     '| File | Observed SEC | Garrett | Wizard | Comparison |',
     '|---|---|---|---|---|',
@@ -247,7 +251,7 @@ export function renderMarkdown(batch) {
   }
   lines.push('## Notes', '',
     '- The original Garrett implementation is a comparison baseline, **not** a normative ACH rules oracle.',
-    '- SEC tokens are extracted from apparent batch headers for navigation; they are not independently validated.',
+    '- SEC tokens are extracted from apparent batch headers for navigation; they are not independently validated. SEC OUTSIDE R2 flags observed codes outside CCD/PPD/CTX/WEB/TEL regardless of the Wizard’s raw FAIL outcome; it does not assert the file is valid.',
     '- A Wizard UNSUPPORTED result is a coverage gap, not a failed compliance check. Validity and bank acceptance cannot be inferred from either validator.',
     '- Input files are processed sequentially. The report contains no raw NACHA data. Use synthetic data only when sharing reports externally.', '');
   return lines.join('\n');
@@ -289,7 +293,7 @@ Usage:
 
 Options:
   --input/-i DIR                 Directory of ACH files (or positional DIR)
-  --garrett/-g HTML             Original Garrett HTML validator (required)
+  --garrett/-g HTML             Original Garrett HTML validator (or set NACHA_GARRETT_HTML once)
   --report/-o FILE              Markdown destination (default: nacha-differential-report.md)
   --json FILE                   Optional normalized findings JSON (no raw NACHA content)
   --profile ID                  Wizard NACHA profile (default: R2)
@@ -307,6 +311,7 @@ async function main() {
   try {
     const opts = parseArguments(process.argv.slice(2));
     if (opts.help) { process.stdout.write(USAGE); return; }
+    if (!opts.garrett && process.env.NACHA_GARRETT_HTML) opts.garrett = process.env.NACHA_GARRETT_HTML;
     const batch = await runBatch(opts);
     const counts = {};
     for (const item of batch.files) counts[item.comparison] = (counts[item.comparison] ?? 0) + 1;
