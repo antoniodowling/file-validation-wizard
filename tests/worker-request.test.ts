@@ -71,7 +71,7 @@ describe("worker input and failure boundaries", () => {
       .toEqual({ type: "error", code: "ENGINE_ERROR" });
   });
   it("validates NACHA in the worker and preserves a forbidden BOM for completed rejection", () => {
-    const source = readFileSync(resolve(process.cwd(), "demo-files/nacha/mixed-five-sec-pass.ach"), "utf8");
+    const source = readFileSync(resolve(process.cwd(), "demo-files/nacha-expanded/mixed-entry-types-pass.ach"), "utf8");
     const response = validateWorkerRequest({ ...request(encoded(source), "nacha-origination-expanded-public-2026-r2"), fileName: "mixed.ach", includeExplorer: true, snapshotId: 9 });
     expect(response.type).toBe("complete");
     if (response.type === "complete") {
