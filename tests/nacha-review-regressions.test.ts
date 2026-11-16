@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { buildNacha, field } from "./nacha-builder";
 const ordinary = FORMAT_PACKS.find(p => p.id === "nacha-origination-public-2026")!;
