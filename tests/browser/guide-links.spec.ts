@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
 const families = [
-  { query: "pain.001", name: /pain\\.001/i, slug: "iso-pain001", versions: ["pain.001.001.03"] },
+  { query: "pain.001", name: /pain\.001/i, slug: "iso-pain001", versions: ["pain.001.001.03"] },
   { query: "ACH Payment Instructions", name: /ACH Payment Instructions/i, slug: "nacha", versions: ["origination-expanded-public-2026-r2"] },
   { query: "Control Totals", name: /ACH Control Totals/i, slug: "ach-control-total-flat-file", versions: ["control-total-public-2026-r1"] },
 ];
