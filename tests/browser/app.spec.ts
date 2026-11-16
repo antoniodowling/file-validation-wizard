@@ -632,6 +632,6 @@ test("retired and hidden worker-only profiles cannot be chosen from the browser"
     await expect(page.locator('#format-listbox [role="option"]'), query).toHaveCount(0);
   }
   await search.fill("pain.001");
-  await page.getByRole("option", { name: /pain\\.001/i }).click();
+  await page.getByRole("option", { name: /pain\.001/i }).click();
   await expect(page.locator("#version-select option")).toHaveText(["Select a version", "pain.001.001.03"]);
 });
