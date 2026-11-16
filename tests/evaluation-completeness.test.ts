@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, CSV_WIRE_PACK } from "../src/format-packs";
+import { ALL_FORMAT_PACKS as FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, CSV_WIRE_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { parseNacha } from "../src/parsers/nacha";
 import { parseCsvWire } from "../src/parsers/csv-wire";
