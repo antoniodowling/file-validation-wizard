@@ -4,6 +4,12 @@ import { resolve } from "node:path";
 
 const packageFile = (name: string): string => resolve(process.cwd(), "readme-package", name);
 const demoFile = (name: string): string => resolve(process.cwd(), "demo-files", name);
+const v3Sample = (name: string) => ({
+  name: "v3-synthetic.xml",
+  mimeType: "application/xml",
+  buffer: Buffer.from(readFileSync(demoFile(name), "utf8").replaceAll("pain.001.001.09", "pain.001.001.03")),
+});
+
 
 test("self-contained ReadMe package mounts on demand and validates locally", async ({ page }) => {
   await page.setContent("<main><p>Existing ReadMe page content</p></main>");
@@ -20,12 +26,12 @@ test("self-contained ReadMe package mounts on demand and validates locally", asy
   await expect(page.locator("#format-search")).toBeVisible();
   await expect(page.locator("[data-file-explorer]")).toHaveCount(0);
   await page.locator("#format-search").focus();
-  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(9);
+  await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(3);
   await page.locator("#format-search").fill("pain.001");
   await page.getByRole("option", { name: /pain\.001/i }).click();
-  await page.locator("#version-select").selectOption("pain.001.001.09");
+  await page.locator("#version-select").selectOption("pain.001.001.03");
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.locator("#file-input").setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await page.locator("#file-input").setInputFiles(v3Sample("pain.001.001.09-pass.xml"));
   await page.getByRole("button", { name: "Validate file" }).click();
 
   await expect(page.locator("#results-title")).toHaveText("PASS");
@@ -55,14 +61,14 @@ async function installPackage(page: import("@playwright/test").Page, html: strin
 
 test("inline instances isolate controls and state, apply safe presets, and unmount on navigation", async ({ page }) => {
   await installPackage(page, `<main><h1>Guide</h1>
-    <div data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.09" data-lock-selection="true"></div>
+    <div data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.03" data-lock-selection="true"></div>
     <div data-payment-file-validator data-format="unknown" data-version="bad" data-lock-selection="true"></div>
     </main>`);
   const roots = page.locator("[data-payment-file-validator]");
   await expect(roots.nth(0).getByRole("button", { name: "Validate file" })).toBeVisible();
   await roots.nth(0).getByRole("button", { name: "Change format" }).click();
   await expect(roots.nth(0).getByRole("combobox", { name: "File format" })).toBeDisabled();
-  await expect(roots.nth(0).getByLabel("Version", { exact: true })).toHaveValue("pain.001.001.09");
+  await expect(roots.nth(0).getByLabel("Version", { exact: true })).toHaveValue("pain.001.001.03");
   await expect(roots.nth(1).getByRole("combobox", { name: "File format" })).toBeEnabled();
   await expect(roots.nth(1).getByRole("button", { name: "Continue" })).toBeDisabled();
   expect(await page.locator("[id]").evaluateAll((elements) => {
@@ -76,7 +82,7 @@ test("inline instances isolate controls and state, apply safe presets, and unmou
 });
 
 test("modal validates, exports, traps focus, and clears file state on close and navigation", async ({ page }) => {
-  await installPackage(page, `<main><h1>Guide</h1><a id="launch" href="/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.09&lockSelection=true">Validate payment</a></main>`);
+  await installPackage(page, `<main><h1>Guide</h1><a id="launch" href="/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.03&lockSelection=true">Validate payment</a></main>`);
   const originalUrl = page.url();
   await page.getByRole("link", { name: "Validate payment" }).click();
   const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
@@ -85,7 +91,7 @@ test("modal validates, exports, traps focus, and clears file state on close and 
   await expect(dialog.getByRole("button", { name: "Close validator" })).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
-  await dialog.locator('input[type="file"]').setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await dialog.locator('input[type="file"]').setInputFiles(v3Sample("pain.001.001.09-pass.xml"));
   await dialog.getByRole("button", { name: "Validate file" }).click();
   await expect(dialog.locator('[id$="results-title"]')).toHaveText("PASS");
   const download = page.waitForEvent("download");
@@ -98,7 +104,7 @@ test("modal validates, exports, traps focus, and clears file state on close and 
   await page.locator("#launch").click();
   await expect(dialog.getByRole("button", { name: "Validate file" })).toBeDisabled();
   await expect(dialog.locator('input[type="file"]')).toHaveValue("");
-  await dialog.locator('input[type="file"]').setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await dialog.locator('input[type="file"]').setInputFiles(v3Sample("pain.001.001.09-pass.xml"));
   await page.evaluate(() => {
     const original = Worker.prototype.terminate;
     Worker.prototype.terminate = function () {
@@ -145,7 +151,7 @@ test("modal trigger runs before ReadMe-style client-side routing", async ({ page
 });
 
 test("dedicated-page fragments apply presets and modal leaves external and new-window links alone", async ({ page }) => {
-  await page.goto("/#payment-file-validator?format=PAIN.001&version=pain.001.001.09");
+  await page.goto("/#payment-file-validator?format=PAIN.001&version=pain.001.001.03");
   await page.setContent('<div id="hnb-payment-file-validator"></div>');
   await page.addScriptTag({ path: packageFile("custom-javascript.js") });
   await expect(page.getByRole("button", { name: "Validate file" })).toBeVisible();
@@ -183,10 +189,10 @@ test("inline and modal layouts fit narrow containers", async ({ page, browserNam
 });
 
 test("closing during a pending file read prevents later worker creation", async ({ page }) => {
-  await installPackage(page, '<a href="/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.09">Open validator</a>');
+  await installPackage(page, '<a href="/page/payment-file-validator#payment-file-validator?format=PAIN.001&version=pain.001.001.03">Open validator</a>');
   await page.getByRole("link", { name: "Open validator" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.locator('input[type="file"]').setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await dialog.locator('input[type="file"]').setInputFiles(v3Sample("pain.001.001.09-pass.xml"));
   const workersCreated = await dialog.evaluate(async (element) => {
     const OriginalWorker = window.Worker;
     const originalRead = File.prototype.arrayBuffer;
@@ -214,14 +220,14 @@ test("closing during a pending file read prevents later worker creation", async 
 });
 
 
-test("ReadMe inline NACHA preset validates the mixed public-profile fixture", async ({ page }) => {
-  await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-public-2026" data-lock-selection="true"></div></main>');
+test("ReadMe inline NACHA preset validates the mixed retained R2 fixture", async ({ page }) => {
+  await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r2" data-lock-selection="true"></div></main>');
   const root = page.locator("[data-payment-file-validator]");
   await expect(root.getByRole("heading", { name: "Upload your NACHA / ACH file" })).toBeVisible();
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/mixed-five-sec-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="result-basis"]')).toContainText(/public specification profile/i);
+  await expect(root.locator('[id$="result-basis"]')).toContainText(/expanded public-source candidate/i);
   await root.getByRole("button", { name: "Back to file" }).click();
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/routing-check-digit-fail.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
@@ -231,8 +237,9 @@ test("ReadMe inline NACHA preset validates the mixed public-profile fixture", as
 });
 
 test("wizard-only results show source lines for errors and warnings without an explorer", async ({ page }) => {
-  await installPackage(page, `<main><div id="hnb-payment-file-validator" data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.09"></div></main>`);
+  await installPackage(page, `<main><div id="hnb-payment-file-validator" data-payment-file-validator data-format="PAIN.001" data-version="pain.001.001.03"></div></main>`);
   const source = readFileSync(demoFile("pain.001.001.09-multiple-errors.xml"), "utf8")
+    .replaceAll("pain.001.001.09", "pain.001.001.03")
     .replaceAll("CstmrCdtTrfInit>", "CstmrCdtTrfInitn>").replaceAll("\n", "\r\n");
   await page.locator('input[type="file"]').setInputFiles({ name: "bad.xml", mimeType: "application/xml", buffer: Buffer.from(source) });
   await page.getByRole("button", { name: "Validate file" }).click();
@@ -259,7 +266,7 @@ test("wizard-only results show source lines for errors and warnings without an e
   await contextNumber.press("Escape");
   await expect(tooltip).toBeHidden();
   await page.getByRole("button", { name: "Back to file" }).click();
-  await page.locator('input[type="file"]').setInputFiles(demoFile("pain.001.001.09-pass.xml"));
+  await page.locator('input[type="file"]').setInputFiles(v3Sample("pain.001.001.09-pass.xml"));
   await page.getByRole("button", { name: "Validate file" }).click();
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator(".finding-line")).toHaveText(Array(11).fill("—"));
@@ -267,17 +274,17 @@ test("wizard-only results show source lines for errors and warnings without an e
 
 
 test("ReadMe expanded NACHA inline and modal presets use the new candidate independently", async ({ page }) => {
-  await installPackage(page, `<main><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r1" data-lock-selection="true"></div>
-    <a id="expanded-launch" href="/page/payment-file-validator#payment-file-validator?format=NACHA&amp;version=origination-expanded-public-2026-r1">Validate expanded ACH</a></main>`);
+  await installPackage(page, `<main><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r2" data-lock-selection="true"></div>
+    <a id="expanded-launch" href="/page/payment-file-validator#payment-file-validator?format=NACHA&amp;version=origination-expanded-public-2026-r2">Validate expanded ACH</a></main>`);
   const root = page.locator("main > [data-payment-file-validator]");
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-expanded-public-1.2.0");
+  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-origination-public-2026-r2.2");
   await page.locator("#expanded-launch").click();
   const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator('[id$="version-select"]')).toHaveValue("origination-expanded-public-2026-r1");
+  await expect(dialog.locator('[id$="version-select"]')).toHaveValue("origination-expanded-public-2026-r2");
   await dialog.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/prenote-amount-fail.ach"));
   await dialog.getByRole("button", { name: "Validate file" }).click();
   await expect(dialog.locator('[id$="results-title"]')).toHaveText("FAIL");
@@ -285,17 +292,20 @@ test("ReadMe expanded NACHA inline and modal presets use the new candidate indep
   await page.keyboard.press("Escape"); await expect(dialog).toHaveCount(0);
 });
 
-test("ACK candidate preset in the shared modal keeps rejection separate from validity", async ({page}) => {
-  await installPackage(page, `<main><h1>Guide</h1><a id="ack-launch" href="/page/payment-file-validator#payment-file-validator?format=File%20Received%20ACK&amp;version=pipe-1.0-candidate-r1&amp;lockSelection=true">Validate ACK</a></main>`);
-  await page.getByRole("link",{name:"Validate ACK"}).click();
-  const dialog=page.getByRole("dialog",{name:"Payment File Validation Wizard"});
+test("a retired ACK modal deep link opens with no executable preset", async ({ page }) => {
+  await installPackage(page, `<main><h1>Guide</h1><a id="retired-launch"
+    href="/page/payment-file-validator#payment-file-validator?format=File%20Received%20ACK&amp;version=pipe-1.0-candidate-r1&amp;lockSelection=true">Old ACK link</a></main>`);
+  await page.getByRole("link", { name: "Old ACK link" }).click();
+  const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
   await expect(dialog).toBeVisible();
-  await dialog.locator('input[type="file"]').setInputFiles(demoFile("ach-candidates/ack-rejected-pass.txt"));
-  await dialog.getByRole("button",{name:"Validate file"}).click();
-  await expect(dialog.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(dialog.locator('[id$="reported-disposition"]')).toContainText("REJECTED");
-  await page.keyboard.press("Escape"); await expect(dialog).toHaveCount(0);
-  await page.getByRole("link",{name:"Validate ACK"}).click();
-  await expect(dialog.locator('[id$="reported-disposition"]')).toBeHidden();
-  await expect(dialog.locator('input[type="file"]')).toHaveValue("");
+  await expect(dialog.getByRole("button", { name: "Continue" })).toBeDisabled();
+  await expect(dialog.locator('input[type="file"]')).toBeDisabled();
+  await expect(dialog.getByRole("combobox", { name: "File format" })).toBeEnabled();
+});
+
+test("CSV Wire remains hidden from ReadMe format search but archived tests remain", async ({ page }) => {
+  await installPackage(page, '<main><div data-payment-file-validator></div></main>');
+  const search = page.getByRole("combobox", { name: "File format" });
+  await search.fill("CSV Wire");
+  await expect(page.getByRole("option", { name: /CSV Wire/i })).toHaveCount(0);
 });
