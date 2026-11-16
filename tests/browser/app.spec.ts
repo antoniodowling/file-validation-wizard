@@ -166,7 +166,7 @@ test("validates mixed NACHA files, warnings and errors with exact source navigat
     await page.locator("#file-input").setInputFiles(demoFile(`nacha-expanded/${file}`));
     await page.getByRole("button", { name: "Validate file" }).click();
   };
-  await upload("mixed-five-sec-pass.ach");
+  await upload("mixed-entry-types-pass.ach");
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#result-basis")).toContainText("Expanded public-source candidate");
   const download = page.waitForEvent("download");
