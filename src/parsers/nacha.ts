@@ -1,4 +1,5 @@
 import { UnsupportedInputError } from "../resource-policy";
+import { HUNTINGTON_NACHA_BATCH_NUMBER_URL } from "../nacha-batch-guidance";
 import { ACH_ENTRY_TYPES } from "./nacha-entry-types";
 import { ctxX12Syntax } from "./ach-remittance";
 import { frameFixedRecords, totals, slice, digits, number, HASH_MOD, date, routingPrefix, routing, type RecordRow } from "./fixed-record";
@@ -132,6 +133,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   let fileAmountsKnown = true;
   const traces = new Set<string>();
   let previousBatch = 0n;
+  let firstBatch = true;
   const supported = pack.identifiers?.kind === "NACHA_FIXED" ? pack.identifiers.secCodes : [];
   for (const batch of batches) {
     const bh = batch.header;
@@ -175,8 +177,16 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const odfi = slice(bh, 80, 87);
     check("odfi", routingPrefix(odfi), "Originating DFI identification", "Originating DFI identification must contain eight routing digits with a valid nonzero routing prefix.", bh, 80, 87);
     const batchNumber = number(slice(bh, 88, 94));
-    check("batch-number", batchNumber !== null && batchNumber > previousBatch, "Batch number", "Batch numbers must be numeric, positive, and ascending within the file.", bh, 88, 94);
+    // Huntington illustrates a first batch of 0000001 but does not explicitly reject 0000000.
+    // R2 treats only the first zero as advisory; malformed, repeated or descending values remain errors.
+    const firstZeroBatch = originationR2 && firstBatch && batchNumber === 0n;
+    check("batch-number", batchNumber !== null && batchNumber > previousBatch, "Batch number",
+      firstZeroBatch
+        ? `The first batch number is 0000000. Huntington's published NACHA specification suggests starting at 0000001 (examples: 0000001, 0000002), but does not explicitly prohibit zero. See ${HUNTINGTON_NACHA_BATCH_NUMBER_URL}`
+        : "Batch numbers must be numeric, positive, and ascending within the file.",
+      bh, 88, 94, firstZeroBatch);
     if (batchNumber !== null) previousBatch = batchNumber;
+    firstBatch = false;
     const bt = totals();
     let batchAmountsKnown = true;
     let batchHashKnown = true;
