@@ -2186,7 +2186,7 @@
     "schemaVersion": "4",
     "profileId": "nacha-origination-expanded-public-2026-r2",
     "messageVersion": "origination-expanded-public-2026-r2",
-    "implementationGuideRevision": "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; Huntington Batch Number examples reviewed 2026-11-17; full Rules qualification deferred",
+    "implementationGuideRevision": "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; Huntington and Nacha public batch-sequencing language reviewed 2026-11-17; full Rules qualification deferred",
     "mode": "CANDIDATE",
     "rulesetRevision": "nacha-origination-public-2026-r2.3",
     "coverageRevision": "nacha-origination-expanded-public-2026-r2@nacha-origination-public-2026-r2.3/report-4",
@@ -2343,12 +2343,12 @@
       },
       {
         "id": "nacha.batch-number",
-        "description": "Batch numbers must be numeric and strictly ascending (gaps permitted). A first batch numbered 0000000 generates a WARNING based on Huntington's published 0000001 example; malformed, repeated or descending numbers remain ERROR.",
+        "description": "Batch numbers must be numeric and strictly ascending within a file; gaps are permitted. No positive minimum or first-batch value is imposed.",
         "ruleClass": "nacha-structure",
         "severity": "ERROR",
-        "applicability": "Each batch header in R2; only the first batch may start at zero with an advisory warning.",
+        "applicability": "Each batch header in R2, compared with preceding batch numbers. The first batch may be 0000000.",
         "prerequisite": "nacha.framing and nacha.ascii passed; nacha.record-order passed (framing, ASCII or order errors stop downstream field evaluation)",
-        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate; https://developer.huntington.com/enterprisepayments/docs/nacha#record-type-5--companybatch-header (Record Type 5 Batch Number examples; zero not explicitly prohibited)",
+        "reference": "docs/ACH_ORIGINATION_EXPANDED.md; https://achdevguide.nacha.org/ach-file-details; https://achdevguide.nacha.org/ach-file-overview; https://developer.gs.com/docs/services/transaction-banking/ach-file/; Nacha ISO mapping guide 2023-08-09; source-reviewed candidate; https://achdevguide.nacha.org/ach-file-details (batch number assigned in ascending sequence); https://developer.huntington.com/enterprisepayments/docs/nacha (Record Type 5 Batch Number examples do not establish a minimum of 1)",
         "evidence": "tests/nacha-expanded.test.ts; tests/nacha-expanded-fixtures.test.ts; demo-files/nacha-expanded/manifest.json; independent source/fixture review recorded in docs/ACH_ORIGINATION_EXPANDED.md; no business approvals or hosted acceptance"
       },
       {
