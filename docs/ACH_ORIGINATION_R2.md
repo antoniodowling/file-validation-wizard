@@ -23,7 +23,7 @@ Both terminator characters are excluded from element content, so accepting backs
 
 Healthcare/CTX remittance findings now point to addenda payload context; the checker does not claim an exact offending byte. Regression evidence is `tests/nacha-review-regressions.test.ts` plus existing r2 and expanded tests. Full current Rules/business-guide qualification, real purpose and bank acceptance remain open exclusions; no approval flag changes.
 
-## Effective Entry Date advisories (issue #78; revision r2.3)
+## Effective Entry Date advisories (issue #78; revision r2.4)
 
 R2 adds two **WARNING** checks on valid batch Effective Entry Dates (YYMMDD; 2000–2099). They are advisory scheduling risks, not automatic ACH Operator rejection claims. A bad date remains an ERROR and suppresses dependent date evaluation; the earlier weekend warning remains in place.
 
