@@ -1,8 +1,7 @@
 import type { CoverageRule, FormatPack } from "./types";
-import { HUNTINGTON_NACHA_BATCH_NUMBER_URL } from "./nacha-batch-guidance";
 import { expandedNachaCoverageFor, NACHA_EXPANDED_EXCLUSIONS } from "./nacha-expanded-coverage";
 export const NACHA_ORIGINATION_R2_REVISION = "nacha-origination-public-2026-r2.3";
-export const NACHA_ORIGINATION_R2_GUIDE = "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; Huntington Batch Number examples reviewed 2026-11-17; full Rules qualification deferred";
+export const NACHA_ORIGINATION_R2_GUIDE = "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; Huntington and Nacha public batch-sequencing language reviewed 2026-11-17; full Rules qualification deferred";
 export const NACHA_ORIGINATION_R2_EXCLUSIONS = Object.freeze([
   ...NACHA_EXPANDED_EXCLUSIONS.filter(exclusion => !exclusion.startsWith("Healthcare classification")),
   "Healthcare classification is declared only by HCCLAIMPMT. Missing descriptors do not prove absence of healthcare, payroll or e-commerce purpose; actual purpose, TEL standing authorization and complete ASC X12 5010 835 business-guide conformance remain unverified.",
@@ -16,9 +15,9 @@ const added: Readonly<Record<string, readonly [string, string, string]>> = {
 export function originationR2CoverageFor(pack: FormatPack): readonly CoverageRule[] {
   const inherited = expandedNachaCoverageFor(pack).map(rule => rule.id === "nacha.batch-number" ? {
     ...rule,
-    description: "Batch numbers must be numeric and strictly ascending (gaps permitted). A first batch numbered 0000000 generates a WARNING based on Huntington's published 0000001 example; malformed, repeated or descending numbers remain ERROR.",
-    applicability: "Each batch header in R2; only the first batch may start at zero with an advisory warning.",
-    reference: `${rule.reference}; ${HUNTINGTON_NACHA_BATCH_NUMBER_URL} (Record Type 5 Batch Number examples; zero not explicitly prohibited)`,
+    description: "Batch numbers must be numeric and strictly ascending within a file; gaps are permitted. No positive minimum or first-batch value is imposed.",
+    applicability: "Each batch header in R2, compared with preceding batch numbers. The first batch may be 0000000.",
+    reference: `${rule.reference}; https://achdevguide.nacha.org/ach-file-details (batch number assigned in ascending sequence); https://developer.huntington.com/enterprisepayments/docs/nacha (Record Type 5 Batch Number examples do not establish a minimum of 1)`,
   } : rule);
   return [...inherited, ...Object.entries(added).map(([key, metadata]) => ({
     id: `nacha.${key}`, description: metadata[0], ruleClass: "nacha-structure" as const, severity: "ERROR" as const,
