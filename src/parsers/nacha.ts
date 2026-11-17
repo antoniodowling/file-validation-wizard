@@ -172,10 +172,17 @@ export function parseNacha(source: string, pack: FormatPack, validationInstant: 
       if (effective) {
         const effectiveDate = effective.toISOString().slice(0, 10);
         const batchId = slice(bh, 88, 94).trim();
+        // Federal Reserve holidays prevent settlement on the specified date,
+        // but do not necessarily invalidate the ACH file.
+        // Report a WARNING rather than an ERROR.
+        // Weekend dates are handled by the existing weekend rule.
         const holiday = federalReserveHoliday(effective);
         check("effective-holiday", holiday === null, "Effective entry date",
           `Batch ${batchId}: Effective Entry Date ${effectiveDate} falls on ${holiday}. Federal Reserve ACH settlement is unavailable on this holiday; confirm handling with the ODFI.`,
           bh, 70, 75, true);
+        // ACH Effective Entry Dates contain no timezone or time of day.
+        // America/New_York is used only to determine what "today" is.
+        // Compare calendar dates.
         check("effective-past", effectiveDate >= validationDate, "Effective entry date",
           `Batch ${batchId}: Effective Entry Date ${effectiveDate} precedes the validation date ${validationDate}. The ACH Operator may settle at the next available opportunity; confirm intended handling with the ODFI.`,
           bh, 70, 75, true);
