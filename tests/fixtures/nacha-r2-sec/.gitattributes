@@ -1,0 +1,2 @@
+# Fixed-width ACH records require their trailing spaces and exact bytes.
+*.ach -text -whitespace
