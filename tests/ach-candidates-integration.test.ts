@@ -34,7 +34,7 @@ describe("integrated ACH candidate revisions", () => {
       .toEqual(historical.map(pack => snapshots.find(s => s.profileId === pack.id)));
     const prior = snapshots.find(s => s.profileId === ORIGINATION_R2_PACK.id)!;
     const current = provenanceFor(ORIGINATION_R2_PACK);
-    expect(current.rulesetRevision).toBe("nacha-origination-public-2026-r2.3");
+    expect(current.rulesetRevision).toBe("nacha-origination-public-2026-r2.4");
     expect(current.coverage.slice(0, -2)).toEqual(prior.coverage);
     expect(current.coverage.slice(-2).map(rule => [rule.id, rule.severity])).toEqual([
       ["nacha.effective-holiday", "WARNING"], ["nacha.effective-past", "WARNING"],
