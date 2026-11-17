@@ -62,7 +62,7 @@ test("starts with format search and keeps later-step messaging inside its step",
   await expect(page.locator('#format-listbox [role="option"]').first().locator("span")).toHaveCount(3);
 });
 
-test("shows a clickable Huntington source for R2's zero-first-batch warning", async ({ page }) => {
+test("accepts an R2 first batch of zero without an unsupported warning", async ({ page }) => {
   const rows = buildNacha();
   rows[1] = field(rows[1]!, 88, 94, "0000000");
   rows[3] = field(rows[3]!, 88, 94, "0000000");
@@ -75,17 +75,10 @@ test("shows a clickable Huntington source for R2's zero-first-batch warning", as
     buffer: Buffer.from(rows.join("\n")),
   });
   await page.getByRole("button", { name: "Validate file" }).click();
-  await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
+  await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#error-count")).toHaveText("0");
-  await expect(page.locator("#warning-count")).toHaveText("1");
-  await expect(page.locator("#finding-rows")).toContainText("suggests starting at 0000001");
-  const sourceLink = page.getByRole("link", { name: "Huntington NACHA specification — Batch Number" });
-  await expect(sourceLink).toHaveAttribute(
-    "href",
-    "https://developer.huntington.com/enterprisepayments/docs/nacha#record-type-5--companybatch-header",
-  );
-  await expect(sourceLink).toHaveAttribute("target", "_blank");
-  await expect(sourceLink).toHaveAttribute("rel", /noopener noreferrer/);
+  await expect(page.locator("#warning-count")).toHaveText("0");
+  await expect(page.locator("#finding-rows")).not.toContainText("suggests starting at 0000001");
 });
 
 test("supports keyboard search and dependent version selection", async ({ page }) => {
