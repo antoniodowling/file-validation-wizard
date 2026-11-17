@@ -152,11 +152,11 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     // Case-insensitive admission is conservative tool policy, not case normalization.
     if (!expanded && upperDescription.includes("REVERSAL")) throw new UnsupportedInputError("Declared reversal markers, including malformed-case variants, are outside the ordinary origination profile. Select an expanded profile; no format verdict is issued.");
     const payroll = originationR2 && upperDescription.includes("PAYROLL");
-    const purchase = originationR2 && upperDescription.includes("PURCHASE");
+    const purchase = originationR2 && upperDescription.trimEnd() === "PURCHASE";
     const healthcare = originationR2 && upperDescription === "HCCLAIMPMT";
     if (originationR2) {
       const markers = ["ACCTVERIFY", "PAYROLL", "PURCHASE", "RETRY PYMT", "REVERSAL", "RETURN FEE", "RECLAIM", "NONSETTLED", "AUTOENROLL", "REDEPCHECK", "NO CHECK", "HCCLAIMPMT"];
-      for (const marker of markers) if (upperDescription.includes(marker)) check("description-case", description === upperDescription && (marker === "PAYROLL" ? description.startsWith(marker) : description.includes(marker)), "Company entry description case", "Declared standardized description fields must use uppercase letters, including suffixes. PAYROLL occupies the leftmost seven columns and permits three discretionary suffix characters.", bh, 54, 63);
+      for (const marker of markers) if (marker === "PURCHASE" ? purchase : upperDescription.includes(marker)) check("description-case", description === upperDescription && (marker === "PAYROLL" ? description.startsWith(marker) : description.includes(marker)), "Company entry description case", "Declared standardized description fields must use uppercase letters, including suffixes. PAYROLL occupies the leftmost seven columns and permits three discretionary suffix characters.", bh, 54, 63);
       if (healthcare) check("description-sec", sec === "CCD", "Healthcare descriptor SEC", "HCCLAIMPMT declares a healthcare CCD entry.", bh, 51, 63);
     }
     const reversal = expanded && description.includes("REVERSAL");
