@@ -17,7 +17,6 @@ import { overallStatusLabel } from "./outcome";
 import { pageWindow } from "./pagination";
 import { pageForFinding } from "./finding-navigation";
 import { validationFailureMessage } from "./validation-failure";
-import { HUNTINGTON_NACHA_BATCH_NUMBER_URL } from "./nacha-batch-guidance";
 import { VALIDATION_DEADLINE_MS } from "./types";
 import type {
   FindingLineEntry,
@@ -982,21 +981,7 @@ export function mountPaymentFileValidator(app: HTMLDivElement, options: Validato
       }
       const message = document.createElement("td");
       const messageText = document.createElement("span");
-      // Only hyperlink a known, allowlisted documentation URL for this specific advisory.
-      // Never parse arbitrary validator messages as HTML or make arbitrary URLs clickable.
-      if (finding.ruleId === "nacha.batch-number" && finding.outcome === "WARNING"
-        && finding.message.includes(HUNTINGTON_NACHA_BATCH_NUMBER_URL)) {
-        const [before, after] = finding.message.split(HUNTINGTON_NACHA_BATCH_NUMBER_URL);
-        messageText.append(document.createTextNode(before ?? ""));
-        const guideLink = document.createElement("a");
-        guideLink.href = HUNTINGTON_NACHA_BATCH_NUMBER_URL;
-        guideLink.target = "_blank";
-        guideLink.rel = "noopener noreferrer";
-        guideLink.textContent = "Huntington NACHA specification — Batch Number";
-        messageText.append(guideLink, document.createTextNode(after ?? ""));
-      } else {
-        messageText.textContent = finding.message;
-      }
+      messageText.textContent = finding.message;
       message.append(messageText);
       if (explorerController && finding.outcome !== "PASS") {
         const action = document.createElement("button");
