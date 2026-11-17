@@ -2186,7 +2186,7 @@
     "schemaVersion": "4",
     "profileId": "nacha-origination-expanded-public-2026-r2",
     "messageVersion": "origination-expanded-public-2026-r2",
-    "implementationGuideRevision": "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; full Rules qualification deferred",
+    "implementationGuideRevision": "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; FedACH holiday schedule reviewed 2026-11-17; origination-expanded-public-2026-r2; full Rules qualification deferred",
     "mode": "CANDIDATE",
     "rulesetRevision": "nacha-origination-public-2026-r2.3",
     "coverageRevision": "nacha-origination-expanded-public-2026-r2@nacha-origination-public-2026-r2.3/report-4",
