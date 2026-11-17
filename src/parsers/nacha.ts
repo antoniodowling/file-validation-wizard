@@ -131,7 +131,9 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
   let fileHashKnown = true;
   let fileAmountsKnown = true;
   const traces = new Set<string>();
-  let previousBatch = 0n;
+  // R2 has no documented minimum of 1; a first batch numbered 0000000 is valid structurally.
+  // Preserve the legacy profile’s stricter behavior until its separate retirement.
+  let previousBatch: bigint | null = originationR2 ? null : 0n;
   const supported = pack.identifiers?.kind === "NACHA_FIXED" ? pack.identifiers.secCodes : [];
   for (const batch of batches) {
     const bh = batch.header;
@@ -175,7 +177,12 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const odfi = slice(bh, 80, 87);
     check("odfi", routingPrefix(odfi), "Originating DFI identification", "Originating DFI identification must contain eight routing digits with a valid nonzero routing prefix.", bh, 80, 87);
     const batchNumber = number(slice(bh, 88, 94));
-    check("batch-number", batchNumber !== null && batchNumber > previousBatch, "Batch number", "Batch numbers must be numeric, positive, and ascending within the file.", bh, 88, 94);
+    check("batch-number", batchNumber !== null && (previousBatch === null || batchNumber > previousBatch),
+      "Batch number",
+      originationR2
+        ? "Batch numbers must be numeric and strictly ascending within the file; gaps are permitted."
+        : "Batch numbers must be numeric, positive, and ascending within the file.",
+      bh, 88, 94);
     if (batchNumber !== null) previousBatch = batchNumber;
     const bt = totals();
     let batchAmountsKnown = true;

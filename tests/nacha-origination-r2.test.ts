@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { FormatPack } from "../src/types";
 import { EXPANDED_NACHA_PACK } from "../src/format-packs";
 import { parseNacha, NACHA_ORIGINATION_R2_RULE_IDS } from "../src/parsers/nacha";
+import { validateSource } from "../src/validation";
 import { originationR2CoverageFor } from "../src/nacha-origination-r2-coverage";
 import { expandedNachaCoverageFor } from "../src/nacha-expanded-coverage";
 import { buildNacha, field } from "./nacha-builder";
@@ -14,10 +15,59 @@ const source = (sec = "CCD", code = "22", description = "HCCLAIMPMT", payload: s
   return rows.join("\n");
 };
 const state = (text: string, id: string) => parseNacha(text, pack).results.find(result => result.ruleId === `nacha.${id}`)?.outcome;
+const numberedBatches = (numbers: string[]): string => {
+  const rows = buildNacha(numbers.map(() => ({})));
+  let batchIndex = 0;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i]?.[0] === "5") rows[i] = field(rows[i]!, 88, 94, numbers[batchIndex]!);
+    if (rows[i]?.[0] === "8") {
+      rows[i] = field(rows[i]!, 88, 94, numbers[batchIndex]!);
+      batchIndex += 1;
+    }
+  }
+  return rows.join("\n");
+};
 describe("origination r2 declarations", () => {
-  it("extends frozen r1 coverage only by the four new rules", () => {
-    expect(originationR2CoverageFor(pack).slice(0, -4)).toEqual(expandedNachaCoverageFor(pack));
-    expect(originationR2CoverageFor(pack).map(rule => rule.id).filter(id => id !== "nacha.non-empty-source")).toEqual(NACHA_ORIGINATION_R2_RULE_IDS);
+  it("inherits r1 coverage except the R2 numeric-sequencing rule without a first-batch minimum", () => {
+    const coverage = originationR2CoverageFor(pack);
+    const inherited = expandedNachaCoverageFor(pack);
+    expect(coverage.slice(0, -4).filter(rule => rule.id !== "nacha.batch-number"))
+      .toEqual(inherited.filter(rule => rule.id !== "nacha.batch-number"));
+    const batch = coverage.find(rule => rule.id === "nacha.batch-number");
+    expect(batch?.description).toContain("strictly ascending");
+    expect(batch?.description).toContain("No positive minimum");
+    expect(batch?.description).not.toContain("WARNING");
+    expect(batch?.reference).toContain("https://achdevguide.nacha.org/ach-file-details");
+    expect(batch?.reference).toContain("https://developer.huntington.com/enterprisepayments/docs/nacha");
+    expect(batch?.severity).toBe("ERROR");
+    expect(coverage.map(rule => rule.id).filter(id => id !== "nacha.non-empty-source"))
+      .toEqual(NACHA_ORIGINATION_R2_RULE_IDS);
+  });
+  it("accepts a first zero batch without warning, while enforcing ascending numeric values and matching controls", () => {
+    const input = numberedBatches(["0000000", "0000001", "0000002"]);
+    const run = validateSource("synthetic.ach", input, pack);
+    expect(run.overallStatus).toBe("PASS");
+    expect(run.errorCount).toBe(0);
+    expect(run.warningCount).toBe(0);
+    expect(run.results.find(rule => rule.ruleId === "nacha.batch-number")?.outcome).toBe("PASS");
+    expect(run.results.find(rule => rule.ruleId === "nacha.batch-mirror")?.outcome).toBe("PASS");
+    expect(state(numberedBatches(["0000000"]), "batch-number")).toBe("PASS");
+    expect(state(numberedBatches(["0000001", "0000002"]), "batch-number")).toBe("PASS");
+    // Gaps are explicitly allowed; only strict order, numeric syntax and control mirroring apply.
+    expect(state(numberedBatches(["0000000", "0000002"]), "batch-number")).toBe("PASS");
+    for (const numbers of [
+      ["0000000", "0000000"],
+      ["0000000", "0000002", "0000001"],
+      ["0000001", "0000000"],
+      ["INVALID"],
+    ]) expect(state(numberedBatches(numbers), "batch-number"), numbers.join(",")).toBe("ERROR");
+    const badMirror = numberedBatches(["0000000"]).split("\n");
+    badMirror[3] = field(badMirror[3]!, 88, 94, "0000001");
+    const mismatch = parseNacha(badMirror.join("\n"), pack);
+    expect(mismatch.results.find(rule => rule.ruleId === "nacha.batch-mirror")?.outcome).toBe("ERROR");
+    // Legacy/r1 remains unchanged; this targeted change is scoped to current R2.
+    const legacy = parseNacha(numberedBatches(["0000000"]), EXPANDED_NACHA_PACK);
+    expect(legacy.results.find(rule => rule.ruleId === "nacha.batch-number")?.outcome).toBe("ERROR");
   });
   it("accepts declared healthcare CCD with a whole TRN and preserves payload padding", () => {
     const text = source();

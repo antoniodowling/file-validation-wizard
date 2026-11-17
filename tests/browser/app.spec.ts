@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { resolve } from "node:path";
+import { buildNacha, field } from "../nacha-builder";
 
 const demoFile = (name: string): string => resolve(process.cwd(), "demo-files", name);
 
@@ -59,6 +60,25 @@ test("starts with format search and keeps later-step messaging inside its step",
   await expect(page.locator(".format-list-header")).toHaveText("FormatCodeStandard");
   await expect(page.locator(".support-badge")).toHaveCount(0);
   await expect(page.locator('#format-listbox [role="option"]').first().locator("span")).toHaveCount(3);
+});
+
+test("accepts an R2 first batch of zero without an unsupported warning", async ({ page }) => {
+  const rows = buildNacha();
+  rows[1] = field(rows[1]!, 88, 94, "0000000");
+  rows[3] = field(rows[3]!, 88, 94, "0000000");
+  await page.goto("/");
+  await chooseFormat(page, "NACHA", /ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.locator("#file-input").setInputFiles({
+    name: "synthetic-zero-batch.ach",
+    mimeType: "text/plain",
+    buffer: Buffer.from(rows.join("\n")),
+  });
+  await page.getByRole("button", { name: "Validate file" }).click();
+  await expect(page.locator("#results-title")).toHaveText("PASS");
+  await expect(page.locator("#error-count")).toHaveText("0");
+  await expect(page.locator("#warning-count")).toHaveText("0");
+  await expect(page.locator("#finding-rows")).not.toContainText("suggests starting at 0000001");
 });
 
 test("supports keyboard search and dependent version selection", async ({ page }) => {

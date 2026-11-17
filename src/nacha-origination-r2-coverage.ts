@@ -1,7 +1,7 @@
 import type { CoverageRule, FormatPack } from "./types";
 import { expandedNachaCoverageFor, NACHA_EXPANDED_EXCLUSIONS } from "./nacha-expanded-coverage";
-export const NACHA_ORIGINATION_R2_REVISION = "nacha-origination-public-2026-r2.2";
-export const NACHA_ORIGINATION_R2_GUIDE = "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; full Rules qualification deferred";
+export const NACHA_ORIGINATION_R2_REVISION = "nacha-origination-public-2026-r2.3";
+export const NACHA_ORIGINATION_R2_GUIDE = "Public sources and supplied 2026 Basic Rules excerpts reviewed 2026-10-14; CMS generic TRN terminators rechecked 2026-10-29; origination-expanded-public-2026-r2; Huntington and Nacha public batch-sequencing language reviewed 2026-11-17; full Rules qualification deferred";
 export const NACHA_ORIGINATION_R2_EXCLUSIONS = Object.freeze([
   ...NACHA_EXPANDED_EXCLUSIONS.filter(exclusion => !exclusion.startsWith("Healthcare classification")),
   "Healthcare classification is declared only by HCCLAIMPMT. Missing descriptors do not prove absence of healthcare, payroll or e-commerce purpose; actual purpose, TEL standing authorization and complete ASC X12 5010 835 business-guide conformance remain unverified.",
@@ -13,7 +13,13 @@ const added: Readonly<Record<string, readonly [string, string, string]>> = {
   "healthcare-trn": ["Declared healthcare CCD payment addenda contain a complete reassociation TRN segment ending in tilde or backslash; payload locations are contextual; full 835 guide conformance is excluded.", "HCCLAIMPMT CCD non-prenotes with present type-05 addenda.", "Trusted record envelopes; known entry type and payment addenda type"],
 };
 export function originationR2CoverageFor(pack: FormatPack): readonly CoverageRule[] {
-  return [...expandedNachaCoverageFor(pack), ...Object.entries(added).map(([key, metadata]) => ({
+  const inherited = expandedNachaCoverageFor(pack).map(rule => rule.id === "nacha.batch-number" ? {
+    ...rule,
+    description: "Batch numbers must be numeric and strictly ascending within a file; gaps are permitted. No positive minimum or first-batch value is imposed.",
+    applicability: "Each batch header in R2, compared with preceding batch numbers. The first batch may be 0000000.",
+    reference: `${rule.reference}; https://achdevguide.nacha.org/ach-file-details (batch number assigned in ascending sequence); https://developer.huntington.com/enterprisepayments/docs/nacha (Record Type 5 Batch Number examples do not establish a minimum of 1)`,
+  } : rule);
+  return [...inherited, ...Object.entries(added).map(([key, metadata]) => ({
     id: `nacha.${key}`, description: metadata[0], ruleClass: "nacha-structure" as const, severity: "ERROR" as const,
     applicability: metadata[1], prerequisite: metadata[2],
     reference: "docs/ACH_ORIGINATION_R2.md; https://www.nacha.org/rules/risk-management-topics-company-entry-descriptions (effective 2026-03-20); supplied September 2026 Basic Supplement pp. 4-5 and 2026 Basic p. 92; https://www.cms.gov/regulations-and-guidance/guidance/transmittals/downloads/r1351otn.pdf (TRN structural corroboration, 2014)",
