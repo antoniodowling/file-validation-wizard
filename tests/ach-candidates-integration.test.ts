@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixtures from "../demo-files/ach-candidates/manifest.json";
 
 import snapshots from "./current-coverage";
@@ -13,6 +13,9 @@ import { locateFindings } from "../src/finding-locations";
 const packs = [ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK];
 const source = (name: string) => readFileSync(`demo-files/ach-candidates/${name}`, "utf8");
 describe("integrated ACH candidate revisions", () => {
+  // Keep historical synthetic fixture verdicts stable despite the new live past-date advisory.
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-14T12:00:00Z")); });
+  afterEach(() => vi.useRealTimers());
   it.each(fixtures)("validates $name against its declared profile with pinned synthetic bytes", fixture => {
     const text = source(fixture.name);
     expect(Buffer.byteLength(text)).toBe(fixture.bytes);
@@ -26,7 +29,16 @@ describe("integrated ACH candidate revisions", () => {
     else expect(run.verdict).toBe(fixture.expectedStatus);
   });
   it("freezes separate new coverage without changing historical snapshots", () => {
-    expect(packs.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; })).toEqual(packs.map(pack => snapshots.find(s => s.profileId === pack.id)));
+    const historical = packs.filter(pack => pack !== ORIGINATION_R2_PACK);
+    expect(historical.map(pack => { const { buildRevision, ...snapshot } = provenanceFor(pack); return snapshot; }))
+      .toEqual(historical.map(pack => snapshots.find(s => s.profileId === pack.id)));
+    const prior = snapshots.find(s => s.profileId === ORIGINATION_R2_PACK.id)!;
+    const current = provenanceFor(ORIGINATION_R2_PACK);
+    expect(current.rulesetRevision).toBe("nacha-origination-public-2026-r2.3");
+    expect(current.coverage.slice(0, -2)).toEqual(prior.coverage);
+    expect(current.coverage.slice(-2).map(rule => [rule.id, rule.severity])).toEqual([
+      ["nacha.effective-holiday", "WARNING"], ["nacha.effective-past", "WARNING"],
+    ]);
   });
   it("exports bank-reported rejection independently of a passing validity verdict", () => {
     const run = validateSource("rejected.txt", source("ack-rejected-pass.txt"), ACK_PACK);
