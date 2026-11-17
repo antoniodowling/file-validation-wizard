@@ -154,6 +154,10 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const payroll = originationR2 && upperDescription.includes("PAYROLL");
     const purchase = originationR2 && upperDescription.includes("PURCHASE");
     const healthcare = originationR2 && upperDescription === "HCCLAIMPMT";
+    // Service class 200 can include both directions; inspect the full batch so debit-first files qualify.
+    const mixedPayroll = payroll && sec === "PPD" && service === "200" &&
+      batch.entries.some(row => row.text[0] === "6" && ACH_ENTRY_TYPES[slice(row, 2, 3)]?.direction === "credit") &&
+      batch.entries.some(row => row.text[0] === "6" && ACH_ENTRY_TYPES[slice(row, 2, 3)]?.direction === "debit");
     if (originationR2) {
       const markers = ["ACCTVERIFY", "PAYROLL", "PURCHASE", "RETRY PYMT", "REVERSAL", "RETURN FEE", "RECLAIM", "NONSETTLED", "AUTOENROLL", "REDEPCHECK", "NO CHECK", "HCCLAIMPMT"];
       for (const marker of markers) if (upperDescription.includes(marker)) check("description-case", description === upperDescription && (marker === "PAYROLL" ? description.startsWith(marker) : description.includes(marker)), "Company entry description case", "Declared standardized description fields must use uppercase letters, including suffixes. PAYROLL occupies the leftmost seven columns and permits three discretionary suffix characters.", bh, 54, 63);
@@ -250,7 +254,7 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
       }
       else incomplete("sec-transaction", "At least one entry lacks a known SEC, service class or transaction type for this check.");
       if (originationR2 && (payroll || purchase)) {
-        if (entryType && secKnown) check("description-sec", payroll ? sec === "PPD" && entryType.direction === "credit" : ["WEB", "TEL"].includes(sec) && entryType.direction === "debit", "Declared descriptor SEC and direction", "Declared PAYROLL is a PPD credit; declared PURCHASE is a WEB or permitted TEL debit. Purpose and TEL standing authorization cannot be established from this file.", row, 2, 3);
+        if (entryType && secKnown) check("description-sec", payroll ? sec === "PPD" && (entryType.direction === "credit" || mixedPayroll) : ["WEB", "TEL"].includes(sec) && entryType.direction === "debit", "Declared descriptor SEC and direction", "Declared PAYROLL requires PPD credits; mixed PPD batches may also contain debits. Declared PURCHASE is a WEB or permitted TEL debit. Actual purpose, debit authorization, offset status and TEL standing authorization cannot be established from this file.", row, 2, 3);
         else incomplete("description-sec");
       }
       if (expanded && (reversal || code === "55")) {
