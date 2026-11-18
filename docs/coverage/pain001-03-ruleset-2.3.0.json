@@ -1,0 +1,129 @@
+[
+  {
+    "schemaVersion": "4",
+    "profileId": "pain-001-03",
+    "messageVersion": "pain.001.001.03",
+    "implementationGuideRevision": "not supplied / not evaluated",
+    "mode": "DEMO",
+    "rulesetRevision": "2.3.0",
+    "coverageRevision": "pain-001-03@2.3.0/report-4",
+    "coverage": [
+      {
+        "id": "iso.safe-declarations",
+        "description": "No actual DTD or custom entity declaration; comment/CDATA/PI text is inert.",
+        "ruleClass": "tool-policy",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "UTF-8 decoded source admitted",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.well-formed",
+        "description": "XML 1.0 document syntax, exactly one root, legal characters and namespace bindings.",
+        "ruleClass": "xml-syntax",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.safe-declarations",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.document-root",
+        "description": "The single document element has local name Document.",
+        "ruleClass": "iso-schema",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.well-formed",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.namespace-version",
+        "description": "Document expanded namespace equals the exact selected version; no auto-switch or conformance claim.",
+        "ruleClass": "iso-schema",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.document-root",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.message-container",
+        "description": "Exactly one selected message container in the selected namespace.",
+        "ruleClass": "iso-schema",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.namespace-version",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.group-header",
+        "description": "Exactly one direct GrpHdr in the selected namespace.",
+        "ruleClass": "iso-schema",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.message-id",
+        "description": "Exactly one scalar MsgId containing 1 to 35 XML characters; the additional nonblank requirement is retained local data-quality policy, not an XSD facet.",
+        "ruleClass": "demo-structure",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.payment-information",
+        "description": "At least one direct PmtInf in the selected namespace.",
+        "ruleClass": "iso-schema",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.message-container",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "iso.transaction-count-type",
+        "description": "Exactly one scalar NbOfTxs containing 1 to 15 digits without application trimming; no reconciliation claim.",
+        "ruleClass": "iso-schema",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "iso.group-header",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "demo.non-empty-source",
+        "description": "Generic input check after parser admission; not an independent ISO payment requirement.",
+        "ruleClass": "advisory",
+        "severity": "ERROR",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      },
+      {
+        "id": "demo.xml-declaration",
+        "description": "Optional XML-declaration advice based on parser-observed presence; this does not check for an explicit encoding attribute.",
+        "ruleClass": "advisory",
+        "severity": "WARNING",
+        "applicability": "Selected profile pain-001-03, message version pain.001.001.03; repeated envelopes evaluated individually where present.",
+        "prerequisite": "Trusted format context",
+        "reference": "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only",
+        "evidence": "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance"
+      }
+    ],
+    "exclusions": [
+      "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
+      "No complete ISO schema validation or Huntington implementation-guide validation.",
+      "No historical or cross-session duplicate detection; no external account or payment verification.",
+      "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated."
+    ]
+  }
+]

@@ -1,0 +1,133 @@
+{
+  "processor": "lxml/libxml2 XMLSchema",
+  "lxml": [
+    6,
+    1,
+    1,
+    0
+  ],
+  "libxml2": [
+    2,
+    14,
+    6
+  ],
+  "selected_versions": [
+    "pain.001.001.03"
+  ],
+  "schemas": [
+    {
+      "version": "pain.001.001.03",
+      "url": "https://www.iso20022.org/message/14316/download",
+      "sha256": "6bb5c6f24250ab807f31f6164142bafd6d43bad8d162a926e258ff4c11e128af",
+      "cases": [
+        {
+          "text": "1",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "0001",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "123456789012345",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "1234567890123456",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "one",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": " 1",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "1 ",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "\t1",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "1\n",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "\r\n1\r\n",
+          "expected": false,
+          "accepted": false
+        }
+      ],
+      "message_id_cases": [
+        {
+          "text": "",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "A",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": " ",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "\t\n",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ",
+          "expected": false,
+          "accepted": false
+        },
+        {
+          "text": "\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e",
+          "expected": true,
+          "accepted": true
+        },
+        {
+          "text": "\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e\ud834\udd1e",
+          "expected": false,
+          "accepted": false
+        }
+      ]
+    }
+  ]
+}

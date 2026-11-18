@@ -9,6 +9,7 @@ import type { CoverageRule, FormatPack, RunProvenance } from "./types";
 import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
 export const ISO_RULESET_REVISION = "2.2.0";
+export const PAIN_001_03_RULESET_REVISION = "2.3.0";
 export const EDI_RULESET_REVISION = "2.1.0";
 export const EXCLUSIONS = Object.freeze([
   "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
@@ -17,6 +18,12 @@ export const EXCLUSIONS = Object.freeze([
   "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated.",
 ]);
 const xmlRules = ["safe-declarations", "well-formed", "document-root", "namespace-version", "message-container", "group-header", "message-id", "payment-information", "transaction-count-type"];
+const pain00103SchemaRules = new Set(["iso.document-root", "iso.namespace-version", "iso.message-container", "iso.group-header", "iso.payment-information", "iso.transaction-count-type"]);
+const pain00103Descriptions: Readonly<Record<string, string>> = {
+  "iso.message-id": "Exactly one scalar MsgId containing 1 to 35 XML characters; the additional nonblank requirement is retained local data-quality policy, not an XSD facet.",
+  "demo.xml-declaration": "Optional XML-declaration advice based on parser-observed presence; this does not check for an explicit encoding attribute.",
+  "demo.non-empty-source": "Generic input check after parser admission; not an independent ISO payment requirement.",
+};
 const ediRules = ["fixed-header", "final-termination", "envelope-nesting", "interchange-envelope", "group-count", "functional-group-envelope", "transaction-count", "transaction-set-envelope", "transaction-set-code", "version", "control-numbers", "segment-count", "payment-remittance"];
 
 const descriptions: Record<string, readonly [string, string]> = {
@@ -56,14 +63,15 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
   if (pack.id === "nacha-origination-expanded-public-2026-r1") return expandedNachaCoverageFor(pack);
   if (pack.parserKind === "NACHA_FIXED") return nachaCoverageFor(pack);
   const xml = pack.parserKind === "ISO_XML";
+  const pain00103 = xml && pack.version === "pain.001.001.03";
   return [...(xml ? xmlRules.map(id => `iso.${id}`) : ediRules.map(id => `edi.${id}`)), ...pack.rules.map(r => r.id)].map(id => ({
-    id, description: descriptions[id]?.[0] ?? pack.rules.find(r => r.id === id)?.description ?? id,
-    ruleClass: id === "iso.well-formed" ? "xml-syntax" : id === "iso.safe-declarations" ? "tool-policy" : id.startsWith("demo.") ? "advisory" : "demo-structure",
+    id, description: (pain00103 ? pain00103Descriptions[id] : undefined) ?? descriptions[id]?.[0] ?? pack.rules.find(r => r.id === id)?.description ?? id,
+    ruleClass: pain00103 && pain00103SchemaRules.has(id) ? "iso-schema" : id === "iso.well-formed" ? "xml-syntax" : id === "iso.safe-declarations" ? "tool-policy" : id.startsWith("demo.") ? "advisory" : "demo-structure",
     severity: id === "demo.xml-declaration" ? "WARNING" : "ERROR",
     applicability: `Selected profile ${pack.id}, message version ${pack.version}; repeated envelopes evaluated individually where present.`,
     prerequisite: descriptions[id]?.[1] ?? "Trusted format context",
-    reference: ["iso.transaction-count-type", "demo.xml-declaration"].includes(id) ? "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence" : id.startsWith("edi.") ? "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim" : id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
-    evidence: `${xml ? "" : "tests/edi-integrity.test.ts; "}tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance`,
+    reference: pain00103 ? "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only" : ["iso.transaction-count-type", "demo.xml-declaration"].includes(id) ? "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence" : id.startsWith("edi.") ? "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim" : id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
+    evidence: pain00103 ? "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance" : `${xml ? "" : "tests/edi-integrity.test.ts; "}tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance`,
   }));
 }
 export function provenanceFor(pack: FormatPack): RunProvenance {
@@ -78,7 +86,8 @@ export function provenanceFor(pack: FormatPack): RunProvenance {
     "HUNTINGTON_ACK": [ACK_RULESET_REVISION, ACK_GUIDE_REVISION, ACK_EXCLUSIONS],
   };
   const metadata = profileMetadata[pack.id] ?? profileMetadata[pack.parserKind];
-  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : RULESET_REVISION);
+  const isoRevision = pack.version === "pain.001.001.03" ? PAIN_001_03_RULESET_REVISION : ISO_RULESET_REVISION;
+  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? isoRevision : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : RULESET_REVISION);
   return Object.freeze({ schemaVersion: "4", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
     implementationGuideRevision: metadata?.[1] ?? (expanded ? NACHA_EXPANDED_GUIDE : nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated"), mode: pack.mode,
     rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}/report-4`,

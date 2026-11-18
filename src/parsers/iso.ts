@@ -60,7 +60,16 @@ export function parseIso(source: string, pack: FormatPack): ParserOutput {
   if (headers.length === 1) {
     const header = headers[0]!;
     const messages = children(header, "MsgId", ids.namespace);
-    add("iso.message-id", messages.length === 1 && messages[0]!.children.length === 0 && Boolean(messages[0]!.text.trim()), "Message ID", `${path}/GrpHdr/MsgId`, "Exactly one populated MsgId element is required; an attribute cannot satisfy it.", nodeLocation(messages, header));
+    const pain00103 = pack.version === "pain.001.001.03";
+    // The original .03 Max35Text type limits decoded XML characters, not UTF-16
+    // storage units. Whitespace counts toward that length. The existing nonblank
+    // requirement remains a separate local quality policy, not an XSD facet.
+    const validMessage = messages.length === 1 && messages[0]!.children.length === 0
+      && Boolean(messages[0]!.text.trim())
+      && (!pain00103 || Array.from(messages[0]!.text).length <= 35);
+    add("iso.message-id", validMessage, "Message ID", `${path}/GrpHdr/MsgId`, pain00103
+      ? "Exactly one MsgId element with 1 to 35 characters and a nonblank value is required."
+      : "Exactly one populated MsgId element is required; an attribute cannot satisfy it.", nodeLocation(messages, header));
     const counts = children(header, "NbOfTxs", ids.namespace);
     add("iso.transaction-count-type", counts.length === 1 && counts[0]!.children.length === 0 && /^\d{1,15}$/.test(counts[0]!.text), "Number of transactions", `${path}/GrpHdr/NbOfTxs`, "Exactly one NbOfTxs element containing 1 to 15 digits is required.", nodeLocation(counts, header));
   }
