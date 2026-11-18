@@ -22,12 +22,21 @@ describe("focused format catalog", () => {
       id: "origination-public-2026",
       label: "Public specification profile (2026 review)",
       validationProfileId: "nacha-origination-public-2026",
-      extensions: [".ach", ".txt"],
+      extensions: [".ach", ".nacha", ".txt"],
     }]);
     expect(FORMAT_PACKS.some((pack) => pack.id === "nacha-origination-public-2026")).toBe(true);
     for (const code of ["CCD", "PPD", "CTX", "WEB", "TEL"]) {
       expect(searchFormatCatalog(code).map((item) => item.id)).toEqual(["nacha"]);
     }
+  });
+
+  it("offers .nacha for every NACHA origination version without changing ACH Returns", () => {
+    const originations = findCatalogEntry("nacha")!.versions;
+    expect(originations).toHaveLength(3);
+    for (const version of originations) {
+      expect(version.extensions).toEqual([".ach", ".nacha", ".txt"]);
+    }
+    expect(findCatalogEntry("nacha-returns")!.versions[0]!.extensions).toEqual([".ach", ".txt"]);
   });
 
   it("maps exactly seventeen supported versions to executable profiles", () => {
