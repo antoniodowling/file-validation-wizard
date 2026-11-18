@@ -1,13 +1,13 @@
 # Current report contract: schema 4 (issue #51)
 
-All 17 selectable profiles emit schema 4. The [combined baseline](report-schema-4.0.0.json) remains immutable. Current PAIN.001 V3 coverage overrides only its `pain-001-03` row with [ruleset 2.3.0](pain001-03-ruleset-2.3.0.json); the other five ISO profiles remain `2.2.0`. Ordinary ACH is `nacha-public-1.2.0`, expanded ACH `nacha-expanded-public-1.2.0`, origination r2 `nacha-origination-public-2026-r2.2`, and CSV Wire `huntington-csv-wire-candidate-1.1.0`. EDI is `2.1.0` and BAI2 is `huntington-bai2-candidate-1.1.0`; other ruleset revisions are unchanged; all coverage revisions include `/report-4`.
+All 17 selectable profiles emit schema 4. The [combined baseline](report-schema-4.0.0.json) remains immutable. Current PAIN.001 V3 coverage overrides only its `pain-001-03` row with [ruleset 2.4.0](pain001-03-ruleset-2.4.0.json); the other five ISO profiles remain `2.2.0`. Ordinary ACH is `nacha-public-1.2.0`, expanded ACH `nacha-expanded-public-1.2.0`, origination r2 `nacha-origination-public-2026-r2.2`, and CSV Wire `huntington-csv-wire-candidate-1.1.0`. EDI is `2.1.0` and BAI2 is `huntington-bai2-candidate-1.1.0`; other ruleset revisions are unchanged; all coverage revisions include `/report-4`.
 
-PAIN.001 V3 ruleset `2.3.0` adds the decoded 35-character MsgId limit, clarifies optional XML-declaration advice, and records exact-schema evidence for six existing structural checks. It retains the nonblank-ID quality policy and all 11 check IDs. Complete schema/payment validation and bank acceptance remain excluded. See [the source review](../PAIN001_003_RULE_REVIEW.md).
+PAIN.001 V3 ruleset `2.4.0` removes two demo checks, retains two XML syntax/security checks, classifies seven scoped structural checks as ISO schema checks, and adds twelve source-based required-structure and transaction-count checks (21 total). The previous `2.3.0` snapshot remains immutable. Complete XSD content models, date/amount facets, bank-specific requirements, and payment acceptance remain excluded. See [the source review](../PAIN001_003_RULE_REVIEW.md).
 
 Prepare a new snapshot with an unused output path; the exporter refuses to overwrite an existing file. For the current PAIN profile, the preparation command was:
 
 ```sh
-npm run export:coverage -- --output docs/coverage/pain001-03-ruleset-2.3.0.json --profile pain-001-03
+npm run export:coverage -- --output docs/coverage/pain001-03-ruleset-2.4.0.json --profile pain-001-03
 ```
 
 Omit `--profile` to prepare a combined snapshot at a new `--output` path. Export schema 4 and historical snapshot bytes are unchanged.
@@ -36,7 +36,7 @@ Before schema 4, the BAI2 candidate used [bai2-candidate-1.1.0.json](bai2-candid
 
 For BAI2 monetary checks and controls, a skipped required occurrence makes the aggregate check `not-evaluated` even when another occurrence passed. Any actual failed occurrence still makes the aggregate `failed`. Successfully evaluated occurrences remain in the report. This uses the existing check states and schemas; it is bounded BAI2 prerequisite tracking, not completion of #51's cross-parser evidence work.
 
-`ruleset-2.0.0.json` preserves the historical coverage of all nine DEMO profile versions. Current EDI coverage is separately frozen in [edi-ruleset-2.1.0.json](edi-ruleset-2.1.0.json). The reconciled pre-schema-4 ISO revision is 2.1.0; the combined schema-4 baseline used 2.2.0. Only PAIN.001 V3 now uses the separately recorded 2.3.0 override above. Never regenerate a historical snapshot to describe changed behavior. The same coverage is embedded in every run and export, so a moved URL does not erase the meaning of a historical report.
+`ruleset-2.0.0.json` preserves the historical coverage of all nine DEMO profile versions. Current EDI coverage is separately frozen in [edi-ruleset-2.1.0.json](edi-ruleset-2.1.0.json). The reconciled pre-schema-4 ISO revision is 2.1.0; the combined schema-4 baseline used 2.2.0. Only PAIN.001 V3 now uses the separately recorded 2.4.0 override above. Never regenerate a historical snapshot to describe changed behavior. The same coverage is embedded in every run and export, so a moved URL does not erase the meaning of a historical report.
 
 PASS means the matching profile's promised checks completed with no errors or warnings. PASS WITH WARNINGS means those checks completed with advisory warnings. FAIL is a completed assessment with a failed prerequisite or rule; dependent checks are explicitly not evaluated. Unsupported XML versions/encodings or multiple complete EDI interchanges receive no validity verdict. Read, decode, engine, resource and timeout failures are incomplete, with no completed assessment or result export. The UI keeps previous-run results and source out of incomplete runs.
 
