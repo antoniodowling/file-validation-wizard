@@ -179,7 +179,7 @@ export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.version?.trim()) errors.push("exact version");
   if (!pack.identifiers) errors.push("version identifiers");
   // ISO parser-owned rules are registered independently of pack.rules.
-  if (pack.rules.length === 0 && pack.parserKind !== "ISO_XML") errors.push("validation rules");
+  if (pack.rules.length === 0 && pack.id !== "pain-001-03") errors.push("validation rules");
   if (pack.identifiers && pack.identifiers.kind !== pack.parserKind) {
     errors.push("parser/version identifier agreement");
   }
