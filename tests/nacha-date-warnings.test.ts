@@ -52,9 +52,9 @@ describe("NACHA origination R2 effective-date advisories", () => {
     const result = finding("261126", "effective-holiday");
     expect(result?.outcome).toBe("WARNING");
     expect(result?.message).toContain("Thanksgiving Day");
-    expect(result?.message).toContain("2026-11-26");
+    expect(result?.message).toContain("261126");
     expect(result?.message).toContain("Batch 0000001");
-    expect(result?.message).toBe("Batch 0000001: Effective Entry Date 2026-11-26 falls on a Federal Reserve holiday (Thanksgiving Day). Confirm the intended settlement date with your bank.");
+    expect(result?.message).toBe("Batch 0000001: Effective Entry Date 261126 falls on a Federal Reserve holiday (Thanksgiving Day). Confirm the intended settlement date with your bank.");
     expect(result?.locator).toBe("Record 2 / Columns 70-75");
     expect(finding("261126", "effective-past")?.outcome).toBe("PASS");
   });
@@ -62,7 +62,7 @@ describe("NACHA origination R2 effective-date advisories", () => {
   it("does not duplicate the existing weekend warning for a weekend holiday", () => {
     const weekend = finding("260704", "effective-weekend");
     expect(weekend?.outcome).toBe("WARNING");
-    expect(weekend?.message).toBe("Batch 0000001: Effective Entry Date 2026-07-04 falls on a weekend. Confirm or update the intended settlement date.");
+    expect(weekend?.message).toBe("Batch 0000001: Effective Entry Date 260704 falls on a weekend. Confirm or update the intended settlement date.");
     expect(weekend?.locator).toBe("Record 2 / Columns 70-75");
     expect(finding("260704", "effective-holiday")?.outcome).toBe("PASS");
     expect(finding("270705", "effective-holiday")?.outcome).toBe("WARNING");
@@ -76,8 +76,8 @@ describe("NACHA origination R2 effective-date advisories", () => {
     const past = finding("261117", "effective-past", new Date("2026-11-18T05:00:00Z"));
     expect(past?.outcome).toBe("WARNING");
     expect(past?.message).toContain("2026-11-18");
-    expect(past?.message).toContain("2026-11-17");
-    expect(past?.message).toBe("Batch 0000001: Effective Entry Date 2026-11-17 is in the past (as of 2026-11-18). Confirm or update the intended settlement date.");
+    expect(past?.message).toContain("261117");
+    expect(past?.message).toBe("Batch 0000001: Effective Entry Date 261117 is in the past (as of 2026-11-18). Confirm or update the intended settlement date.");
     expect(finding("261119", "effective-past", new Date("2026-11-18T05:00:00Z"))?.outcome).toBe("PASS");
     expect(easternValidationDate(new Date("2026-07-04T03:59:59Z"))).toBe("2026-07-03");
     expect(easternValidationDate(new Date("2026-07-04T04:00:00Z"))).toBe("2026-07-04");
