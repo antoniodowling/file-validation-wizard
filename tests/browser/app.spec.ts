@@ -609,13 +609,19 @@ for (const scenario of [
   await page.getByRole("button",{name:"Continue"}).click();
   await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.pass}`));
   await page.getByRole("button",{name:"Validate file"}).click();
-  await expect(page.locator("#results-title")).toHaveText("PASS");
+  // Historical 2026-10-14 NACHA samples correctly warn once that date has passed.
+  const nyParts = new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const nyDate = (kind:string) => nyParts.find(part => part.type===kind)?.value ?? "";
+  const today = `${nyDate("year")}-${nyDate("month")}-${nyDate("day")}`;
+  const dated = scenario.query === "NACHA" && today > "2026-10-14";
+  await expect(page.locator("#results-title")).toHaveText(dated ? "PASS WITH WARNINGS" : "PASS");
   if(scenario.query==="ACK") await expect(page.locator("#reported-disposition")).toContainText("REJECTED");
   else await expect(page.locator("#reported-disposition")).toBeHidden();
   const download=page.waitForEvent("download"); await page.locator("#export-json").click();
   const report=await download; const file=await report.path();
   const {readFileSync}=await import("node:fs"); const json=JSON.parse(readFileSync(file!,"utf8"));
-  expect(json.exportSchemaVersion).toBe("4"); expect(json.verdict).toBe("PASS");
+  expect(json.exportSchemaVersion).toBe("4"); expect(json.verdict).toBe(dated ? "PASS_WITH_WARNINGS" : "PASS");
+  if (dated) expect(json.results.some((r: { ruleId: string; outcome: string }) => r.ruleId === "nacha.effective-past" && r.outcome === "WARNING")).toBe(true);
   if(scenario.query==="ACK")expect(json.reportedDisposition.file.status).toBe("REJECTED");
   await page.getByRole("button",{name:"Back to file"}).click();
   await page.locator("#file-input").setInputFiles(demoFile(`ach-candidates/${scenario.fail}`));

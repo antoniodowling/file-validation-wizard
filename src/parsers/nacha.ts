@@ -1,6 +1,7 @@
 import { UnsupportedInputError } from "../resource-policy";
 import { ACH_ENTRY_TYPES } from "./nacha-entry-types";
 import { ctxX12Syntax } from "./ach-remittance";
+import { easternValidationDate, federalReserveHoliday } from "./nacha-calendar";
 import { frameFixedRecords, totals, slice, digits, number, HASH_MOD, date, routingPrefix, routing, type RecordRow } from "./fixed-record";
 import type { FindingLocation, FormatPack, RuleOutcome, RuleResult } from "../types";
 import type { ParserOutput } from "./iso";
@@ -24,7 +25,7 @@ const IDS = [
 export const NACHA_RULE_IDS: readonly string[] = Object.freeze(IDS.map((id) => `nacha.${id}`));
 const EXPANDED_IDS = ["field-padding", "reversal-marker", "reversal-transaction", "remittance-required", "ctx-remittance"] as const;
 export const NACHA_EXPANDED_RULE_IDS: readonly string[] = Object.freeze([...NACHA_RULE_IDS, ...EXPANDED_IDS.map(id => `nacha.${id}`)]);
-const ORIGINATION_R2_IDS = ["description-case", "description-sec", "healthcare-addenda", "healthcare-trn"] as const;
+const ORIGINATION_R2_IDS = ["description-case", "description-sec", "healthcare-addenda", "healthcare-trn", "effective-holiday", "effective-past"] as const;
 export const NACHA_ORIGINATION_R2_RULE_IDS: readonly string[] = Object.freeze([...NACHA_EXPANDED_RULE_IDS, ...ORIGINATION_R2_IDS.map(id => `nacha.${id}`)]);
 type Id = typeof IDS[number] | typeof EXPANDED_IDS[number] | typeof ORIGINATION_R2_IDS[number];
 interface Check { outcome: RuleOutcome; count: number; field: string; message: string; row: RecordRow | undefined; from: number; to: number; location: FindingLocation | undefined }
@@ -35,9 +36,10 @@ function location(check: Check): FindingLocation {
     span: { start: check.row.start + check.from - 1, end: Math.min(check.row.start + check.to, check.row.start + check.row.text.length) } }, related: [] };
 }
 
-export function parseNacha(source: string, pack: FormatPack): ParserOutput {
+export function parseNacha(source: string, pack: FormatPack, validationInstant: Date = new Date()): ParserOutput {
   const profile = pack.identifiers?.kind === "NACHA_FIXED" ? String(pack.identifiers.profile) : "";
   const originationR2 = profile === "origination-expanded-public-2026-r2";
+  const validationDate = originationR2 ? easternValidationDate(validationInstant) : "";
   const expanded = originationR2 || profile === "origination-expanded-public-2026-r1";
   const checks = new Map<Id, Check>();
   const incompleteChecks = new Map<Id, string>();
@@ -162,10 +164,36 @@ export function parseNacha(source: string, pack: FormatPack): ParserOutput {
     const reversal = expanded && description.includes("REVERSAL");
     if (expanded && description.toUpperCase().includes("REVERSAL")) check("reversal-marker", reversal, "Reversal description", "A declared reversal must include uppercase REVERSAL within the Company Entry Description.", bh, 54, 63);
     padding(bh, [[5, 20], [21, 40], [41, 50], [54, 63], [64, 69]]);
-    const effective = date(slice(bh, 70, 75));
+    const effectiveRaw = slice(bh, 70, 75);
+    const effective = date(effectiveRaw);
     check("effective-date", !!effective, "Effective entry date", "Effective entry date must be a real calendar date in YYMMDD format.", bh, 70, 75);
-    if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
+    if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", originationR2
+      ? `Batch ${slice(bh, 88, 94).trim()}: Effective Entry Date ${effectiveRaw} falls on a weekend. Confirm or update the intended settlement date.`
+      : "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
     if (!effective) incomplete("effective-weekend", "At least one batch has an invalid effective date, so its weekend check was not evaluated.");
+    if (originationR2) {
+      if (effective) {
+        const effectiveDate = effective.toISOString().slice(0, 10);
+        const batchId = slice(bh, 88, 94).trim();
+        // Federal Reserve holidays prevent settlement on the specified date,
+        // but do not necessarily invalidate the ACH file.
+        // Report a WARNING rather than an ERROR.
+        // Weekend dates are handled by the existing weekend rule.
+        const holiday = federalReserveHoliday(effective);
+        check("effective-holiday", holiday === null, "Effective entry date",
+          `Batch ${batchId}: Effective Entry Date ${effectiveRaw} falls on a Federal Reserve holiday (${holiday}). Confirm the intended settlement date with your bank.`,
+          bh, 70, 75, true);
+        // ACH Effective Entry Dates contain no timezone or time of day.
+        // America/New_York is used only to determine what "today" is.
+        // Compare calendar dates.
+        check("effective-past", effectiveDate >= validationDate, "Effective entry date",
+          `Batch ${batchId}: Effective Entry Date ${effectiveRaw} is in the past. Confirm or update the intended settlement date.`,
+          bh, 70, 75, true);
+      } else {
+        incomplete("effective-holiday", "At least one batch has an invalid effective date; holiday evaluation was not possible.");
+        incomplete("effective-past", "At least one batch has an invalid effective date; past-date evaluation was not possible.");
+      }
+    }
     const settlement = slice(bh, 76, 78);
     const julian = number(settlement);
     const settlementValid = settlement === "   " || (julian !== null && julian >= 1n && julian <= 366n);

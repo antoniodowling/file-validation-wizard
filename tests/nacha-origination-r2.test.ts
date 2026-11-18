@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FormatPack } from "../src/types";
 import { EXPANDED_NACHA_PACK } from "../src/format-packs";
 import { parseNacha, NACHA_ORIGINATION_R2_RULE_IDS } from "../src/parsers/nacha";
@@ -14,9 +14,12 @@ const source = (sec = "CCD", code = "22", description = "HCCLAIMPMT", payload: s
   return rows.join("\n");
 };
 const state = (text: string, id: string) => parseNacha(text, pack).results.find(result => result.ruleId === `nacha.${id}`)?.outcome;
+// Historical synthetic files use 2026-10-14. Freeze "today" for deterministic fixtures.
+beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-14T12:00:00Z")); });
+afterEach(() => vi.useRealTimers());
 describe("origination r2 declarations", () => {
-  it("extends frozen r1 coverage only by the four new rules", () => {
-    expect(originationR2CoverageFor(pack).slice(0, -4)).toEqual(expandedNachaCoverageFor(pack));
+  it("extends frozen r1 coverage by six r2 rules, including the two date advisories", () => {
+    expect(originationR2CoverageFor(pack).slice(0, -6)).toEqual(expandedNachaCoverageFor(pack));
     expect(originationR2CoverageFor(pack).map(rule => rule.id).filter(id => id !== "nacha.non-empty-source")).toEqual(NACHA_ORIGINATION_R2_RULE_IDS);
   });
   it("accepts declared healthcare CCD with a whole TRN and preserves payload padding", () => {
