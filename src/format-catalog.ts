@@ -3,6 +3,7 @@ import type { FormatCatalogEntry, FormatVersionOption } from "./types";
 const XML_EXTENSIONS = Object.freeze([".xml"]);
 const X12_820_EXTENSIONS = Object.freeze([".edi", ".x12", ".820", ".txt"]);
 const ACH_EXTENSIONS = Object.freeze([".ach", ".txt"]);
+const NACHA_ORIGINATION_EXTENSIONS = Object.freeze([".ach", ".nacha", ".txt"]);
 
 const version = (
   label: string,
@@ -64,17 +65,17 @@ export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
   ], [Object.freeze({
     id: "origination-public-2026",
     label: "Public specification profile (2026 review)",
-    extensions: ACH_EXTENSIONS,
+    extensions: NACHA_ORIGINATION_EXTENSIONS,
     validationProfileId: "nacha-origination-public-2026",
   }), Object.freeze({
     id: "origination-expanded-public-2026-r1",
     label: "Expanded entry types — public-source candidate (2026 r1)",
-    extensions: ACH_EXTENSIONS,
+    extensions: NACHA_ORIGINATION_EXTENSIONS,
     validationProfileId: "nacha-origination-expanded-public-2026-r1",
   }), Object.freeze({
     id: "origination-expanded-public-2026-r2",
     label: "Expanded entries and declared healthcare — candidate (2026 r2)",
-    extensions: ACH_EXTENSIONS,
+    extensions: NACHA_ORIGINATION_EXTENSIONS,
     validationProfileId: "nacha-origination-expanded-public-2026-r2",
   })]),
   entry("nacha-returns", "Nacha ACH", "ACH Returns", "Returns and Notifications of Change", ["NACHA Returns", "ACH NOC", "COR", "Dishonored", "Contested", "Refused NOC"], [Object.freeze({
