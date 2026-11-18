@@ -54,6 +54,7 @@ describe("NACHA origination R2 effective-date advisories", () => {
     expect(result?.message).toContain("Thanksgiving Day");
     expect(result?.message).toContain("2026-11-26");
     expect(result?.message).toContain("Batch 0000001");
+    expect(result?.message).toBe("Batch 0000001: Effective Entry Date 2026-11-26 falls on a Federal Reserve holiday (Thanksgiving Day). Confirm the intended settlement date with your bank.");
     expect(result?.locator).toBe("Record 2 / Columns 70-75");
     expect(finding("261126", "effective-past")?.outcome).toBe("PASS");
   });
@@ -73,6 +74,7 @@ describe("NACHA origination R2 effective-date advisories", () => {
     expect(past?.outcome).toBe("WARNING");
     expect(past?.message).toContain("2026-11-18");
     expect(past?.message).toContain("2026-11-17");
+    expect(past?.message).toBe("Batch 0000001: Effective Entry Date 2026-11-17 is in the past (as of 2026-11-18). Confirm or update the intended settlement date.");
     expect(finding("261119", "effective-past", new Date("2026-11-18T05:00:00Z"))?.outcome).toBe("PASS");
     expect(easternValidationDate(new Date("2026-07-04T03:59:59Z"))).toBe("2026-07-03");
     expect(easternValidationDate(new Date("2026-07-04T04:00:00Z"))).toBe("2026-07-04");
@@ -80,7 +82,9 @@ describe("NACHA origination R2 effective-date advisories", () => {
 
   it("keeps invalid dates ERROR and marks dependent warnings not evaluated", () => {
     const output = fixture("260230");
-    expect(output.results.find(r => r.ruleId === "nacha.effective-date")?.outcome).toBe("ERROR");
+    const invalidDate = output.results.find(r => r.ruleId === "nacha.effective-date");
+    expect(invalidDate?.outcome).toBe("ERROR");
+    expect(invalidDate?.message).toBe("Effective Entry Date is not a valid calendar date. Enter a valid date in YYMMDD format.");
     for (const id of ["effective-weekend", "effective-holiday", "effective-past"]) {
       expect(output.results.some(r => r.ruleId === `nacha.${id}`)).toBe(false);
       expect(output.incompleteChecks?.map(c => c.ruleId)).toContain(`nacha.${id}`);
@@ -103,5 +107,8 @@ describe("NACHA origination R2 effective-date advisories", () => {
     rows[1] = field(rows[1]!, 70, 75, "261126");
     const output = parseNacha(rows.join("\n"), EXPANDED_NACHA_PACK, new Date("2026-11-27T18:00:00Z"));
     expect(output.results.some(r => ["nacha.effective-holiday", "nacha.effective-past"].includes(r.ruleId))).toBe(false);
+    rows[1] = field(rows[1]!, 70, 75, "260230");
+    const invalid = parseNacha(rows.join("\n"), EXPANDED_NACHA_PACK, new Date("2026-11-27T18:00:00Z"));
+    expect(invalid.results.find(r => r.ruleId === "nacha.effective-date")?.message).toBe("Effective entry date must be a real calendar date in YYMMDD format.");
   });
 });
