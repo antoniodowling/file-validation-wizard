@@ -62,7 +62,7 @@ describe("NACHA origination R2 effective-date advisories", () => {
   it("does not duplicate the existing weekend warning for a weekend holiday", () => {
     const weekend = finding("260704", "effective-weekend");
     expect(weekend?.outcome).toBe("WARNING");
-    expect(weekend?.message).toBe("Batch 0000001: Effective Entry Date 2026-07-04 falls on a weekend. Confirm the intended settlement date with your bank.");
+    expect(weekend?.message).toBe("Batch 0000001: Effective Entry Date 2026-07-04 falls on a weekend. Confirm or update the intended settlement date.");
     expect(weekend?.locator).toBe("Record 2 / Columns 70-75");
     expect(finding("260704", "effective-holiday")?.outcome).toBe("PASS");
     expect(finding("270705", "effective-holiday")?.outcome).toBe("WARNING");
