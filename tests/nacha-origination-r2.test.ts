@@ -53,6 +53,27 @@ describe("origination r2 declarations", () => {
       expect(state(source(sec, code, description, null), "description-sec")).toBe("ERROR");
     for (const sec of ["WEB", "TEL"]) expect(state(source(sec, "27", "PURCHASE", null), "description-sec")).toBe("PASS");
   });
+  it("does not mistake REPURCHASE for the standardized PURCHASE descriptor", () => {
+    for (const description of ["REPURCHASE", "repurchase"]) {
+      const result = parseNacha(source("CCD", "22", description, null), pack);
+      for (const id of ["description-sec", "description-case"]) {
+        expect(result.results.some(rule => rule.ruleId === `nacha.${id}`), description).toBe(false);
+        expect(result.notApplicable).toContain(`nacha.${id}`);
+      }
+    }
+    expect(state(source("WEB", "27", "PURCHASE", null), "description-sec")).toBe("PASS");
+    expect(state(source("CCD", "22", "PURCHASE", null), "description-sec")).toBe("ERROR");
+    expect(state(source("WEB", "27", "purchase", null), "description-case")).toBe("ERROR");
+  });
+  it("validates the full four-batch PURCHASE fixture with exactly one intended error", () => {
+    const text = readFileSync("tests/fixtures/nacha-r2-purchase-substring-repro.ach", "utf8");
+    const result = parseNacha(text, pack);
+    expect(result.results.filter(rule => rule.outcome !== "PASS").map(rule => [rule.ruleId, rule.outcome]))
+      .toEqual([["nacha.description-case", "ERROR"]]);
+    expect(result.results.find(rule => rule.ruleId === "nacha.description-sec")?.outcome).toBe("PASS");
+    expect(result.results.find(rule => rule.ruleId === "nacha.description-case")?.locator).toBe("Record 11 / Columns 54-63");
+    expect(result.incompleteChecks).toEqual([]);
+  });
   it("suppresses TRN evaluation on unknown transaction/addenda prerequisites", () => {
     const rows = source().split("\n"); rows[3] = field(rows[3]!, 2, 3, "99");
     const result = parseNacha(rows.join("\n"), pack);
