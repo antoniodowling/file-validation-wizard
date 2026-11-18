@@ -40,17 +40,6 @@ const xmlDeclarationRule: ValidationRule = Object.freeze({
   }),
 });
 
-const pain00103DeclarationRule: ValidationRule = Object.freeze({
-  ...xmlDeclarationRule,
-  description: "An optional XML declaration is present.",
-  evaluate: (context: ValidationContext) => ({
-    outcome: context.xml?.hasDeclaration === true ? "PASS" as const : "WARNING" as const,
-    message: context.xml?.hasDeclaration === true
-      ? "An XML declaration is present."
-      : "An XML declaration is recommended but optional; omitting it does not make this XML document invalid.",
-  }),
-});
-
 const isoPack = (
   id: string,
   family: "PAIN.001" | "PAIN.008",
@@ -76,7 +65,9 @@ const isoPack = (
       messageContainer: container,
     }),
     approval: noApprovals,
-    rules: Object.freeze([nonEmptyRule, version === "pain.001.001.03" ? pain00103DeclarationRule : xmlDeclarationRule]),
+    // .03 has parser-owned ISO checks; the two placeholder demo rules are retired
+    // for this version only. Other historical ISO profiles retain their contracts.
+    rules: Object.freeze(version === "pain.001.001.03" ? [] : [nonEmptyRule, xmlDeclarationRule]),
   });
 
 const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>
@@ -187,7 +178,8 @@ export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   const errors: string[] = [];
   if (!pack.version?.trim()) errors.push("exact version");
   if (!pack.identifiers) errors.push("version identifiers");
-  if (pack.rules.length === 0) errors.push("validation rules");
+  // ISO parser-owned rules are registered independently of pack.rules.
+  if (pack.rules.length === 0 && pack.id !== "pain-001-03") errors.push("validation rules");
   if (pack.identifiers && pack.identifiers.kind !== pack.parserKind) {
     errors.push("parser/version identifier agreement");
   }

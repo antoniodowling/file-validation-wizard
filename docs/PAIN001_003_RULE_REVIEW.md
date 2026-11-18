@@ -103,3 +103,78 @@ For testing, a current PASS means the implemented XML, version and selected
 field checks passed. It does not validate the complete payment message or
 reconcile its totals. Application test/build results belong to the exact
 implementation commit's PR receipt and are separate from the source oracle.
+
+
+## Follow-up: required structure and demo-rule retirement (ruleset 2.4.0 draft)
+
+This **supersedes the older 2.3.0 current-runtime count and warning disposition**
+earlier in this historical document. The original-XSD oracle receipts and 2.3.0
+coverage snapshot remain unchanged. This change is a draft stacked on PR #82.
+
+### Disposition of the prior 11 checks
+
+- Remove `demo.non-empty-source` for .03: the XML parser already rejects empty
+  input. For an entirely blank file, `iso.well-formed` now supplies a specific
+  error instead of an unreachable duplicate check.
+- Remove `demo.xml-declaration` for .03: an XML declaration is optional under
+  XML 1.0. Its omission should not degrade PASS to PASS WITH WARNINGS.
+- Keep `iso.well-formed` (`xml-syntax`) and `iso.safe-declarations`
+  (`tool-policy`) unchanged in principle.
+- Retain and classify the seven original `iso.*` structure/lexical checks
+  as scoped `iso-schema` checks. `iso.message-id` combines the exact .03
+  Max35Text limit with an explicitly identified nonblank quality policy.
+- Leave the other five historical ISO profiles and EDI behavior unchanged.
+
+### Twelve new .03 checks
+
+| Rule ID | New required check | Scope / qualification |
+| --- | --- | --- |
+| `iso.creation-date-time` | `GrpHdr/CreDtTm` must be present and populated | Full ISODateTime lexical facets deferred |
+| `iso.initiating-party` | `GrpHdr/InitgPty` is required | No invented requirement for optional nested party fields |
+| `iso.payment-information-id` | Each `PmtInf` needs a 1–35-character `PmtInfId` | Exact .03 Max35Text |
+| `iso.payment-method` | Each `PmtInf` needs `PmtMtd` (CHK, TRF, TRA) | PaymentMethod3Code |
+| `iso.requested-execution-date` | Each `PmtInf` needs populated `ReqdExctnDt` | Full ISODate lexical facets deferred |
+| `iso.debtor` | Each `PmtInf` needs `Dbtr` | No unconditional nested party-name requirement |
+| `iso.debtor-account` | Each `PmtInf` needs `DbtrAcct/Id` with IBAN or Othr | Basic choice checks, not full account conformance |
+| `iso.debtor-agent` | Each `PmtInf` needs `DbtrAgt/FinInstnId` | Basic structural checks |
+| `iso.credit-transfer-transactions` | Each `PmtInf` needs at least one `CdtTrfTxInf` | Qualified transaction scope |
+| `iso.credit-transfer-identification` | Each transaction needs `PmtId/EndToEndId` (1–35 chars) | Not full transaction schema |
+| `iso.credit-transfer-amount` | Each transaction needs `Amt`, with one InstdAmt or EqvtAmt branch | Full decimal/currency facets deferred |
+| `iso.transaction-count-reconciliation` | `GrpHdr/NbOfTxs` equals actual qualified transactions | No PASS where prerequisite transaction scope is missing |
+
+Exactly 21 checks are registered for .03: two XML safety/syntax, seven retained
+structure/lexical and twelve new. Changes do not assert full ISO schema
+conformance, ordering, bank/rail conditions, optional control-sum reconciliation,
+payment acceptance or cross-file uniqueness. In particular `CtrlSum`,
+`Cdtr` and `CdtrAcct` are not made universally mandatory.
+
+### Authority
+
+- Original ISO .03 XSD: https://www.iso20022.org/message/14316/download
+  (45,859 bytes; recorded SHA-256
+  `6bb5c6f24250ab807f31f6164142bafd6d43bad8d162a926e258ff4c11e128af`).
+  PR #82 independently verified the original schema and its positive fixture.
+- Exact-version structure/type cross-reference:
+  https://pain001.com/message-spec-pain.001.001.03/
+  and https://pain001.com/message-spec-pain.001.001.03-types-2/
+- Huntington ISO PAIN.001 guide:
+  https://developer.huntington.com/enterprisepayments/docs/iso-pain001
+  (family-level guidance, not a substitute for the exact original .03 XSD).
+- Optional XML declaration: https://www.w3.org/TR/2008/REC-xml-20081126/
+
+### Evidence and release gates
+
+The synthetic positive in `tests/fixtures/pain001-03-schema-valid.xml` was
+independently checked against the exact original publisher XSD in PR #82.
+`tests/pain001-03-required.test.ts` adds field omissions, malformed nested
+content, multi-block transaction counts, optional creditor cases, and
+prerequisite non-evaluation regressions. Two new upload examples appear in
+`demo-files/pain.001.001.03-*.xml`; all data is synthetic.
+
+Current proposed immutable snapshot:
+`docs/coverage/pain001-03-ruleset-2.4.0.json`.
+Rebuild the snapshot at a **fresh path**, compare byte-for-byte, run
+`npm run validate:core`, regenerate the ReadMe package, verify drift, and run
+targeted browser tests. Obtain independent source and exact-head code review
+before merging. These checks are **not yet claimed to have passed** on the new
+stacked branch. No merge, deployment or publication is authorized by this draft.

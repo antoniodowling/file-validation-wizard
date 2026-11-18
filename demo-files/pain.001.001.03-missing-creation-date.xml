@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>AUDIT-001</MsgId>
+      <NbOfTxs>1</NbOfTxs>
+      <InitgPty>
+        <Nm>Synthetic Initiator</Nm>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>PMT-001</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt>2026-11-19</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Synthetic Debtor</Nm>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>SYNTHETIC-ACCOUNT</Id>
+          </Othr>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>AAAAUS33</BIC>
+        </FinInstnId>
+      </DbtrAgt>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">1.00</InstdAmt>
+        </Amt>
+        <Cdtr>
+          <Nm>Synthetic Creditor</Nm>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>SYNTHETIC-CREDITOR</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

@@ -9,7 +9,7 @@ import type { CoverageRule, FormatPack, RunProvenance } from "./types";
 import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
 export const ISO_RULESET_REVISION = "2.2.0";
-export const PAIN_001_03_RULESET_REVISION = "2.3.0";
+export const PAIN_001_03_RULESET_REVISION = "2.4.0";
 export const EDI_RULESET_REVISION = "2.1.0";
 export const EXCLUSIONS = Object.freeze([
   "DEMO checks only. No bank acceptance, funds availability, authorization, fraud approval, or execution guarantee.",
@@ -18,11 +18,25 @@ export const EXCLUSIONS = Object.freeze([
   "X12 implementation-guide/ST03 requirements and complete 820 content are not evaluated.",
 ]);
 const xmlRules = ["safe-declarations", "well-formed", "document-root", "namespace-version", "message-container", "group-header", "message-id", "payment-information", "transaction-count-type"];
-const pain00103SchemaRules = new Set(["iso.document-root", "iso.namespace-version", "iso.message-container", "iso.group-header", "iso.payment-information", "iso.transaction-count-type"]);
+const pain00103SchemaRules = new Set(["iso.document-root", "iso.namespace-version", "iso.message-container", "iso.group-header", "iso.message-id", "iso.payment-information", "iso.transaction-count-type"]);
 const pain00103Descriptions: Readonly<Record<string, string>> = {
   "iso.message-id": "Exactly one scalar MsgId containing 1 to 35 XML characters; the additional nonblank requirement is retained local data-quality policy, not an XSD facet.",
-  "demo.xml-declaration": "Optional XML-declaration advice based on parser-observed presence; this does not check for an explicit encoding attribute.",
-  "demo.non-empty-source": "Generic input check after parser admission; not an independent ISO payment requirement.",
+};
+// Selected, independently sourced .03 content-model requirements. Full XSD
+// element ordering, conditional bank rules and amount/date type facets remain excluded.
+const pain00103Required: Readonly<Record<string, readonly [string, string]>> = {
+  "iso.creation-date-time": ["Group header has exactly one nonempty scalar CreDtTm; ISODateTime lexical facets remain unqualified.", "iso.group-header"],
+  "iso.initiating-party": ["Group header has exactly one InitgPty; nested PartyIdentification32 properties are not universally mandatory.", "iso.group-header"],
+  "iso.payment-information-id": ["Each PmtInf has one PmtInfId with 1–35 decoded characters.", "iso.payment-information"],
+  "iso.payment-method": ["Each PmtInf has one PmtMtd from the .03 CHK/TRF/TRA enumeration.", "iso.payment-information"],
+  "iso.requested-execution-date": ["Each PmtInf has one nonempty ReqdExctnDt; ISODate lexical facets are not yet checked.", "iso.payment-information"],
+  "iso.debtor": ["Each PmtInf has one Dbtr element; nested optional party fields remain unqualified.", "iso.payment-information"],
+  "iso.debtor-account": ["Each PmtInf has one DbtrAcct with the mandatory Id choice (IBAN or Othr).", "iso.payment-information"],
+  "iso.debtor-agent": ["Each PmtInf has one DbtrAgt with a FinInstnId child.", "iso.payment-information"],
+  "iso.credit-transfer-transactions": ["Each PmtInf contains at least one CdtTrfTxInf.", "iso.payment-information"],
+  "iso.credit-transfer-identification": ["Each transaction has PmtId and one 1–35-character EndToEndId.", "iso.credit-transfer-transactions"],
+  "iso.credit-transfer-amount": ["Each transaction has Amt with exactly one InstdAmt or EqvtAmt choice and required currency-bearing children; complete amount facets remain excluded.", "iso.credit-transfer-transactions"],
+  "iso.transaction-count-reconciliation": ["GrpHdr/NbOfTxs equals the number of CdtTrfTxInf elements across all payment blocks; only qualified transaction scopes are evaluated.", "iso.transaction-count-type; iso.credit-transfer-transactions"],
 };
 const ediRules = ["fixed-header", "final-termination", "envelope-nesting", "interchange-envelope", "group-count", "functional-group-envelope", "transaction-count", "transaction-set-envelope", "transaction-set-code", "version", "control-numbers", "segment-count", "payment-remittance"];
 
@@ -64,14 +78,14 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
   if (pack.parserKind === "NACHA_FIXED") return nachaCoverageFor(pack);
   const xml = pack.parserKind === "ISO_XML";
   const pain00103 = xml && pack.version === "pain.001.001.03";
-  return [...(xml ? xmlRules.map(id => `iso.${id}`) : ediRules.map(id => `edi.${id}`)), ...pack.rules.map(r => r.id)].map(id => ({
-    id, description: (pain00103 ? pain00103Descriptions[id] : undefined) ?? descriptions[id]?.[0] ?? pack.rules.find(r => r.id === id)?.description ?? id,
-    ruleClass: pain00103 && pain00103SchemaRules.has(id) ? "iso-schema" : id === "iso.well-formed" ? "xml-syntax" : id === "iso.safe-declarations" ? "tool-policy" : id.startsWith("demo.") ? "advisory" : "demo-structure",
+  return [...(xml ? xmlRules.map(id => `iso.${id}`) : ediRules.map(id => `edi.${id}`)), ...(pain00103 ? Object.keys(pain00103Required) : []), ...pack.rules.map(r => r.id)].map(id => ({
+    id, description: (pain00103 ? pain00103Required[id]?.[0] ?? pain00103Descriptions[id] : undefined) ?? descriptions[id]?.[0] ?? pack.rules.find(r => r.id === id)?.description ?? id,
+    ruleClass: pain00103 && (pain00103SchemaRules.has(id) || id in pain00103Required) ? "iso-schema" : id === "iso.well-formed" ? "xml-syntax" : id === "iso.safe-declarations" ? "tool-policy" : id.startsWith("demo.") ? "advisory" : "demo-structure",
     severity: id === "demo.xml-declaration" ? "WARNING" : "ERROR",
     applicability: `Selected profile ${pack.id}, message version ${pack.version}; repeated envelopes evaluated individually where present.`,
-    prerequisite: descriptions[id]?.[1] ?? "Trusted format context",
+    prerequisite: (pain00103 ? pain00103Required[id]?.[1] : undefined) ?? descriptions[id]?.[1] ?? "Trusted format context",
     reference: pain00103 ? "docs/PAIN001_003_RULE_REVIEW.md — exact .03 XSD, W3C XML and separately identified tool policies; partial validation only" : ["iso.transaction-count-type", "demo.xml-declaration"].includes(id) ? "docs/ISO_RULE_CORRECTIONS.md — exact-type qualification and parser declaration evidence" : id.startsWith("edi.") ? "docs/EDI_SOURCE_SCOPE.md; X12 RFI 1648 and RFI 2207 (5010); no bank-acceptance claim" : id === "iso.well-formed" ? "https://www.w3.org/TR/2008/REC-xml-20081126/; https://www.w3.org/TR/2009/REC-xml-names-20091208/" : "docs/IMPLEMENTATION_EVIDENCE.md — DEMO ruleset 2; no bank-specification claim",
-    evidence: pain00103 ? "tests/pain001-03-review.test.ts; tests/iso-lexical.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance" : `${xml ? "" : "tests/edi-integrity.test.ts; "}tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance`,
+    evidence: pain00103 ? "tests/pain001-03-review.test.ts; tests/pain001-03-required.test.ts; docs/evidence/pain001-03-2026-11-18/; selected checks only, not complete payment conformance" : `${xml ? "" : "tests/edi-integrity.test.ts; "}tests/hardening.test.ts; tests/validation.test.ts; synthetic structural evidence, not independently approved payment conformance`,
   }));
 }
 export function provenanceFor(pack: FormatPack): RunProvenance {
