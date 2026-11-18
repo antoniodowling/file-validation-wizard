@@ -40,6 +40,17 @@ const xmlDeclarationRule: ValidationRule = Object.freeze({
   }),
 });
 
+const pain00103DeclarationRule: ValidationRule = Object.freeze({
+  ...xmlDeclarationRule,
+  description: "An optional XML declaration is present.",
+  evaluate: (context: ValidationContext) => ({
+    outcome: context.xml?.hasDeclaration === true ? "PASS" as const : "WARNING" as const,
+    message: context.xml?.hasDeclaration === true
+      ? "An XML declaration is present."
+      : "An XML declaration is recommended but optional; omitting it does not make this XML document invalid.",
+  }),
+});
+
 const isoPack = (
   id: string,
   family: "PAIN.001" | "PAIN.008",
@@ -65,7 +76,7 @@ const isoPack = (
       messageContainer: container,
     }),
     approval: noApprovals,
-    rules: Object.freeze([nonEmptyRule, xmlDeclarationRule]),
+    rules: Object.freeze([nonEmptyRule, version === "pain.001.001.03" ? pain00103DeclarationRule : xmlDeclarationRule]),
   });
 
 const ediPack = (version: "004010" | "005010" | "008030"): FormatPack =>

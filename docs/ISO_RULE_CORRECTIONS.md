@@ -61,3 +61,25 @@ requests and adds no browser/runtime dependency. Full schemas are not redistribu
 The application tests currently assert the documented review contract; they must
 not be described as fresh independent original-XSD validation. Keep that part of
 issue #53 open until the original-type oracle and source review are recorded.
+
+## 2026-11-18 follow-up: `.03` original source verified
+
+The original `pain.001.001.03` XSD was obtained from
+`https://www.iso20022.org/message/14316/download`. Its 45,859 bytes hash to
+`6bb5c6f24250ab807f31f6164142bafd6d43bad8d162a926e258ff4c11e128af`, exactly
+matching the earlier recorded digest. The October retrieval limitations above
+remain historical evidence; they no longer describe this profile's source access.
+
+The independent lxml/libxml2 oracle now supports explicit `--version` selection.
+The default still requires all six schemas; optional `--include-message-id`
+requires an explicitly selected `.03` schema. A fresh `.03` run passed 11
+`Max15NumericText` cases and 10 original `Max35Text` cases. See the
+[source receipt](evidence/pain001-03-2026-11-18/source-receipt.json) and
+[oracle output](evidence/pain001-03-2026-11-18/oracle-output.json).
+
+The [`.03` review](PAIN001_003_RULE_REVIEW.md) records the missing 35-character
+MsgId limit, the retained nonblank data-quality policy, the optional declaration
+advisory and the remaining coverage gaps. Its correction is scoped to `.03`
+ruleset 2.3.0. The other five profiles retain their existing behavior and evidence.
+This verification does not close the six-profile scope of #53, qualify complete
+payment semantics, or supply application/build/hosted acceptance evidence.

@@ -1,0 +1,1409 @@
+{
+  "reviewed_source_commit": "181dd49a67b564f6b8a3468f519370b65ab5892b",
+  "method": "57 synthetic documents executed through the unchanged parseIso implementation plus registered pack rules, then independently validated against the original complete pain.001.001.03 XSD. These are baseline audit results, not tests of the correction, the worker or the browser UI.",
+  "schema_sha256": "6bb5c6f24250ab807f31f6164142bafd6d43bad8d162a926e258ff4c11e128af",
+  "schema_processor_versions": {
+    "lxml": "6.1.1.0",
+    "libxml2": "2.14.6"
+  },
+  "runtime": {
+    "node": "v24.22.3",
+    "saxes": "6.0.0"
+  },
+  "results": [
+    {
+      "id": "schema_valid_baseline",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "msgid_35",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "msgid_36",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}MsgId': [facet 'maxLength'] The value has a length of '36'; this exceeds the allowed maximum length of '35'."
+      ]
+    },
+    {
+      "id": "msgid_whitespace_only",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.message-id",
+          "outcome": "ERROR",
+          "message": "Exactly one populated MsgId element is required; an attribute cannot satisfy it."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "ERROR",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "msgid_empty",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.message-id",
+          "outcome": "ERROR",
+          "message": "Exactly one populated MsgId element is required; an attribute cannot satisfy it."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "ERROR",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}MsgId': [facet 'minLength'] The value has a length of '0'; this underruns the allowed minimum length of '1'."
+      ]
+    },
+    {
+      "id": "msgid_nested",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.message-id",
+          "outcome": "ERROR",
+          "message": "Exactly one populated MsgId element is required; an attribute cannot satisfy it."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "ERROR",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}MsgId': Element content is not allowed, because the type definition is simple.",
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}MsgId': [facet 'minLength'] The value has a length of '0'; this underruns the allowed minimum length of '1'."
+      ]
+    },
+    {
+      "id": "msgid_35_unicode_codepoints",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "msgid_36_unicode_codepoints",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}MsgId': [facet 'maxLength'] The value has a length of '36'; this exceeds the allowed maximum length of '35'."
+      ]
+    },
+    {
+      "id": "msgid_duplicate",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.message-id",
+          "outcome": "ERROR",
+          "message": "Exactly one populated MsgId element is required; an attribute cannot satisfy it."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "ERROR",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}MsgId': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CreDtTm )."
+      ]
+    },
+    {
+      "id": "msgid_foreign_namespace_extra",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:foreign}MsgId': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CreDtTm )."
+      ]
+    },
+    {
+      "id": "count_one",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_zero",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_two",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_leading_zero",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_15digits",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_16digits",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '1234567890123456' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_empty",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_letters",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value 'A' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_leading_space",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value ' 1' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_trailing_space",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '1 ' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_trailing_lf",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '1\n' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_trailing_cr",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '1\n' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_trailing_crlf",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '1\n' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_trailing_lf_reference",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '1\n' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_digits_reference",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_digits_cdata",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "count_nested",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': Element content is not allowed, because the type definition is simple.",
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_unicode_digits",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': [facet 'pattern'] The value '١' is not accepted by the pattern '[0-9]{1,15}'."
+      ]
+    },
+    {
+      "id": "count_duplicate",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': This element is not expected. Expected is one of ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CtrlSum, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}InitgPty )."
+      ]
+    },
+    {
+      "id": "count_foreign_only",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.transaction-count-type",
+          "outcome": "ERROR",
+          "message": "Exactly one NbOfTxs element containing 1 to 15 digits is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:foreign}NbOfTxs': This element is not expected. Expected is one of ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}Authstn, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs )."
+      ]
+    },
+    {
+      "id": "no_CreDtTm",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CreDtTm )."
+      ]
+    },
+    {
+      "id": "no_InitgPty",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}GrpHdr': Missing child element(s). Expected is one of ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CtrlSum, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}InitgPty )."
+      ]
+    },
+    {
+      "id": "no_transaction",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf': Missing child element(s). Expected is one of ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}DbtrAgtAcct, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}UltmtDbtr, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}ChrgBr, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}ChrgsAcct, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}ChrgsAcctAgt, {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CdtTrfTxInf )."
+      ]
+    },
+    {
+      "id": "empty_PmtInf",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf': Missing child element(s). Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInfId )."
+      ]
+    },
+    {
+      "id": "PmtInf_before_GrpHdr",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}GrpHdr )."
+      ]
+    },
+    {
+      "id": "unknown_child",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}Unknown': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf )."
+      ]
+    },
+    {
+      "id": "extra_message_container_foreign",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:foreign}CstmrCdtTrfInitn': This element is not expected."
+      ]
+    },
+    {
+      "id": "missing_declaration",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "demo.xml-declaration",
+          "outcome": "WARNING",
+          "message": "Add an XML declaration to make the document encoding explicit."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "WARNING"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "declaration_no_encoding",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "nonempty_scaffold_minimum",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}NbOfTxs': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CreDtTm ).",
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf': Missing child element(s). Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInfId )."
+      ]
+    },
+    {
+      "id": "empty_source",
+      "parserContext": false,
+      "evaluated": 2,
+      "findings": [
+        {
+          "ruleId": "iso.well-formed",
+          "outcome": "ERROR",
+          "message": "The XML document is not well formed or has invalid namespace bindings. Dependent ISO checks were not evaluated."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Document is empty, line 1, column 1 (empty_source.xml, line 1)"
+      ]
+    },
+    {
+      "id": "whitespace_source",
+      "parserContext": false,
+      "evaluated": 2,
+      "findings": [
+        {
+          "ruleId": "iso.well-formed",
+          "outcome": "ERROR",
+          "message": "The XML document is not well formed or has invalid namespace bindings. Dependent ISO checks were not evaluated."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Start tag expected, '<' not found, line 2, column 1 (whitespace_source.xml, line 2)"
+      ]
+    },
+    {
+      "id": "namespace_prefix",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "wrong_version",
+      "parserContext": false,
+      "evaluated": 4,
+      "findings": [
+        {
+          "ruleId": "iso.namespace-version",
+          "outcome": "ERROR",
+          "message": "The XML namespace does not match the selected format version. Ensure the file format type/version you selected matches the file you uploaded."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.09}Document': No matching global declaration available for the validation root."
+      ]
+    },
+    {
+      "id": "DTD",
+      "parserContext": false,
+      "evaluated": 1,
+      "findings": [
+        {
+          "ruleId": "iso.safe-declarations",
+          "outcome": "ERROR",
+          "message": "DTD and entity declarations are prohibited by tool policy."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "ERROR"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "DTD_in_comment",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "unbound_prefix",
+      "parserContext": false,
+      "evaluated": 2,
+      "findings": [
+        {
+          "ruleId": "iso.well-formed",
+          "outcome": "ERROR",
+          "message": "The XML document is not well formed or has invalid namespace bindings. Dependent ISO checks were not evaluated."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Namespace prefix p on Document is not defined, line 1, column 105 (unbound_prefix.xml, line 1)"
+      ]
+    },
+    {
+      "id": "wrong_root_name",
+      "parserContext": false,
+      "evaluated": 3,
+      "findings": [
+        {
+          "ruleId": "iso.document-root",
+          "outcome": "ERROR",
+          "message": "The required Document root is missing."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}Other': No matching global declaration available for the validation root."
+      ]
+    },
+    {
+      "id": "missing_container",
+      "parserContext": false,
+      "evaluated": 5,
+      "findings": [
+        {
+          "ruleId": "iso.message-container",
+          "outcome": "ERROR",
+          "message": "Exactly one message container in the selected namespace is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}Document': Missing child element(s). Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CstmrCdtTrfInitn )."
+      ]
+    },
+    {
+      "id": "duplicate_container",
+      "parserContext": false,
+      "evaluated": 5,
+      "findings": [
+        {
+          "ruleId": "iso.message-container",
+          "outcome": "ERROR",
+          "message": "Exactly one message container in the selected namespace is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CstmrCdtTrfInitn': This element is not expected."
+      ]
+    },
+    {
+      "id": "foreign_container_only",
+      "parserContext": false,
+      "evaluated": 5,
+      "findings": [
+        {
+          "ruleId": "iso.message-container",
+          "outcome": "ERROR",
+          "message": "Exactly one message container in the selected namespace is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "ERROR"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:foreign}CstmrCdtTrfInitn': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CstmrCdtTrfInitn )."
+      ]
+    },
+    {
+      "id": "missing_group_header",
+      "parserContext": true,
+      "evaluated": 9,
+      "findings": [
+        {
+          "ruleId": "iso.group-header",
+          "outcome": "ERROR",
+          "message": "Exactly one group header in the selected namespace is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}GrpHdr )."
+      ]
+    },
+    {
+      "id": "duplicate_group_header",
+      "parserContext": true,
+      "evaluated": 9,
+      "findings": [
+        {
+          "ruleId": "iso.group-header",
+          "outcome": "ERROR",
+          "message": "Exactly one group header in the selected namespace is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "ERROR",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}GrpHdr': This element is not expected. Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf )."
+      ]
+    },
+    {
+      "id": "missing_payment_information",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "iso.payment-information",
+          "outcome": "ERROR",
+          "message": "At least one payment information block in the selected namespace is required."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "ERROR",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": false,
+      "xsd_errors": [
+        "Element '{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}CstmrCdtTrfInitn': Missing child element(s). Expected is ( {urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}PmtInf )."
+      ]
+    },
+    {
+      "id": "duplicate_payment_information",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "PASS"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "PI_is_not_declaration",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "demo.xml-declaration",
+          "outcome": "WARNING",
+          "message": "Add an XML declaration to make the document encoding explicit."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "WARNING"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    },
+    {
+      "id": "comment_is_not_declaration",
+      "parserContext": true,
+      "evaluated": 11,
+      "findings": [
+        {
+          "ruleId": "demo.xml-declaration",
+          "outcome": "WARNING",
+          "message": "Add an XML declaration to make the document encoding explicit."
+        }
+      ],
+      "outcomes": {
+        "iso.safe-declarations": "PASS",
+        "iso.well-formed": "PASS",
+        "iso.document-root": "PASS",
+        "iso.namespace-version": "PASS",
+        "iso.message-container": "PASS",
+        "iso.group-header": "PASS",
+        "iso.message-id": "PASS",
+        "iso.transaction-count-type": "PASS",
+        "iso.payment-information": "PASS",
+        "demo.non-empty-source": "PASS",
+        "demo.xml-declaration": "WARNING"
+      },
+      "original_xsd_valid": true,
+      "xsd_errors": []
+    }
+  ]
+}

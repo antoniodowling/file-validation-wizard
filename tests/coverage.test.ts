@@ -34,6 +34,6 @@ it("pins synthetic evidence and rejects production approval without exact revisi
 
 it("pins corrected ISO and EDI revisions", () => {
   for (const pack of FORMAT_PACKS.filter(p => p.mode === "DEMO")) {
-    expect(provenanceFor(pack).rulesetRevision).toBe(pack.parserKind === "ISO_XML" ? "2.2.0" : "2.1.0");
+    expect(provenanceFor(pack).rulesetRevision).toBe(pack.id === "pain-001-03" ? "2.3.0" : pack.parserKind === "ISO_XML" ? "2.2.0" : "2.1.0");
   }
 });

@@ -1,0 +1,44 @@
+{
+  "review_date": "2026-11-18",
+  "reviewed_source_commit": "181dd49a67b564f6b8a3468f519370b65ab5892b",
+  "message_version": "pain.001.001.03",
+  "publisher_url": "https://www.iso20022.org/message/14316/download",
+  "publisher_bytes": 45859,
+  "publisher_sha256": "6bb5c6f24250ab807f31f6164142bafd6d43bad8d162a926e258ff4c11e128af",
+  "source_handling": "Publisher bytes retrieved during the review and hash-verified again for this oracle; the XSD is not redistributed.",
+  "scope": "Original Max15NumericText and Max35Text simple types only. This receipt does not qualify the other five profiles, full-message semantics, the application build, or bank acceptance.",
+  "oracle_command": "python3 scripts/verify-iso-numeric-type.py <schema-directory> --version pain.001.001.03 --include-message-id",
+  "oracle_output": "oracle-output.json",
+  "oracle_case_counts": {
+    "Max15NumericText": 11,
+    "Max35Text": 10
+  },
+  "oracle_checks": [
+    {
+      "case": "selected-original-.03",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "case": "default-still-requires-all-six",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": "changed-source-digest-rejected",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": "selected-source-missing-rejected",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": "message-id-check-requires-explicit-.03-scope",
+      "exit_code": 2,
+      "passed": true
+    }
+  ],
+  "oracle_script_sha256": "cbc83fa55dab8cd99e2b14256aeb1273b2e0567695b306bd4afe73d0234c054a"
+}
