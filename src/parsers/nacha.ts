@@ -166,7 +166,9 @@ export function parseNacha(source: string, pack: FormatPack, validationInstant: 
     padding(bh, [[5, 20], [21, 40], [41, 50], [54, 63], [64, 69]]);
     const effective = date(slice(bh, 70, 75));
     check("effective-date", !!effective, "Effective entry date", "Effective entry date must be a real calendar date in YYMMDD format.", bh, 70, 75);
-    if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
+    if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", originationR2
+      ? `Batch ${slice(bh, 88, 94).trim()}: Effective Entry Date ${effective.toISOString().slice(0, 10)} falls on a weekend. Confirm the intended settlement date with your bank.`
+      : "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
     if (!effective) incomplete("effective-weekend", "At least one batch has an invalid effective date, so its weekend check was not evaluated.");
     if (originationR2) {
       if (effective) {
