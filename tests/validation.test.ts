@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { FORMAT_PACKS } from "../src/format-packs";
 import type { EdiVersionIdentifiers, FormatPack, IsoVersionIdentifiers } from "../src/types";
@@ -5,6 +6,9 @@ import { validateSource } from "../src/validation";
 import { ediPack, isoPack, validEdi820, validPain001 } from "./helpers";
 
 function validIsoFor(pack: FormatPack): string {
+  if (pack.id === "pain-001-03") {
+    return readFileSync("tests/fixtures/pain001-03-schema-valid.xml", "utf8");
+  }
   const identifiers = pack.identifiers as IsoVersionIdentifiers;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="${identifiers.namespace}">
