@@ -187,7 +187,7 @@ export function parseNacha(source: string, pack: FormatPack, validationInstant: 
         // America/New_York is used only to determine what "today" is.
         // Compare calendar dates.
         check("effective-past", effectiveDate >= validationDate, "Effective entry date",
-          `Batch ${batchId}: Effective Entry Date ${effectiveRaw} is in the past (as of ${validationDate}). Confirm or update the intended settlement date.`,
+          `Batch ${batchId}: Effective Entry Date ${effectiveRaw} is in the past. Confirm or update the intended settlement date.`,
           bh, 70, 75, true);
       } else {
         incomplete("effective-holiday", "At least one batch has an invalid effective date; holiday evaluation was not possible.");
