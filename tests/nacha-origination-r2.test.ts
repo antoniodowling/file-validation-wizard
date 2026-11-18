@@ -71,6 +71,7 @@ describe("origination r2 declarations", () => {
     expect(result.results.filter(rule => rule.outcome !== "PASS").map(rule => [rule.ruleId, rule.outcome]))
       .toEqual([["nacha.description-case", "ERROR"]]);
     expect(result.results.find(rule => rule.ruleId === "nacha.description-sec")?.outcome).toBe("PASS");
+    expect(result.results.find(rule => rule.ruleId === "nacha.description-case")?.locator).toBe("Record 11 / Columns 54-63");
     expect(result.incompleteChecks).toEqual([]);
   });
   it("suppresses TRN evaluation on unknown transaction/addenda prerequisites", () => {
