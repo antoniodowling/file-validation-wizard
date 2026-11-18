@@ -83,12 +83,12 @@ describe("XML finding locations", () => {
     expect(location?.kind, ruleId).not.toBe("unavailable");
   });
 
-  it("maps the demo XML-declaration warning to the start of the document", () => {
-    const pack = FORMAT_PACKS.find((candidate) => candidate.id === "pain-001-03");
+  it("preserves declaration-warning location for the unchanged legacy .09 profile", () => {
+    const pack = FORMAT_PACKS.find((candidate) => candidate.id === "pain-001-09");
     expect(pack).toBeTruthy();
     if (!pack) return;
     const source = validPain001
-      .replace("pain.001.001.99", "pain.001.001.03")
+      .replace("pain.001.001.99", "pain.001.001.09")
       .replace(/^<\?xml[^>]+>\n/u, "");
     const run = validateSource("case.xml", source, pack);
     const location = locationFor(locateFindings(source, pack, run), run.results, "demo.xml-declaration");
