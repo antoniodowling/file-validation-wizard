@@ -60,7 +60,10 @@ describe("NACHA origination R2 effective-date advisories", () => {
   });
 
   it("does not duplicate the existing weekend warning for a weekend holiday", () => {
-    expect(finding("260704", "effective-weekend")?.outcome).toBe("WARNING");
+    const weekend = finding("260704", "effective-weekend");
+    expect(weekend?.outcome).toBe("WARNING");
+    expect(weekend?.message).toBe("Batch 0000001: Effective Entry Date 2026-07-04 falls on a weekend. Confirm the intended settlement date with your bank.");
+    expect(weekend?.locator).toBe("Record 2 / Columns 70-75");
     expect(finding("260704", "effective-holiday")?.outcome).toBe("PASS");
     expect(finding("270705", "effective-holiday")?.outcome).toBe("WARNING");
     expect(finding("260703", "effective-holiday")?.outcome).toBe("PASS");
@@ -107,6 +110,9 @@ describe("NACHA origination R2 effective-date advisories", () => {
     rows[1] = field(rows[1]!, 70, 75, "261126");
     const output = parseNacha(rows.join("\n"), EXPANDED_NACHA_PACK, new Date("2026-11-27T18:00:00Z"));
     expect(output.results.some(r => ["nacha.effective-holiday", "nacha.effective-past"].includes(r.ruleId))).toBe(false);
+    rows[1] = field(rows[1]!, 70, 75, "260704");
+    const legacyWeekend = parseNacha(rows.join("\n"), EXPANDED_NACHA_PACK, new Date("2026-07-04T18:00:00Z"));
+    expect(legacyWeekend.results.find(r => r.ruleId === "nacha.effective-weekend")?.message).toBe("The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.");
     rows[1] = field(rows[1]!, 70, 75, "260230");
     const invalid = parseNacha(rows.join("\n"), EXPANDED_NACHA_PACK, new Date("2026-11-27T18:00:00Z"));
     expect(invalid.results.find(r => r.ruleId === "nacha.effective-date")?.message).toBe("Effective entry date must be a real calendar date in YYMMDD format.");
