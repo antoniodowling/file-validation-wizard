@@ -165,7 +165,9 @@ export function parseNacha(source: string, pack: FormatPack, validationInstant: 
     if (expanded && description.toUpperCase().includes("REVERSAL")) check("reversal-marker", reversal, "Reversal description", "A declared reversal must include uppercase REVERSAL within the Company Entry Description.", bh, 54, 63);
     padding(bh, [[5, 20], [21, 40], [41, 50], [54, 63], [64, 69]]);
     const effective = date(slice(bh, 70, 75));
-    check("effective-date", !!effective, "Effective entry date", "Effective entry date must be a real calendar date in YYMMDD format.", bh, 70, 75);
+    check("effective-date", !!effective, "Effective entry date", originationR2
+      ? "Effective Entry Date is not a valid calendar date. Enter a valid date in YYMMDD format."
+      : "Effective entry date must be a real calendar date in YYMMDD format.", bh, 70, 75);
     if (effective) check("effective-weekend", ![0, 6].includes(effective.getUTCDay()), "Effective entry date", "The effective entry date falls on a weekend. Confirm ACH processing dates and handling with the ODFI; this check does not determine a cutoff or holiday calendar.", bh, 70, 75, true);
     if (!effective) incomplete("effective-weekend", "At least one batch has an invalid effective date, so its weekend check was not evaluated.");
     if (originationR2) {
@@ -178,13 +180,13 @@ export function parseNacha(source: string, pack: FormatPack, validationInstant: 
         // Weekend dates are handled by the existing weekend rule.
         const holiday = federalReserveHoliday(effective);
         check("effective-holiday", holiday === null, "Effective entry date",
-          `Batch ${batchId}: Effective Entry Date ${effectiveDate} falls on ${holiday}. Federal Reserve ACH settlement is unavailable on this holiday; confirm handling with the ODFI.`,
+          `Batch ${batchId}: Effective Entry Date ${effectiveDate} falls on a Federal Reserve holiday (${holiday}). Confirm the intended settlement date with your bank.`,
           bh, 70, 75, true);
         // ACH Effective Entry Dates contain no timezone or time of day.
         // America/New_York is used only to determine what "today" is.
         // Compare calendar dates.
         check("effective-past", effectiveDate >= validationDate, "Effective entry date",
-          `Batch ${batchId}: Effective Entry Date ${effectiveDate} precedes the validation date ${validationDate}. The ACH Operator may settle at the next available opportunity; confirm intended handling with the ODFI.`,
+          `Batch ${batchId}: Effective Entry Date ${effectiveDate} is in the past (as of ${validationDate}). Confirm or update the intended settlement date.`,
           bh, 70, 75, true);
       } else {
         incomplete("effective-holiday", "At least one batch has an invalid effective date; holiday evaluation was not possible.");
