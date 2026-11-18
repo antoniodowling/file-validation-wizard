@@ -106,7 +106,7 @@ const LEGACY_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
     label: "NACHA / ACH — CCD, PPD, CTX, WEB, TEL originations",
     version: "origination-public-2026",
     parserKind: "NACHA_FIXED",
-    extensions: Object.freeze([".ach", ".txt"]),
+    extensions: Object.freeze([".ach", ".nacha", ".txt"]),
     guideUrl: NACHA_GUIDE_URL,
     enabled: true,
     mode: "CANDIDATE",
