@@ -75,9 +75,9 @@ describe("NACHA origination R2 effective-date advisories", () => {
     expect(finding("261117", "effective-past", new Date("2026-11-18T04:59:59Z"))?.outcome).toBe("PASS");
     const past = finding("261117", "effective-past", new Date("2026-11-18T05:00:00Z"));
     expect(past?.outcome).toBe("WARNING");
-    expect(past?.message).toContain("2026-11-18");
     expect(past?.message).toContain("261117");
-    expect(past?.message).toBe("Batch 0000001: Effective Entry Date 261117 is in the past (as of 2026-11-18). Confirm or update the intended settlement date.");
+    expect(past?.message).not.toContain("2026-11-18");
+    expect(past?.message).toBe("Batch 0000001: Effective Entry Date 261117 is in the past. Confirm or update the intended settlement date.");
     expect(finding("261119", "effective-past", new Date("2026-11-18T05:00:00Z"))?.outcome).toBe("PASS");
     expect(easternValidationDate(new Date("2026-07-04T03:59:59Z"))).toBe("2026-07-03");
     expect(easternValidationDate(new Date("2026-07-04T04:00:00Z"))).toBe("2026-07-04");
