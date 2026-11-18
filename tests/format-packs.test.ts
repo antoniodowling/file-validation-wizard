@@ -16,6 +16,17 @@ describe("format-pack release gates", () => {
     expect(FORMAT_PACKS.every((pack) => Object.values(pack.approval).every((value) => !value))).toBe(true);
   });
 
+  it("allows .nacha for all NACHA origination packs without changing returns or other formats", () => {
+    const originations = FORMAT_PACKS.filter(pack => pack.family === "NACHA");
+    expect(originations).toHaveLength(3);
+    for (const pack of originations) {
+      expect(pack.extensions).toEqual([".ach", ".nacha", ".txt"]);
+    }
+    expect(FORMAT_PACKS.find(pack => pack.family === "NACHA Returns")!.extensions)
+      .toEqual([".ach", ".txt"]);
+    expect(FORMAT_PACKS.find(pack => pack.id === "pain-001-03")!.extensions).toEqual([".xml"]);
+  });
+
   it("rejects an incomplete enabled production pack", () => {
     const incomplete = isoPack({ version: null, guideUrl: null, rules: [] });
     expect(formatPackReleaseErrors(incomplete)).toContain("exact version");
