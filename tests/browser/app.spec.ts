@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -144,7 +145,27 @@ test("opens the NACHA public profile and removes unsupported catalog formats", a
   await expect(page.getByText("Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.locator("#upload-title")).toHaveText("Upload your NACHA / ACH file");
-  await expect(page.locator("#file-input")).toHaveAttribute("accept", ".ach,.txt");
+  await expect(page.locator("#file-input")).toHaveAttribute("accept", ".ach,.nacha,.txt");
+});
+
+test("uploads .nacha under R2 with the same result as .ach", async ({ page }) => {
+  await page.goto("/");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.locator("#file-input")).toHaveAttribute("accept", ".ach,.nacha,.txt");
+  await expect(page.locator("#accepted-extensions")).toContainText("NACHA");
+
+  const fixture = readFileSync(demoFile("ach-candidates/origination-healthcare-pass.ach"));
+  for (const extension of [".nacha", ".ach"]) {
+    await page.locator("#file-input").setInputFiles({
+      name: "synthetic-origination" + extension, mimeType: "text/plain", buffer: fixture,
+    });
+    await page.getByRole("button", { name: "Validate file" }).click();
+    await expect(page.locator("#results-title")).toHaveText("PASS");
+    await expect(page.locator("#error-count")).toHaveText("0");
+    await expect(page.locator("#warning-count")).toHaveText("0");
+    if (extension === ".nacha") await page.locator('[data-open-step="2"].button').click();
+  }
 });
 
 test("validates mixed NACHA files, warnings and errors with exact source navigation and CSV", async ({ page }) => {
