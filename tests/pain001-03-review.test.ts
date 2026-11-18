@@ -62,34 +62,29 @@ describe("PAIN.001.001.03 reviewed identifier limits", () => {
 });
 
 describe("PAIN.001.001.03 declaration advice and evidence", () => {
-  it("describes an omitted declaration as optional advice", () => {
-    const result = run(withoutDeclaration);
-    const finding = result.results.find(r => r.ruleId === "demo.xml-declaration")!;
-    expect(finding.outcome).toBe("WARNING");
-    expect(finding.message).toBe("An XML declaration is recommended but optional; omitting it does not make this XML document invalid.");
-    expect(result.errorCount).toBe(0);
-    expect(result.overallStatus).toBe("PASS_WITH_WARNINGS");
-  });
-
-  it("accepts an actual declaration without an encoding attribute", () => {
-    const result = run('<?xml version="1.0"?>\n' + withoutDeclaration);
-    expect(result.results.find(r => r.ruleId === "demo.xml-declaration")?.outcome).toBe("PASS");
-    expect(result.overallStatus).toBe("PASS");
+  it("does not treat an optional XML declaration as a rule or warning", () => {
+    for (const source of [baseline, withoutDeclaration]) {
+      const actual = run(source);
+      expect(actual.results.some(result => result.ruleId.startsWith("demo."))).toBe(false);
+      expect(actual.overallStatus).toBe("PASS");
+      expect(actual.warningCount).toBe(0);
+    }
   });
 
   it("versions only the reviewed profile and records bounded schema evidence", () => {
     const provenance = provenanceFor(pack);
-    expect(provenance.rulesetRevision).toBe("2.3.0");
-    expect(provenance.coverageRevision).toBe("pain-001-03@2.3.0/report-4");
-    expect(provenance.coverage).toHaveLength(11);
+    expect(provenance.rulesetRevision).toBe("2.4.0");
+    expect(provenance.coverageRevision).toBe("pain-001-03@2.4.0/report-4");
+    expect(provenance.coverage).toHaveLength(21);
     const schemaRules = ["iso.document-root", "iso.namespace-version", "iso.message-container",
       "iso.group-header", "iso.transaction-count-type", "iso.payment-information"];
     for (const id of schemaRules) {
       expect(provenance.coverage.find(r => r.id === id)?.ruleClass, id).toBe("iso-schema");
     }
     expect(provenance.coverage.find(r => r.id === "iso.safe-declarations")?.ruleClass).toBe("tool-policy");
-    expect(provenance.coverage.find(r => r.id === "iso.message-id")?.ruleClass).toBe("demo-structure");
-    expect(provenance.coverage.find(r => r.id === "demo.xml-declaration")?.severity).toBe("WARNING");
+    expect(provenance.coverage.find(r => r.id === "iso.message-id")?.ruleClass).toBe("iso-schema");
+    expect(provenance.coverage.every(r => !r.id.startsWith("demo."))).toBe(true);
+    expect(provenance.coverage.filter(r => r.ruleClass === "iso-schema")).toHaveLength(19);
     expect(provenance.exclusions).toContain("No complete ISO schema validation or Huntington implementation-guide validation.");
   });
 
