@@ -1,5 +1,10 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { extensionOf, fileSelectionError } from "../src/file-policy";
+import { findCatalogVersion } from "../src/format-catalog";
+import { findEnabledFormatPack } from "../src/format-packs";
+import { validateSource } from "../src/validation";
 import { MAX_FILE_BYTES } from "../src/types";
 
 describe("file selection policy", () => {
@@ -7,6 +12,24 @@ describe("file selection policy", () => {
     for (const name of ["one.XML", "one.edi", "one.X12", "one.820", "one.TXT"]) {
       expect(fileSelectionError([{ name, size: MAX_FILE_BYTES }], [".xml", ".edi", ".x12", ".820", ".txt"])).toBeNull();
     }
+  });
+
+  it("accepts .nacha names without changing NACHA R2 validation", () => {
+    const selected = findCatalogVersion("nacha", "origination-expanded-public-2026-r2")!;
+    const pack = findEnabledFormatPack(selected.validationProfileId!)!;
+    const content = readFileSync(resolve("demo-files/ach-candidates/origination-healthcare-pass.ach"), "utf8");
+    const size = Buffer.byteLength(content, "utf8");
+
+    for (const name of ["payments.ach", "payments.nacha", "payments.NACHA", "payments.txt"]) {
+      expect(fileSelectionError([{ name, size }], selected.extensions)).toBeNull();
+    }
+    expect(fileSelectionError([{ name: "payments.nacha.exe", size }], selected.extensions))
+      .toMatch(/Unsupported file extension/);
+
+    const ach = validateSource("payments.ach", content, pack);
+    const nacha = validateSource("payments.nacha", content, pack);
+    expect(nacha.overallStatus).toBe("PASS");
+    expect({ ...nacha, fileName: ach.fileName }).toEqual(ach);
   });
 
   it("rejects multiple, unsupported, extensionless, and oversized candidates", () => {
