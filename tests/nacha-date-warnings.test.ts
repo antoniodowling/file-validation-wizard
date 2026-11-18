@@ -84,7 +84,7 @@ describe("NACHA origination R2 effective-date advisories", () => {
     const output = fixture("260230");
     const invalidDate = output.results.find(r => r.ruleId === "nacha.effective-date");
     expect(invalidDate?.outcome).toBe("ERROR");
-    expect(invalidDate?.message).toBe("Effective Entry Date is not a valid calendar date. Enter a valid date in YYMMDD format.");
+    expect(invalidDate?.message).toBe("Effective entry date must be a real calendar date in YYMMDD format.");
     for (const id of ["effective-weekend", "effective-holiday", "effective-past"]) {
       expect(output.results.some(r => r.ruleId === `nacha.${id}`)).toBe(false);
       expect(output.incompleteChecks?.map(c => c.ruleId)).toContain(`nacha.${id}`);
