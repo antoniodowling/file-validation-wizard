@@ -1,3 +1,4 @@
+import { ORIGINATION_R2_PACK } from "./format-packs";
 import { provenanceFor } from "./coverage";
 import { MAX_DECODED_UNITS, ResourceLimitError, UnsupportedInputError } from "./resource-policy";
 import { deriveOverallStatus } from "./outcome";
@@ -13,7 +14,8 @@ import { result } from "./parsers/shared";
 import type { FormatPack, RuleResult, ValidationRun } from "./types";
 
 export function validateSource(fileName: string, source: string, pack: FormatPack): ValidationRun {
-  if (!pack.enabled || !pack.version || !pack.identifiers) {
+  if (!pack.enabled || !pack.version || !pack.identifiers ||
+      (pack.parserKind === "NACHA_FIXED" && pack.id !== ORIGINATION_R2_PACK.id)) {
     throw new Error("The selected validation profile is not available.");
   }
 

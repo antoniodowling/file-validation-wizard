@@ -4,19 +4,15 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { findEnabledFormatPack } from "../src/format-packs";
+import { ORIGINATION_R2_PACK as pack } from "../src/format-packs";
 import { locateFindings } from "../src/finding-locations";
-import { NACHA_EXPANDED_RULE_IDS } from "../src/parsers/nacha";
 import { validateSource } from "../src/validation";
 interface Fixture { file: string; description: string; expectedStatus: "PASS" | "PASS_WITH_WARNINGS" | "FAIL"; expectedRuleIds: string[]; sha256: string; bytes: number }
 const directory = resolve(process.cwd(), "demo-files/nacha-expanded");
 const manifest = JSON.parse(readFileSync(resolve(directory, "manifest.json"), "utf8")) as { synthetic: boolean; fixtures: Fixture[] };
 
-describe("synthetic public NACHA origination fixtures", () => {
+describe("expanded NACHA fixture kit under R2", () => {
   it.each(manifest.fixtures)("validates $file with its intended outcome and navigable findings", (fixture) => {
-    const pack = findEnabledFormatPack("nacha-origination-expanded-public-2026-r1");
-    expect(pack).toBeTruthy();
-    if (!pack) return;
     const source = readFileSync(resolve(directory, fixture.file), "utf8");
     expect(Buffer.byteLength(source)).toBe(fixture.bytes);
     expect(createHash("sha256").update(source).digest("hex")).toBe(fixture.sha256);
@@ -37,18 +33,6 @@ describe("synthetic public NACHA origination fixtures", () => {
         }
       }
     }
-  });
-
-  it("covers every implemented rule's ERROR or WARNING branch in a named fixture", () => {
-    const namedCoverage = new Set(manifest.fixtures.flatMap(fixture => fixture.expectedRuleIds));
-    expect(NACHA_EXPANDED_RULE_IDS.filter(id => !namedCoverage.has(id))).toEqual([]);
-    const pack = findEnabledFormatPack("nacha-origination-expanded-public-2026-r1");
-    expect(pack).toBeTruthy();
-    if (!pack) return;
-    const actualCoverage = new Set(manifest.fixtures.flatMap(fixture => validateSource(fixture.file,
-      readFileSync(resolve(directory, fixture.file), "utf8"), pack).results
-      .filter(result => result.outcome === "ERROR" || result.outcome === "WARNING").map(result => result.ruleId)));
-    expect(NACHA_EXPANDED_RULE_IDS.filter(id => !actualCoverage.has(id))).toEqual([]);
   });
 
   it("regenerates every fixture and its manifest byte-for-byte without private inputs", () => {

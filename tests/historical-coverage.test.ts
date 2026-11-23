@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { expect, it } from "vitest";
 const historical = {
+  "docs/coverage/nacha-retired-report-schema-4.0.0.json": "77e069769f46adb55133794e32be35f49bcbb8076d96a7f670590a46975b4d06",
   "docs/coverage/bai2-candidate-1.1.0.json": "373f124b1aee9d58eed3c66a407a843f3db0bcc114905f3abb4830da6321d6ea",
   "docs/coverage/edi-ruleset-2.1.0.json": "a5e23619214805cea0648854962c3ebf3a2e2bce1edf2450a6de8936968fe78b",
   "docs/coverage/ach-candidates-1.0.0.json": "62a5b924f1c7f4e68cc14bd19fff80d3dad7ef54d2d2233dd916d8f275ca1c4f",
@@ -15,6 +16,6 @@ const historical = {
   "docs/coverage/ruleset-2.0.0.json": "7f6c77e174d628270b84a3db2fbf73ef7e03f51c1f96454aa57c7f3f6c3facb1",
   "docs/coverage/ruleset-2.1.0.json": "c7ae0b2098a919075afcb54e2c99c13d63e5c3569ee18639386237be5f40f177"
 };
-it("preserves every pre-schema-4 coverage snapshot byte-for-byte", () => {
+it("preserves every archived coverage snapshot byte-for-byte", () => {
  for (const [path, hash] of Object.entries(historical)) expect(createHash("sha256").update(readFileSync(path)).digest("hex"), path).toBe(hash);
 });

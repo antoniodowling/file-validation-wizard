@@ -1,32 +1,31 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, CSV_WIRE_PACK } from "../src/format-packs";
+import { ORIGINATION_R2_PACK, CSV_WIRE_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { parseNacha } from "../src/parsers/nacha";
 import { parseCsvWire } from "../src/parsers/csv-wire";
 import { buildNacha, field } from "./nacha-builder";
-const ordinary = FORMAT_PACKS.find(p => p.id === "nacha-origination-public-2026")!;
-const ach = (rows: string[], pack = ordinary) => validateSource("synthetic.ach", rows.join("\n"), pack);
+const ach = (rows: string[]) => validateSource("synthetic.ach", rows.join("\n"), ORIGINATION_R2_PACK);
 const state = (run: ReturnType<typeof validateSource>, id: string) => run.checks?.find(c => c.ruleId === id)?.state;
 const wireFixture = (intl = false) => readFileSync(`demo-files/csv-wire/${intl ? "international-usd-pass.csv" : "domestic-pass.csv"}`, "utf8").trim();
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-14T23:59:00Z")); });
 afterEach(() => vi.useRealTimers());
 
 describe("rule completeness across independently scoped entities", () => {
-  it.each([ordinary, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("withholds partial batch amount PASS in $id in both orders", pack => {
+  it("withholds partial batch amount PASS in both orders", () => {
     for (const rowIndex of [2, 5]) {
       const rows = buildNacha([{}, {}]); rows[rowIndex] = field(rows[rowIndex]!, 30, 39, "NOTAMOUNT!");
-      const run = ach(rows, pack); expect(run.verdict).toBe("FAIL");
+      const run = ach(rows); expect(run.verdict).toBe("FAIL");
       for (const id of ["batch-debit", "batch-credit"]) {
         expect(state(run, `nacha.${id}`)).toBe("not-evaluated");
         expect(run.results.some(r => r.ruleId === `nacha.${id}` && r.outcome === "PASS")).toBe(true);
       }
     }
   });
-  it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("withholds partial batch hash PASS in $id", pack => {
+  it("withholds partial batch hash PASS", () => {
     for (const rowIndex of [2, 5]) {
       const rows = buildNacha([{}, {}]); rows[rowIndex] = field(rows[rowIndex]!, 4, 11, "X2100002");
-      const run = ach(rows, pack); expect(run.verdict).toBe("FAIL");
+      const run = ach(rows); expect(run.verdict).toBe("FAIL");
       expect(state(run,"nacha.batch-hash")).toBe("not-evaluated");
     }
   });
@@ -37,16 +36,16 @@ describe("rule completeness across independently scoped entities", () => {
   });
   it("separates unknown entry-type prerequisites from optional absence", () => {
     const rows = buildNacha([{sec:"WEB",codes:["22","22"]}]);rows[3]=field(rows[3]!,2,3,"99");
-    const run=ach(rows,EXPANDED_NACHA_PACK);
+    const run=ach(rows);
     for(const id of ["entry-amount","sec-transaction","web-credit-originator"]) expect(state(run,`nacha.${id}`)).toBe("not-evaluated");
-    expect(state(ach(buildNacha(),EXPANDED_NACHA_PACK),"nacha.web-credit-originator")).toBe("not-applicable");
+    expect(state(ach(buildNacha()),"nacha.web-credit-originator")).toBe("not-applicable");
   });
   it("retains evaluated healthcare occurrences while exposing incomplete scope", () => {
     for (const badEntry of [2,4]) {
       const rows=buildNacha([{addenda:[1,1],codes:["22","22"]}]);rows[1]=field(rows[1]!,54,63,"HCCLAIMPMT");
       for(const i of [3,5]) rows[i]=field(rows[i]!,4,83,"TRN*1*TRACE*COMPANY~".padEnd(80));
       rows[badEntry]=field(rows[badEntry]!,2,3,"99");
-      const run=ach(rows,ORIGINATION_R2_PACK);
+      const run=ach(rows);
       for(const id of ["healthcare-addenda","healthcare-trn"]) {
         expect(state(run,`nacha.${id}`)).toBe("not-evaluated");
         expect(run.results.some(r=>r.ruleId===`nacha.${id}`&&r.outcome==="PASS")).toBe(true);
@@ -81,7 +80,7 @@ describe("rule completeness across independently scoped entities", () => {
   it("bounds incompleteness metadata by rule count rather than entity count", () => {
     const rows=buildNacha(Array.from({length:100},()=>({})));
     for(let i=2;i<302;i+=3) if(rows[i]?.startsWith("6")) rows[i]=field(rows[i]!,30,39,"NOTAMOUNT!");
-    const parsed=parseNacha(rows.join("\n"),ordinary);
+    const parsed=parseNacha(rows.join("\n"),ORIGINATION_R2_PACK);
     expect(parsed.incompleteChecks?.length).toBeGreaterThan(0);
     expect(new Set(parsed.incompleteChecks?.map(c=>c.ruleId)).size).toBe(parsed.incompleteChecks?.length);
     expect(parsed.incompleteChecks!.length).toBeLessThan(10);
@@ -93,7 +92,7 @@ it("reports CTX prerequisite incompleteness without deleting a real successful p
     const rows=buildNacha([{sec:"CTX",codes:["22","22"],addenda:[1,1]}]);
     for(const i of [3,5]) rows[i]=field(rows[i]!,4,83,"ST*820*1~BPR*C*1.00*C*ACH~SE*3*1~".padEnd(80));
     rows[badIndex]=field(rows[badIndex]!,2,3,"99");
-    const run=ach(rows,EXPANDED_NACHA_PACK);
+    const run=ach(rows);
     expect(state(run,"nacha.ctx-remittance")).toBe("not-evaluated");
     expect(run.checks?.find(c=>c.ruleId==="nacha.ctx-remittance")?.reason).toBeTruthy();
     expect(run.results.some(r=>r.ruleId==="nacha.ctx-remittance"&&r.outcome==="PASS")).toBe(true);
@@ -111,10 +110,10 @@ it("has bounded CSV incompleteness for many malformed rows and no false optional
 });
 
 // A known non-WEB SEC makes the WEB-only field inapplicable even when direction is unknown.
-it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("keeps non-WEB unknown codes inapplicable in $id", pack => {
+it("keeps non-WEB unknown codes inapplicable", () => {
   for (const sec of ["CCD", "PPD", "CTX"]) {
     for (const codes of [["99", "22"], ["22", "99"]]) {
-      const run = ach(buildNacha([{sec, codes}]), pack);
+      const run = ach(buildNacha([{sec, codes}]));
       expect(state(run, "nacha.web-credit-originator")).toBe("not-applicable");
       expect(state(run, "nacha.entry-amount")).toBe("not-evaluated");
       expect(run.verdict).toBe("FAIL");
@@ -122,10 +121,10 @@ it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("keeps non-WEB unknown codes
   }
 });
 
-it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("keeps non-CTX unknown codes inapplicable in $id", pack => {
+it("keeps non-CTX unknown codes inapplicable", () => {
   for (const sec of ["CCD", "PPD", "WEB", "TEL"]) {
     for (const codes of [["99", "22"], ["22", "99"]]) {
-      const run = ach(buildNacha([{sec, codes}]), pack);
+      const run = ach(buildNacha([{sec, codes}]));
       expect(state(run, "nacha.ctx-remittance")).toBe("not-applicable");
       expect(state(run, "nacha.remittance-required")).toBe("not-evaluated");
       expect(run.verdict).toBe("FAIL");

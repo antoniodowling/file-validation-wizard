@@ -100,50 +100,36 @@ const LEGACY_FORMAT_PACKS: readonly FormatPack[] = Object.freeze([
   ediPack("004010"),
   ediPack("005010"),
   ediPack("008030"),
-  Object.freeze({
-    id: "nacha-origination-public-2026",
-    family: "NACHA",
-    label: "NACHA / ACH — CCD, PPD, CTX, WEB, TEL originations",
-    version: "origination-public-2026",
-    parserKind: "NACHA_FIXED",
-    extensions: Object.freeze([".ach", ".txt"]),
-    guideUrl: NACHA_GUIDE_URL,
-    enabled: true,
-    mode: "CANDIDATE",
-    identifiers: Object.freeze({
-      kind: "NACHA_FIXED",
-      profile: "origination-public-2026",
-      secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]),
-    }),
-    approval: noApprovals,
-    rules: Object.freeze([Object.freeze({
-      id: "nacha.non-empty-source",
-      description: "The selected ACH file contains records.",
-      field: "File content",
-      defaultLocator: "file",
-      evaluate: (context: ValidationContext) => ({
-        outcome: context.source.length > 0 ? "PASS" as const : "ERROR" as const,
-        message: context.source.length > 0 ? "The ACH file contains records." : "The ACH file is empty.",
-      }),
-    })]),
-  } as FormatPack),
 ]);
 
-export const EXPANDED_NACHA_PACK: FormatPack = Object.freeze({
-  ...LEGACY_FORMAT_PACKS.find(pack => pack.id === "nacha-origination-public-2026")!,
-  id: "nacha-origination-expanded-public-2026-r1",
-  label: "NACHA / ACH — expanded entry types (public-source candidate)",
-  version: "origination-expanded-public-2026-r1",
-  identifiers: Object.freeze({ kind: "NACHA_FIXED", profile: "origination-expanded-public-2026-r1", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]) }),
-});
-
 export const ORIGINATION_R2_PACK: FormatPack = Object.freeze({
-  ...EXPANDED_NACHA_PACK,
   id: "nacha-origination-expanded-public-2026-r2",
+  family: "NACHA",
   label: "NACHA / ACH — expanded entries and declared healthcare (2026 r2 candidate)",
   version: "origination-expanded-public-2026-r2",
-  identifiers: Object.freeze({ kind: "NACHA_FIXED", profile: "origination-expanded-public-2026-r2", secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]) }),
+  parserKind: "NACHA_FIXED",
+  extensions: Object.freeze([".ach", ".txt"]),
+  guideUrl: NACHA_GUIDE_URL,
+  enabled: true,
+  mode: "CANDIDATE",
+  identifiers: Object.freeze({
+    kind: "NACHA_FIXED",
+    profile: "origination-expanded-public-2026-r2",
+    secCodes: Object.freeze(["CCD", "PPD", "CTX", "WEB", "TEL"]),
+  }),
+  approval: noApprovals,
+  rules: Object.freeze([Object.freeze({
+    id: "nacha.non-empty-source",
+    description: "The selected ACH file contains records.",
+    field: "File content",
+    defaultLocator: "file",
+    evaluate: (context: ValidationContext) => ({
+      outcome: context.source.length > 0 ? "PASS" as const : "ERROR" as const,
+      message: context.source.length > 0 ? "The ACH file contains records." : "The ACH file is empty.",
+    }),
+  })]),
 });
+
 const flatCandidate = (id: string, family: FormatPack["family"], version: string, identifiers: NonNullable<FormatPack["identifiers"]>, guideUrl: string): FormatPack => Object.freeze({
   id, family, label: family, version, parserKind: identifiers.kind, identifiers,
   extensions: Object.freeze(family === "NACHA Returns" ? [".ach", ".txt"] : [".txt"]),
@@ -168,7 +154,7 @@ export const CSV_WIRE_PACK: FormatPack = Object.freeze({
   label: "CSV Wire — Huntington public-guide candidate",
   extensions: Object.freeze([".csv", ".txt"]),
 });
-export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK, CSV_WIRE_PACK]);
+export const FORMAT_PACKS: readonly FormatPack[] = Object.freeze([...LEGACY_FORMAT_PACKS, ORIGINATION_R2_PACK, RETURNS_PACK, CONTROL_TOTAL_PACK, ACK_PACK, BAI2_PACK, CSV_WIRE_PACK]);
 
 export function formatPackReleaseErrors(pack: FormatPack): readonly string[] {
   if (!pack.enabled) return [];

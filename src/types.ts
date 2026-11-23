@@ -63,7 +63,7 @@ export interface EdiVersionIdentifiers {
 
 export interface NachaVersionIdentifiers {
   readonly kind: "NACHA_FIXED";
-  readonly profile: "origination-public-2026" | "origination-expanded-public-2026-r1" | "origination-expanded-public-2026-r2";
+  readonly profile: "origination-expanded-public-2026-r2";
   readonly secCodes: readonly string[];
 }
 

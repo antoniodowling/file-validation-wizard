@@ -1,26 +1,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EXPANDED_NACHA_PACK } from "../src/format-packs";
+import { ORIGINATION_R2_PACK } from "../src/format-packs";
+import { provenanceFor } from "../src/coverage";
 import { validateSource } from "../src/validation";
 import { validateWorkerRequest } from "../src/worker-request";
-import { coverageFor, provenanceFor } from "../src/coverage";
-import { NACHA_EXPANDED_RULE_IDS } from "../src/parsers/nacha";
 import { ctxX12Syntax } from "../src/parsers/ach-remittance";
 import { ResourceLimitError } from "../src/resource-policy";
 import { field } from "./nacha-builder";
-import { expandedSnapshots as snapshot } from "./current-coverage";
-const pack = EXPANDED_NACHA_PACK;
+const pack = ORIGINATION_R2_PACK;
 const fixture = (name: string) => readFileSync(`demo-files/nacha-expanded/${name}.ach`, "utf8");
 const run = (source: string) => validateSource("synthetic.ach", source, pack);
 const change = (source: string, row: number, from: number, to: number, value: string) => source.split("\n").map((line, i) => i === row ? field(line, from, to, value) : line).join("\n");
 const state = (source: string, id: string) => run(source).checks?.find(check => check.ruleId === `nacha.${id}`)?.state;
-describe("expanded origination revision", () => {
-  it("pins separate coverage with all approvals false and preserves legacy snapshots", () => {
-    const { buildRevision, ...actual } = provenanceFor(pack);
-    expect([actual]).toEqual(snapshot);
-    expect(coverageFor(pack).map(rule => rule.id)).toEqual([...NACHA_EXPANDED_RULE_IDS.slice(0, 42), "nacha.non-empty-source", ...NACHA_EXPANDED_RULE_IDS.slice(42)]);
-    expect(Object.values(pack.approval)).toEqual([false, false, false, false, false]);
-  });
+describe("R2 extended entry types and CTX", () => {
   it("independently verifies a known entry’s zero amounts and exact count/hash controls from source positions", () => {
     const rows = fixture("ccd-24-pass").trimEnd().split("\n");
     expect(rows[2]?.slice(1, 3)).toBe("24"); expect(rows[2]?.slice(29, 39)).toBe("0000000000");

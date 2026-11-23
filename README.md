@@ -4,7 +4,7 @@ A browser-local demo for exploring and validating payment-file formats. The wiza
 
 - a focused catalog of PAIN.001, PAIN.008, ASC X12 EDI 820, NACHA origination, ACH Returns, Huntington control totals, File Received ACK, BAI2, and CSV Wire;
 - nine ISO/X12 profiles, with three versions per format;
-- six ACH candidates across four format families, including three origination revisions for CCD, PPD, CTX, WEB, and TEL;
+- four ACH candidates across four format families, including NACHA Origination for CCD, PPD, CTX, WEB, and TEL;
 - one Huntington-guide BAI2 reporting candidate with multiple groups/accounts, continuations, and exact trailer controls;
 - one Huntington CSV Wire candidate for 54-field domestic USD and 58-field international USD imports within its [declared scope](docs/CSV_WIRE_SOURCE_SCOPE.md); and
 - a read-only file explorer on the dedicated explorer page. Findings link to the source or nearby context; findings without a source location are labeled explicitly.
@@ -57,7 +57,7 @@ Select the format and version shown, upload a linked file, and press **Validate*
 | --- | --- | --- | --- |
 | PAIN.001 | pain.001.001.09 | [PASS](demo-files/pain.001.001.09-pass.xml), [PASS WITH WARNINGS](demo-files/pain.001.001.09-pass-with-warnings.xml), [FAIL](demo-files/pain.001.001.09-fail.xml), [FAIL with warning + error](demo-files/mixed-findings/pain.001.001.09-fail-with-warnings.xml) | Missing XML declaration |
 | 820 (ASC X12) | 005010 | [PASS](demo-files/hnb-validator-stress-files/11-edi-820-005010-baseline-pass.edi), the small baseline from the stress kit | None implemented |
-| NACHA | Expanded entries and declared healthcare — candidate (2026 r2) | [PASS](demo-files/ach-candidates/origination-healthcare-pass.ach), [PASS WITH WARNINGS](demo-files/nacha-expanded/effective-weekend-warning.ach), [FAIL](demo-files/ach-candidates/origination-healthcare-missing-fail.ach), [FAIL with warning + error](demo-files/mixed-findings/nacha-r2-fail-with-warnings.ach) | Weekend effective date; populated operator settlement date |
+| NACHA | NACHA Origination | [PASS](demo-files/ach-candidates/origination-healthcare-pass.ach), [PASS WITH WARNINGS](demo-files/nacha-expanded/effective-weekend-warning.ach), [FAIL](demo-files/ach-candidates/origination-healthcare-missing-fail.ach), [FAIL with warning + error](demo-files/mixed-findings/nacha-r2-fail-with-warnings.ach) | Weekend effective date; populated operator settlement date |
 | ACH Returns | General network returns — public-source candidate (2026 r1) | [PASS](demo-files/ach-candidates/returns-ccd-pass.ach), [FAIL](demo-files/ach-candidates/returns-trace-fail.ach) | None implemented |
 | ACH Control Totals | 58-column standalone candidate (2026 r1) | [PASS](demo-files/ach-candidates/totals-pass.txt), [FAIL](demo-files/ach-candidates/totals-date-fail.txt) | None implemented |
 | File Received ACK | Single pipe-delimited scenario — candidate (1.0 r1) | [PASS](demo-files/ach-candidates/ack-received-pass.txt), [FAIL](demo-files/ach-candidates/ack-date-fail.txt) | None for ACK syntax; see disposition note below |
@@ -86,7 +86,7 @@ Each kit covers valid inputs, specific errors, warnings, or unsupported cases. E
 | --- | ---: | --- |
 | XML files directly in `demo-files/` | 6 | PAIN.001.001.09 result presentation, malformed XML, and prerequisite handling; hashes are recorded in [synthetic provenance](tests/fixtures/synthetic-provenance.json) |
 | [nacha/](demo-files/nacha/README.md) | 69 | Original **Public specification profile (2026 review)**, retained for regression and historical comparisons |
-| [nacha-expanded/](demo-files/nacha-expanded/README.md) | 159 | **Expanded entry types — public-source candidate (2026 r1)**, retained alongside r2 |
+| [nacha-expanded/](demo-files/nacha-expanded/README.md) | 159 | **Expanded entry types — public-source candidate (2026 r1)**, retained as historical evidence |
 | [ach-candidates/](demo-files/ach-candidates/README.md) | 57 | Latest origination r2, ordinary Returns/COR, control totals, and ACK candidates; each manifest entry names its profile |
 | [bai2/](demo-files/bai2/README.md) | 22 | Huntington BAI2 candidate: 21 synthetic fixtures and one preserved public guide sample |
 | [csv-wire/](demo-files/csv-wire/README.md) | 23 | Synthetic domestic/international USD CSV Wire input, failures and unsupported scenarios; separate candidate r1 and manifest |
@@ -97,7 +97,7 @@ The remaining PAIN.001 examples cover:
 - [syntax-error.xml](demo-files/pain.001.001.09-syntax-error.xml): the correct namespace with an unclosed `PmtInf` element, producing FAIL with parser-position navigation.
 - [multiple-errors.xml](demo-files/pain.001.001.09-multiple-errors.xml) and [multiple-errors-resolved.xml](demo-files/pain.001.001.09-multiple-errors-resolved.xml): a broken message container and its corrected companion. The broken file also has a blank message ID and nonnumeric transaction count, but reports only the container error until that prerequisite is valid. Descendant checks and the dependent declaration advisory are skipped. The corrected companion passes the current DEMO checks; the original preserves earlier report history.
 
-Keep all profile revisions and their fixtures. Malformed inputs, fixed-width spaces, line endings, and historical expectations are intentional; do not normalize them. The kit READMEs describe generation and comparison procedures.
+Keep archived profile reports and their fixtures. Malformed inputs, fixed-width spaces, line endings, and historical expectations are intentional; do not normalize them. The kit READMEs describe generation and comparison procedures.
 
 ### Stress files
 
@@ -105,13 +105,13 @@ The [14-file stress kit](demo-files/hnb-validator-stress-files/README.md) covers
 
 ## Catalog and validation profiles
 
-The display catalog is defined in `src/format-catalog.ts`; executable parsers and rules are registered in `src/format-packs.ts`. The nine ISO/X12 profiles are `DEMO`. The six ACH profiles are `CANDIDATE` revisions based on public specifications and declared scenarios. None is an approved production pack or a complete 2026 Operating Rules implementation.
+The display catalog is defined in `src/format-catalog.ts`; executable parsers and rules are registered in `src/format-packs.ts`. The nine ISO/X12 profiles are `DEMO`. The four ACH profiles are `CANDIDATE` revisions based on public specifications and declared scenarios. None is an approved production pack or a complete 2026 Operating Rules implementation.
 
-For NACHA origination, r2 is the latest candidate; the original profile and r1 remain selectable. The original **Public specification profile (2026 review)** supports ordinary monetary transaction codes 22, 27, 32, 37, and 52 across the five supported SEC codes in separate batches. It accepts balanced and unbalanced files when controls reconcile, with LF, CRLF, CR, or concatenated 94-character framing. See [original NACHA scope](docs/NACHA_SOURCE_REVIEW.md), [expanded r1 scope and gates](docs/ACH_ORIGINATION_EXPANDED.md), and [origination r2](docs/ACH_ORIGINATION_R2.md) for revision-specific rules.
+NACHA Origination uses the consolidated R2 public-source candidate for CCD, PPD, CTX, WEB, and TEL. It supports monetary, prenote, zero-dollar remittance, and qualified reversal entries, including mixed batches. It accepts balanced and unbalanced files when controls reconcile, with LF, CRLF, CR, or concatenated 94-character framing. The original and R1 profiles are retired. See [R2 scope](docs/ACH_ORIGINATION_R2.md) and [archived coverage](docs/coverage/nacha-retired-report-schema-4.0.0.json).
 
-The other ACH candidates cover [ordinary network Returns/COR](docs/ACH_RETURNS_CANDIDATE.md), [Huntington standalone control totals](docs/HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md), and [Huntington single-scenario ACK](docs/HUNTINGTON_ACK_CANDIDATE.md). Their supported checks and exclusions are recorded in [version-bound coverage](docs/coverage/ach-candidates-1.0.0.json). These four latest candidates export schema 3; the earlier profiles retain schema 2. ACK exports record reported disposition separately from the validation verdict.
+The other ACH candidates cover [ordinary network Returns/COR](docs/ACH_RETURNS_CANDIDATE.md), [Huntington standalone control totals](docs/HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md), and [Huntington single-scenario ACK](docs/HUNTINGTON_ACK_CANDIDATE.md). Their supported checks and exclusions are recorded in [version-bound coverage](docs/coverage/ach-candidates-1.0.0.json). These candidates export schema 4. ACK exports record reported disposition separately from the validation verdict.
 
-BAI2 adds a seventh CANDIDATE profile, **Huntington public-guide candidate (BAI2 2026 r1)**. It checks the declared line-based USD reporting scenario, continuations, hierarchy, fields and trailer controls, with schema-3 exports. Funds availability layouts and other unqualified scenarios receive no verdict. See [source scope and assumptions](docs/BAI2_SOURCE_SCOPE.md) and [fixtures](demo-files/bai2/README.md).
+BAI2 offers the **Huntington public-guide candidate (BAI2 2026 r1)**. It checks the declared line-based USD reporting scenario, continuations, hierarchy, fields and trailer controls, with schema-4 exports. Funds availability layouts and other unqualified scenarios receive no verdict. See [source scope and assumptions](docs/BAI2_SOURCE_SCOPE.md) and [fixtures](demo-files/bai2/README.md).
 
 To enable a production pack, provide its exact version identifiers, approved guide URL, approved rules and fixtures, and Product/SC/FT sign-offs. The registry fails closed when any of those production release gates are missing.
 

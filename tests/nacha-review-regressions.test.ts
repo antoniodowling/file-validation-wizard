@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { FORMAT_PACKS, EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK } from "../src/format-packs";
+import { ORIGINATION_R2_PACK } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { buildNacha, field } from "./nacha-builder";
-const ordinary = FORMAT_PACKS.find(p => p.id === "nacha-origination-public-2026")!;
 const healthcare = (payload: string) => {
   const rows = buildNacha([{ addenda: [1] }]);
   rows[1] = field(rows[1]!, 54, 63, "HCCLAIMPMT");
@@ -10,22 +9,14 @@ const healthcare = (payload: string) => {
   return rows;
 };
 describe("independent review ACH scope and payload boundaries", () => {
-  it.each(["REVERSAL", "REVERSAL42", "42REVERSAL", "reversal42", "42Reversal"])("withholds ordinary verdict for %s", description => {
-    const rows = buildNacha(); rows[1] = field(rows[1]!, 54, 63, description.padEnd(10));
-    const run = validateSource("synthetic.ach", rows.join("\n"), ordinary);
-    expect(run.executionStatus).toBe("UNSUPPORTED"); expect(run.verdict).toBeNull(); expect(run.executionReason).toContain("reversal");
-  });
-  it("withholds a mixed ordinary/reversal file in either batch order", () => {
+  it.each(["REVERSAL", "REVERSAL42", "42REVERSAL", "reversal42", "42Reversal"])("evaluates the declared reversal marker %s", description => {
     for (const index of [1, 4]) {
-      const rows = buildNacha([{}, {}]); rows[index] = field(rows[index]!,54,63,"REVERSAL42");
-      expect(validateSource("synthetic.ach", rows.join("\n"), ordinary).verdict).toBeNull();
-    }
-  });
-  it.each([EXPANDED_NACHA_PACK, ORIGINATION_R2_PACK])("retains expanded marker case checks in $id", pack => {
-    for (const marker of ["REVERSAL42", "reversal42"]) {
-      const rows = buildNacha(); rows[1] = field(rows[1]!,54,63,marker);
-      const run = validateSource("synthetic.ach",rows.join("\n"),pack);
-      expect(run.results.find(r=>r.ruleId==="nacha.reversal-marker")?.outcome).toBe(marker === "REVERSAL42" ? "PASS" : "ERROR");
+      const rows = buildNacha([{}, {}]);
+      rows[index] = field(rows[index]!, 54, 63, description.padEnd(10));
+      const run = validateSource("synthetic.ach", rows.join("\n"), ORIGINATION_R2_PACK);
+      const outcome = description.includes("REVERSAL") ? "PASS" : "ERROR";
+      expect(run.verdict).toBe(outcome === "PASS" ? "PASS" : "FAIL");
+      expect(run.results.find(r => r.ruleId === "nacha.reversal-marker")?.outcome).toBe(outcome);
     }
   });
   it.each(["~", "\\"])("admits generic TRN terminator %s with optional TRN04", term => {
@@ -54,7 +45,7 @@ describe("independent review ACH scope and payload boundaries", () => {
       for(let i=0;i<3;i++) rows[3+i]=field(rows[3+i]!,4,83,padded.slice(i*80,(i+1)*80));
       rows[3+badChunk]=field(rows[3+badChunk]!,4,83,"~!~".padEnd(80,"!"));
       const source=rows.join(separator);
-      const found=validateSource("synthetic.ach",source,EXPANDED_NACHA_PACK).results.find(r=>r.ruleId==="nacha.ctx-remittance")!;
+      const found=validateSource("synthetic.ach",source,ORIGINATION_R2_PACK).results.find(r=>r.ruleId==="nacha.ctx-remittance")!;
       expect(found.outcome).toBe("ERROR");
       if(found.location?.kind!=="located") throw Error("Missing location");
       const targets=[found.location.primary,...found.location.related];expect(targets).toHaveLength(3);
@@ -66,7 +57,7 @@ describe("independent review ACH scope and payload boundaries", () => {
 it("bounds payload context and retains the first failing entry's payload", () => {
   const rows = buildNacha([{sec:"CTX",codes:["22","22"],addenda:[40,1]}]);
   const source = rows.join("\r\n");
-  const finding=validateSource("synthetic.ach",source,EXPANDED_NACHA_PACK).results.find(r=>r.ruleId==="nacha.ctx-remittance")!;
+  const finding=validateSource("synthetic.ach",source,ORIGINATION_R2_PACK).results.find(r=>r.ruleId==="nacha.ctx-remittance")!;
   expect(finding.outcome).toBe("ERROR"); expect(finding.message).toContain("2 violations");
   if(finding.location?.kind!=="located") throw Error("Missing payload context");
   expect(finding.location.related).toHaveLength(32); expect(finding.location.relatedTruncated).toBe(true);
@@ -74,7 +65,7 @@ it("bounds payload context and retains the first failing entry's payload", () =>
 });
 
 it("keeps ordinary descriptions in scope and preserves healthcare prerequisite suppression", () => {
-  expect(validateSource("synthetic.ach",buildNacha().join("\n"),ordinary).verdict).toBe("PASS");
+  expect(validateSource("synthetic.ach",buildNacha().join("\n"),ORIGINATION_R2_PACK).verdict).toBe("PASS");
   const rows=healthcare("TRN*1*TRACE*COMPANY\\");rows[3]=field(rows[3]!,2,3,"99");
   const run=validateSource("synthetic.ach",rows.join("\n"),ORIGINATION_R2_PACK);
   expect(run.verdict).toBe("FAIL");

@@ -1,19 +1,31 @@
 import { describe, expect, it } from "vitest";
-import type { FindingLocation, FormatPack } from "../src/types";
-import { NACHA_RULE_IDS, parseNacha } from "../src/parsers/nacha";
+import type { FindingLocation } from "../src/types";
+import { NACHA_ORIGINATION_R2_RULE_IDS, parseNacha } from "../src/parsers/nacha";
+import { ORIGINATION_R2_PACK } from "../src/format-packs";
 import { buildNacha, field } from "./nacha-builder";
-const pack = { identifiers: { kind: "NACHA_FIXED", profile: "origination-public-2026", secCodes: ["CCD", "PPD", "CTX", "WEB", "TEL"] } } as unknown as FormatPack;
-const parse = (rows: string[] | string) => parseNacha(typeof rows === "string" ? rows : rows.join("\n"), pack);
+const parse = (rows: string[] | string) => parseNacha(typeof rows === "string" ? rows : rows.join("\n"), ORIGINATION_R2_PACK);
 const errors = (rows: string[] | string) => parse(rows).results.filter((r) => r.outcome === "ERROR");
 const bad = (rows: string[], record: number, from: number, to: number, value: string) => rows.map((row, i) => i === record ? field(row, from, to, value) : row);
 const fails = (rows: string[] | string, id: string) => expect(errors(rows).map((r) => r.ruleId)).toContain(`nacha.${id}`);
-describe("NACHA ordinary origination parser", () => {
+function withCtxRemittance(rows: string[]): string[] {
+  let ctx = false;
+  let firstAddenda = true;
+  return rows.map(row => {
+    if (row[0] === "5") ctx = row.slice(50, 53) === "CTX";
+    if (row[0] === "6") firstAddenda = true;
+    if (row[0] !== "7" || !ctx) return row;
+    const payload = firstAddenda ? "ST*820*1~BPR*C*1.00*C*ACH~SE*3*1~" : "";
+    firstAddenda = false;
+    return field(row, 4, 83, payload.padEnd(80));
+  });
+}
+describe("NACHA R2 origination parser", () => {
   it.each(["CCD", "PPD", "CTX", "WEB", "TEL"])("accepts %s and mixed SEC batches", (sec) => {
-    expect(errors(buildNacha([{ sec, addenda: [sec === "CTX" ? 2 : sec === "TEL" ? 0 : 1] }]))).toEqual([]);
+    expect(errors(withCtxRemittance(buildNacha([{ sec, addenda: [sec === "CTX" ? 2 : sec === "TEL" ? 0 : 1] }])))).toEqual([]);
   });
   it("accepts every supported ordinary account code and both balancing modes", () => {
     expect(errors(buildNacha([{ codes: ["22", "27", "32", "37", "52"], amounts: [1n, 2n, 3n, 4n, 5n] }]))).toEqual([]);
-    expect(errors(buildNacha([{ codes: ["22", "27"], amounts: [125n, 125n] }, { sec: "CTX", addenda: [4] }, { sec: "WEB" }, { sec: "TEL" }]))).toEqual([]);
+    expect(errors(withCtxRemittance(buildNacha([{ codes: ["22", "27"], amounts: [125n, 125n] }, { sec: "CTX", addenda: [4] }, { sec: "WEB" }, { sec: "TEL" }])))).toEqual([]);
   });
   it.each(["\n", "\r\n", "\r", ""])("preserves complete records using %j framing", (delimiter) => {
     const source = buildNacha().join(delimiter) + delimiter;
@@ -44,7 +56,6 @@ describe("NACHA ordinary origination parser", () => {
     expect(errors(bad(buildNacha(), 0, 30, 33, "    "))).toEqual([]);
     fails(bad(buildNacha(), 1, 70, 75, "260231"), "effective-date");
     fails(bad(buildNacha(), 1, 5, 20, " ".repeat(16)), "batch-required");
-    expect(() => parse(bad(buildNacha(), 1, 54, 63, "REVERSAL  "))).toThrow("outside the ordinary origination profile");
   });
   it("reports weekends and operator settlement dates as warnings", () => {
     expect(parse(bad(buildNacha(), 1, 70, 75, "261017")).results.find((r) => r.ruleId === "nacha.effective-weekend")?.outcome).toBe("WARNING");
@@ -71,8 +82,9 @@ describe("NACHA ordinary origination parser", () => {
     for (const value of ["021000020", "000000000", "991234560"]) fails(bad(buildNacha(), 2, 4, 12, value), "routing");
     fails(bad(buildNacha(), 1, 80, 87, "00000000"), "odfi");
   });
-  it("rejects prenotes, remittance-only, loan reversals and zero amounts", () => {
-    for (const code of ["23", "24", "28", "29", "33", "34", "38", "39", "53", "54", "55", "99"]) fails(bad(buildNacha(), 2, 2, 3, code), "transaction-code");
+  it("rejects unknown codes, undeclared loan reversals and invalid monetary amounts", () => {
+    fails(bad(buildNacha(), 2, 2, 3, "99"), "transaction-code");
+    fails(bad(buildNacha(), 2, 2, 3, "55"), "reversal-transaction");
     fails(bad(buildNacha(), 2, 30, 39, "0000000000"), "entry-amount");
     fails(bad(buildNacha(), 2, 30, 39, "0000001.00"), "entry-amount");
   });
@@ -106,7 +118,7 @@ describe("NACHA ordinary origination parser", () => {
     fails(bad(buildNacha([{ sec: "CTX", addenda: [2] }]), 2, 55, 58, "0001"), "addenda-count");
   });
   it("accepts CTX maximum and rejects 10,000 addenda", () => {
-    expect(errors(buildNacha([{ sec: "CTX", addenda: [9999] }]))).toEqual([]);
+    expect(errors(withCtxRemittance(buildNacha([{ sec: "CTX", addenda: [9999] }])))).toEqual([]);
     const rows = buildNacha([{ sec: "CTX", addenda: [9999] }]);
     rows.splice(10002, 0, "705" + " ".repeat(80) + "00000000001");
     fails(rows, "addenda-count");
@@ -126,7 +138,7 @@ describe("NACHA ordinary origination parser", () => {
   });
   it("bounds repeated findings and never includes private field values", () => {
     const rows = buildNacha([{ codes: Array(2000).fill("22") }]).map((row) => row[0] === "6" ? field(row, 4, 12, "000000000") : row);
-    const output = parse(rows); expect(output.results.length).toBeLessThanOrEqual(NACHA_RULE_IDS.length);
+    const output = parse(rows); expect(output.results.length).toBeLessThanOrEqual(NACHA_ORIGINATION_R2_RULE_IDS.length);
     expect(output.results.find((r) => r.ruleId === "nacha.routing")?.message).toContain("2000 violations");
     expect(JSON.stringify(output.results)).not.toContain("SYNTHETIC NAME");
   });
@@ -135,7 +147,7 @@ describe("NACHA ordinary origination parser", () => {
     const result = parse(source).results.find((r) => r.ruleId === "nacha.routing") as { location: FindingLocation } | undefined;
     expect(result?.location.kind).toBe("located");
     if (result?.location.kind === "located") expect(result.location.primary.span).toEqual({ start: 195, end: 204 });
-    expect(new Set(NACHA_RULE_IDS).size).toBe(NACHA_RULE_IDS.length);
-    expect(parse(source).results.every((r) => NACHA_RULE_IDS.includes(r.ruleId))).toBe(true);
+    expect(new Set(NACHA_ORIGINATION_R2_RULE_IDS).size).toBe(NACHA_ORIGINATION_R2_RULE_IDS.length);
+    expect(parse(source).results.every((r) => NACHA_ORIGINATION_R2_RULE_IDS.includes(r.ruleId))).toBe(true);
   });
 });

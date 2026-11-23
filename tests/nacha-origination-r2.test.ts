@@ -1,12 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { FormatPack } from "../src/types";
-import { EXPANDED_NACHA_PACK } from "../src/format-packs";
+import { ORIGINATION_R2_PACK as pack } from "../src/format-packs";
 import { parseNacha, NACHA_ORIGINATION_R2_RULE_IDS } from "../src/parsers/nacha";
 import { originationR2CoverageFor } from "../src/nacha-origination-r2-coverage";
-import { expandedNachaCoverageFor } from "../src/nacha-expanded-coverage";
 import { buildNacha, field } from "./nacha-builder";
-const pack = { ...EXPANDED_NACHA_PACK, id: "nacha-origination-expanded-public-2026-r2", identifiers: { ...EXPANDED_NACHA_PACK.identifiers, profile: "origination-expanded-public-2026-r2" } } as unknown as FormatPack;
 const source = (sec = "CCD", code = "22", description = "HCCLAIMPMT", payload: string | null = "TRN*1*TRACE*COMPANY~") => {
   const rows = buildNacha([{ sec, codes: [code], amounts: [code === "23" ? 0n : 12345n], addenda: [payload === null ? 0 : 1], ...(code === "23" ? { service: "220" } : {}) }]);
   rows[1] = field(rows[1]!, 54, 63, description.padEnd(10));
@@ -15,9 +12,11 @@ const source = (sec = "CCD", code = "22", description = "HCCLAIMPMT", payload: s
 };
 const state = (text: string, id: string) => parseNacha(text, pack).results.find(result => result.ruleId === `nacha.${id}`)?.outcome;
 describe("origination r2 declarations", () => {
-  it("extends frozen r1 coverage only by the four new rules", () => {
-    expect(originationR2CoverageFor(pack).slice(0, -4)).toEqual(expandedNachaCoverageFor(pack));
-    expect(originationR2CoverageFor(pack).map(rule => rule.id).filter(id => id !== "nacha.non-empty-source")).toEqual(NACHA_ORIGINATION_R2_RULE_IDS);
+  it("covers exactly the 51 parser checks and the configured source check", () => {
+    const ids = originationR2CoverageFor(pack).map(rule => rule.id);
+    expect(ids).toHaveLength(52);
+    expect(new Set(ids).size).toBe(52);
+    expect(new Set(ids)).toEqual(new Set([...NACHA_ORIGINATION_R2_RULE_IDS, ...pack.rules.map(rule => rule.id)]));
   });
   it("accepts declared healthcare CCD with a whole TRN and preserves payload padding", () => {
     const text = source();
@@ -67,8 +66,7 @@ describe("origination r2 declarations", () => {
     const badIndicator = source().split("\n"); badIndicator[2] = field(badIndicator[2]!, 79, 79, "0");
     expect(state(badIndicator.join("\n"), "healthcare-addenda")).toBe("ERROR");
   });
-  it("preserves r1 descriptors and source-gated payload/account behavior", () => {
-    expect(parseNacha(source("CCD", "22", "HCCLAIMPMT", null), EXPANDED_NACHA_PACK).results.some(rule => rule.ruleId === "nacha.healthcare-addenda")).toBe(false);
+  it("preserves source-gated payload and account behavior", () => {
     for (const name of ["ctx-edifact-unsupported", "web-loan-unsupported"])
       expect(() => parseNacha(readFileSync(`demo-files/nacha-expanded/${name}.ach`, "utf8"), pack)).toThrow(/source|qualif/i);
   });

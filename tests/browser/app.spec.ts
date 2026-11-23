@@ -136,11 +136,11 @@ test("format controls fit and stack in the narrow explorer pane", async ({ page 
   expect(Math.max(...geometry.map(box => box.right)) - Math.min(...geometry.map(box => box.right))).toBeLessThan(2);
 });
 
-test("opens the NACHA public profile and removes unsupported catalog formats", async ({ page }) => {
+test("opens the NACHA Origination profile and removes unsupported catalog formats", async ({ page }) => {
   await page.goto("/");
   await page.locator("#format-search").fill("MT940");
   await expect(page.locator('#format-listbox [role="option"]')).toHaveCount(0);
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await expect(page.getByText("Supports CCD, PPD, CTX, WEB, and TEL batches, including mixed files.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.locator("#upload-title")).toHaveText("Upload your NACHA / ACH file");
@@ -149,18 +149,18 @@ test("opens the NACHA public profile and removes unsupported catalog formats", a
 
 test("validates mixed NACHA files, warnings and errors with exact source navigation and CSV", async ({ page }) => {
   await page.goto("/");
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-public-2026");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Continue" }).click();
   const upload = async (file: string) => {
-    await page.locator("#file-input").setInputFiles(demoFile(`nacha/${file}`));
+    await page.locator("#file-input").setInputFiles(demoFile(`nacha-expanded/${file}`));
     await page.getByRole("button", { name: "Validate file" }).click();
   };
   await upload("mixed-five-sec-pass.ach");
   await expect(page.locator("#results-title")).toHaveText("PASS");
-  await expect(page.locator("#result-basis")).toContainText("Passing does not establish full Nacha Rules compliance or bank acceptance.");
+  await expect(page.locator("#result-basis")).toContainText("original matching, real purpose, deadlines and complete remittance business guides are unverified.");
   const download = page.waitForEvent("download");
   await page.locator("#export-csv").click();
-  expect((await download).suggestedFilename()).toContain("nacha-origination-public-2026");
+  expect((await download).suggestedFilename()).toContain("nacha-origination-expanded-public-2026-r2");
   await page.locator('[data-open-step="2"].button').click();
   await upload("effective-weekend-warning.ach");
   await expect(page.locator("#results-title")).toHaveText("PASS WITH WARNINGS");
@@ -193,14 +193,14 @@ test("offers only formats and versions with enabled validators", async ({ page }
     ["pain.001", ["pain.001.001.03", "pain.001.001.09", "pain.001.001.13"]],
     ["pain.008", ["pain.008.001.02", "pain.008.001.08", "pain.008.001.12"]],
     ["820", ["004010", "005010", "008030"]],
-    ["NACHA", ["origination-public-2026", "origination-expanded-public-2026-r1", "origination-expanded-public-2026-r2"]],
+    ["NACHA", ["origination-expanded-public-2026-r2"]],
     ["ACH Returns", ["returns-network-public-2026-r1"]],
     ["ACH Control Totals", ["control-total-public-2026-r1"]],
     ["File Received ACK", ["pipe-1.0-candidate-r1"]],
   ] as const) {
     await search.fill(query);
     await (query === "NACHA" ? options.filter({hasText:"ACH Payment Instructions"}) : options).click();
-    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-public-2026" ? "Public specification profile (2026 review)" : version === "origination-expanded-public-2026-r1" ? "Expanded entry types — public-source candidate (2026 r1)" : version === "origination-expanded-public-2026-r2" ? "Expanded entries and declared healthcare — candidate (2026 r2)" : version === "returns-network-public-2026-r1" ? "General network returns — public-source candidate (2026 r1)" : version === "control-total-public-2026-r1" ? "58-column standalone candidate (2026 r1)" : version === "pipe-1.0-candidate-r1" ? "Single pipe-delimited scenario — candidate (1.0 r1)" : version)]);
+    await expect(page.locator("#version-select option")).toHaveText(["Select a version", ...versions.map(version => version === "origination-expanded-public-2026-r2" ? "NACHA Origination" : version === "returns-network-public-2026-r1" ? "General network returns — public-source candidate (2026 r1)" : version === "control-total-public-2026-r1" ? "58-column standalone candidate (2026 r1)" : version === "pipe-1.0-candidate-r1" ? "Single pipe-delimited scenario — candidate (1.0 r1)" : version)]);
     for (const version of versions) {
       await page.locator("#version-select").selectOption(version);
       await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
@@ -565,11 +565,11 @@ test("uses the embedded portal presentation and has no detectable accessibility 
 });
 
 
-test("expanded NACHA candidate runs locally, exports its coverage, navigates a failure and clears stale verdicts", async ({ page }) => {
+test("NACHA Origination runs locally, exports its coverage, navigates a failure and clears stale verdicts", async ({ page }) => {
   const sourcePosts: string[] = [];
   page.on("request", request => { if (request.postData()?.includes("SYNTHETIC")) sourcePosts.push(request.url()); });
   await page.goto("/");
-  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r1");
+  await chooseFormat(page, "NACHA", /NACHA.*ACH Payment Instructions/i, "origination-expanded-public-2026-r2");
   await expect(page.locator("#format-selection-help")).toContainText("monetary, prenote, zero-dollar remittance and reversal");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
@@ -577,9 +577,9 @@ test("expanded NACHA candidate runs locally, exports its coverage, navigates a f
   await expect(page.locator("#results-title")).toHaveText("PASS");
   await expect(page.locator("#result-basis")).toContainText("Expanded public-source candidate");
   const csvDownload = page.waitForEvent("download"); await page.locator("#export-csv").click();
-  const csv = await csvDownload; expect(csv.suggestedFilename()).toContain("origination-expanded-public-2026-r1");
+  const csv = await csvDownload; expect(csv.suggestedFilename()).toContain("origination-expanded-public-2026-r2");
   const jsonDownload = page.waitForEvent("download"); await page.locator("#export-json").click();
-  const json = await jsonDownload; expect(json.suggestedFilename()).toContain("origination-expanded-public-2026-r1");
+  const json = await jsonDownload; expect(json.suggestedFilename()).toContain("origination-expanded-public-2026-r2");
   await page.getByRole("button", { name: "Back to file" }).click();
   await page.locator("#file-input").setInputFiles(demoFile("nacha-expanded/prenote-amount-fail.ach"));
   await page.getByRole("button", { name: "Validate file" }).click();

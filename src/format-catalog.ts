@@ -62,18 +62,8 @@ export const FORMAT_CATALOG: readonly FormatCatalogEntry[] = Object.freeze([
     "Corporate Credit or Debit", "Prearranged Payment and Deposit", "Corporate Trade Exchange",
     "Internet-Initiated", "Telephone-Initiated",
   ], [Object.freeze({
-    id: "origination-public-2026",
-    label: "Public specification profile (2026 review)",
-    extensions: ACH_EXTENSIONS,
-    validationProfileId: "nacha-origination-public-2026",
-  }), Object.freeze({
-    id: "origination-expanded-public-2026-r1",
-    label: "Expanded entry types — public-source candidate (2026 r1)",
-    extensions: ACH_EXTENSIONS,
-    validationProfileId: "nacha-origination-expanded-public-2026-r1",
-  }), Object.freeze({
     id: "origination-expanded-public-2026-r2",
-    label: "Expanded entries and declared healthcare — candidate (2026 r2)",
+    label: "NACHA Origination",
     extensions: ACH_EXTENSIONS,
     validationProfileId: "nacha-origination-expanded-public-2026-r2",
   })]),

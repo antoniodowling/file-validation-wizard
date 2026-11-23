@@ -4,9 +4,7 @@ import { bai2CoverageFor, BAI2_REVISION, BAI2_GUIDE, BAI2_EXCLUSIONS } from "./b
 import { controlTotalCoverageFor, CONTROL_TOTAL_REVISION, CONTROL_TOTAL_GUIDE, CONTROL_TOTAL_EXCLUSIONS } from "./control-total-coverage";
 import { nachaReturnsCoverageFor, NACHA_RETURNS_RULESET_REVISION, NACHA_RETURNS_GUIDE_REVISION, NACHA_RETURNS_EXCLUSIONS } from "./nacha-returns-coverage";
 import { originationR2CoverageFor, NACHA_ORIGINATION_R2_REVISION, NACHA_ORIGINATION_R2_GUIDE, NACHA_ORIGINATION_R2_EXCLUSIONS } from "./nacha-origination-r2-coverage";
-import { expandedNachaCoverageFor, NACHA_EXPANDED_REVISION, NACHA_EXPANDED_GUIDE, NACHA_EXPANDED_EXCLUSIONS } from "./nacha-expanded-coverage";
 import type { CoverageRule, FormatPack, RunProvenance } from "./types";
-import { nachaCoverageFor, NACHA_EXCLUSIONS, NACHA_GUIDE_REVISION, NACHA_RULESET_REVISION } from "./nacha-coverage";
 export const RULESET_REVISION = "2.0.0";
 export const ISO_RULESET_REVISION = "2.2.0";
 export const EDI_RULESET_REVISION = "2.1.0";
@@ -49,12 +47,10 @@ const descriptions: Record<string, readonly [string, string]> = {
 export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
   if (pack.parserKind === "CSV_WIRE") return csvWireCoverageFor(pack);
   if (pack.parserKind === "BAI2") return bai2CoverageFor(pack);
-  if (pack.id === "nacha-origination-expanded-public-2026-r2") return originationR2CoverageFor(pack);
+  if (pack.parserKind === "NACHA_FIXED") return originationR2CoverageFor(pack);
   if (pack.parserKind === "NACHA_RETURN_FIXED") return nachaReturnsCoverageFor(pack);
   if (pack.parserKind === "ACH_CONTROL_FIXED") return controlTotalCoverageFor(pack);
   if (pack.parserKind === "HUNTINGTON_ACK") return [...ackCoverageFor(pack), ...pack.rules.map(rule => ({ id: rule.id, description: rule.description, ruleClass: "flat-file-structure" as const, severity: "ERROR" as const, applicability: "Selected ACK candidate.", prerequisite: "Trusted ACK syntax context", reference: "docs/HUNTINGTON_ACK_CANDIDATE.md", evidence: "tests/huntington-ack.test.ts" }))];
-  if (pack.id === "nacha-origination-expanded-public-2026-r1") return expandedNachaCoverageFor(pack);
-  if (pack.parserKind === "NACHA_FIXED") return nachaCoverageFor(pack);
   const xml = pack.parserKind === "ISO_XML";
   return [...(xml ? xmlRules.map(id => `iso.${id}`) : ediRules.map(id => `edi.${id}`)), ...pack.rules.map(r => r.id)].map(id => ({
     id, description: descriptions[id]?.[0] ?? pack.rules.find(r => r.id === id)?.description ?? id,
@@ -67,22 +63,20 @@ export function coverageFor(pack: FormatPack): readonly CoverageRule[] {
   }));
 }
 export function provenanceFor(pack: FormatPack): RunProvenance {
-  const nacha = pack.parserKind === "NACHA_FIXED";
-  const expanded = pack.id === "nacha-origination-expanded-public-2026-r1";
   const profileMetadata: Partial<Record<string, readonly [string, string, readonly string[]]>> = {
     "CSV_WIRE": [CSV_WIRE_REVISION, CSV_WIRE_GUIDE, CSV_WIRE_EXCLUSIONS],
     "BAI2": [BAI2_REVISION, BAI2_GUIDE, BAI2_EXCLUSIONS],
-    "nacha-origination-expanded-public-2026-r2": [NACHA_ORIGINATION_R2_REVISION, NACHA_ORIGINATION_R2_GUIDE, NACHA_ORIGINATION_R2_EXCLUSIONS],
+    "NACHA_FIXED": [NACHA_ORIGINATION_R2_REVISION, NACHA_ORIGINATION_R2_GUIDE, NACHA_ORIGINATION_R2_EXCLUSIONS],
     "NACHA_RETURN_FIXED": [NACHA_RETURNS_RULESET_REVISION, NACHA_RETURNS_GUIDE_REVISION, NACHA_RETURNS_EXCLUSIONS],
     "ACH_CONTROL_FIXED": [CONTROL_TOTAL_REVISION, CONTROL_TOTAL_GUIDE, CONTROL_TOTAL_EXCLUSIONS],
     "HUNTINGTON_ACK": [ACK_RULESET_REVISION, ACK_GUIDE_REVISION, ACK_EXCLUSIONS],
   };
   const metadata = profileMetadata[pack.id] ?? profileMetadata[pack.parserKind];
-  const revision = metadata?.[0] ?? (expanded ? NACHA_EXPANDED_REVISION : nacha ? NACHA_RULESET_REVISION : pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : RULESET_REVISION);
+  const revision = metadata?.[0] ?? (pack.parserKind === "ISO_XML" ? ISO_RULESET_REVISION : pack.parserKind === "EDI_X12" ? EDI_RULESET_REVISION : RULESET_REVISION);
   return Object.freeze({ schemaVersion: "4", profileId: pack.id, messageVersion: pack.version ?? "unavailable",
-    implementationGuideRevision: metadata?.[1] ?? (expanded ? NACHA_EXPANDED_GUIDE : nacha ? NACHA_GUIDE_REVISION : "not supplied / not evaluated"), mode: pack.mode,
+    implementationGuideRevision: metadata?.[1] ?? "not supplied / not evaluated", mode: pack.mode,
     rulesetRevision: revision, coverageRevision: `${pack.id}@${revision}/report-4`,
     buildRevision: typeof __BUILD_REVISION__ === "string" ? __BUILD_REVISION__ : "source-development",
-    coverage: coverageFor(pack), exclusions: metadata?.[2] ?? (expanded ? NACHA_EXPANDED_EXCLUSIONS : nacha ? NACHA_EXCLUSIONS : EXCLUSIONS) });
+    coverage: coverageFor(pack), exclusions: metadata?.[2] ?? EXCLUSIONS });
 }
 declare const __BUILD_REVISION__: string;
