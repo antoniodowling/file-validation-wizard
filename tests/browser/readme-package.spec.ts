@@ -214,20 +214,40 @@ test("closing during a pending file read prevents later worker creation", async 
 });
 
 
-test("ReadMe inline NACHA preset validates the mixed public-profile fixture", async ({ page }) => {
-  await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-public-2026" data-lock-selection="true"></div></main>');
+test("ReadMe inline NACHA preset validates the mixed-SEC fixture", async ({ page }) => {
+  await installPackage(page, '<main><h1>NACHA guide</h1><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r2" data-lock-selection="true"></div></main>');
   const root = page.locator("[data-payment-file-validator]");
   await expect(root.getByRole("heading", { name: "Upload your NACHA / ACH file" })).toBeVisible();
-  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/mixed-five-sec-pass.ach"));
+  await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/mixed-five-sec-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="result-basis"]')).toContainText(/public specification profile/i);
+  await expect(root.locator('[id$="result-basis"]')).toContainText(/expanded public-source candidate/i);
   await root.getByRole("button", { name: "Back to file" }).click();
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha/routing-check-digit-fail.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("FAIL");
   const routing = root.locator('[id$="finding-rows"] tr').filter({ hasText: "Receiving routing number" });
   await expect(routing.locator(".finding-line")).toHaveText("3");
+});
+
+test("ReadMe retired NACHA presets cannot lock or advance selection", async ({ page }) => {
+  const retired = ["origination-public-2026", "origination-expanded-public-2026-r1"];
+  await installPackage(page, `<main>${retired.map(version =>
+    `<div data-payment-file-validator data-format="NACHA" data-version="${version}" data-lock-selection="true"></div>`,
+  ).join("")}</main>`);
+  const roots = page.locator("main > [data-payment-file-validator]");
+  await expect(roots).toHaveCount(retired.length);
+  for (const root of await roots.all()) {
+    const select = root.locator('[id$="version-select"]');
+    const next = root.getByRole("button", { name: "Continue" });
+    await expect(select).toBeEnabled();
+    await expect(select).toHaveValue("");
+    await expect(select.locator("option")).toHaveText(["Select a version", "NACHA Origination"]);
+    await expect(next).toBeDisabled();
+    await select.selectOption("origination-expanded-public-2026-r2");
+    await next.click();
+    await expect(root.getByRole("heading", { name: "Upload your NACHA / ACH file" })).toBeVisible();
+  }
 });
 
 test("wizard-only results show source lines for errors and warnings without an explorer", async ({ page }) => {
@@ -266,18 +286,18 @@ test("wizard-only results show source lines for errors and warnings without an e
 });
 
 
-test("ReadMe expanded NACHA inline and modal presets use the new candidate independently", async ({ page }) => {
-  await installPackage(page, `<main><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r1" data-lock-selection="true"></div>
-    <a id="expanded-launch" href="/page/payment-file-validator#payment-file-validator?format=NACHA&amp;version=origination-expanded-public-2026-r1">Validate expanded ACH</a></main>`);
+test("ReadMe R2 inline and modal presets keep independent validation state", async ({ page }) => {
+  await installPackage(page, `<main><div data-payment-file-validator data-format="NACHA" data-version="origination-expanded-public-2026-r2" data-lock-selection="true"></div>
+    <a id="expanded-launch" href="/page/payment-file-validator#payment-file-validator?format=NACHA&amp;version=origination-expanded-public-2026-r2">Validate expanded ACH</a></main>`);
   const root = page.locator("main > [data-payment-file-validator]");
   await root.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/mixed-entry-types-pass.ach"));
   await root.getByRole("button", { name: "Validate file" }).click();
   await expect(root.locator('[id$="results-title"]')).toHaveText("PASS");
-  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-expanded-public-1.2.0");
+  await expect(root.locator('[id$="coverage-snapshot"]')).toContainText("nacha-origination-public-2026-r2.2");
   await page.locator("#expanded-launch").click();
   const dialog = page.getByRole("dialog", { name: "Payment File Validation Wizard" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator('[id$="version-select"]')).toHaveValue("origination-expanded-public-2026-r1");
+  await expect(dialog.locator('[id$="version-select"]')).toHaveValue("origination-expanded-public-2026-r2");
   await dialog.locator('input[type="file"]').setInputFiles(demoFile("nacha-expanded/prenote-amount-fail.ach"));
   await dialog.getByRole("button", { name: "Validate file" }).click();
   await expect(dialog.locator('[id$="results-title"]')).toHaveText("FAIL");

@@ -16,25 +16,25 @@ describe("focused format catalog", () => {
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").every((item) => item.versions.length === 3)).toBe(true);
   });
 
-  it("connects the public NACHA candidate without claiming an embedded annual version", () => {
+  it("offers NACHA Origination as a single executable option", () => {
     const nacha = findCatalogEntry("nacha");
-    expect(nacha?.versions.slice(0, 1)).toEqual([{
-      id: "origination-public-2026",
-      label: "Public specification profile (2026 review)",
-      validationProfileId: "nacha-origination-public-2026",
+    expect(nacha?.versions).toEqual([{
+      id: "origination-expanded-public-2026-r2",
+      label: "NACHA Origination",
+      validationProfileId: "nacha-origination-expanded-public-2026-r2",
       extensions: [".ach", ".txt"],
     }]);
-    expect(FORMAT_PACKS.some((pack) => pack.id === "nacha-origination-public-2026")).toBe(true);
+    expect(FORMAT_PACKS.some((pack) => pack.id === "nacha-origination-expanded-public-2026-r2")).toBe(true);
     for (const code of ["CCD", "PPD", "CTX", "WEB", "TEL"]) {
       expect(searchFormatCatalog(code).map((item) => item.id)).toEqual(["nacha"]);
     }
   });
 
-  it("maps exactly seventeen supported versions to executable profiles", () => {
+  it("maps exactly fifteen supported versions to executable profiles", () => {
     const profileIds = FORMAT_CATALOG.flatMap((item) =>
       item.versions.flatMap((version) => version.validationProfileId ? [version.validationProfileId] : []),
     );
-    expect(profileIds).toHaveLength(17);
+    expect(profileIds).toHaveLength(15);
     expect(new Set(profileIds)).toEqual(new Set(FORMAT_PACKS.map((pack) => pack.id)));
     expect(FORMAT_CATALOG.filter((item) => item.status === "DEMO_SUPPORTED").map((item) => item.code)).toEqual([
       "pain.001",

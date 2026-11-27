@@ -31,20 +31,18 @@ Use Node.js 22.12 or newer and run `npm ci` from the repository root. `npm run d
 
 ## Current scope and acceptance
 
-The catalog has nine format families and seventeen executable profiles: nine ISO/X12 DEMO profiles, six ACH CANDIDATE profiles, one BAI2 CANDIDATE profile and one CSV Wire CANDIDATE profile. PAIN.001, PAIN.008, and EDI 820 each offer three versions. The candidate profiles are:
+The catalog has nine format families and fifteen executable profiles: nine ISO/X12 DEMO profiles, four ACH CANDIDATE profiles, one BAI2 CANDIDATE profile and one CSV Wire CANDIDATE profile. PAIN.001, PAIN.008, and EDI 820 each offer three versions. The candidate profiles are:
 
 | Format | Version ID (for presets) | Scope |
 | --- | --- | --- |
-| NACHA | `origination-public-2026` | [Original public specification profile](NACHA_SOURCE_REVIEW.md), retained for regression comparisons |
-| NACHA | `origination-expanded-public-2026-r1` | [Expanded entry types](ACH_ORIGINATION_EXPANDED.md), retained alongside r2 |
-| NACHA | `origination-expanded-public-2026-r2` | [Latest origination candidate](ACH_ORIGINATION_R2.md), including declared healthcare checks |
+| NACHA Origination | `origination-expanded-public-2026-r2` | [Consolidated origination candidate](ACH_ORIGINATION_R2.md), including declared healthcare checks |
 | ACH Returns | `returns-network-public-2026-r1` | [Ordinary network Returns/COR](ACH_RETURNS_CANDIDATE.md); specialized layouts remain gated |
 | ACH Control Totals | `control-total-public-2026-r1` | [One standalone 58-column record](HUNTINGTON_CONTROL_TOTAL_CANDIDATE.md); no companion-file matching |
 | File Received ACK | `pipe-1.0-candidate-r1` | [One pipe-delimited scenario](HUNTINGTON_ACK_CANDIDATE.md); reported disposition is separate from format validity |
 | BAI2 | `huntington-bai2-public-2026-r1` | [Huntington-guide candidate scope](BAI2_SOURCE_SCOPE.md); multiple groups/accounts, continuations, exact controls; unqualified funds/currency/code scenarios receive no verdict |
 | CSV Wire | `huntington-csv-wire-public-2026-r1` | [Guide-backed USD import candidate](CSV_WIRE_SOURCE_SCOPE.md); 54-field USWIRE and 58-field INT, US/CA OTHER beneficiaries; non-USD/IBAN/ambiguous intermediary SWIFT cases receive no verdict |
 
-The four latest ACH candidates, BAI2 and CSV Wire use report/export schema 3; the original NACHA profile, r1, and ISO/X12 profiles retain schema 2. A valid ACK reporting REJECTED can pass format checks. Unsupported inputs receive no format verdict. See [coverage and export semantics](coverage/README.md).
+All active profiles use report and export schema 4. A valid ACK reporting REJECTED can pass format checks. Unsupported inputs receive no format verdict. See [coverage and export semantics](coverage/README.md) and the [NACHA consolidation transfer instructions](NACHA_R2_HANDOFF.md).
 
 No profile establishes full standards conformance, complete 2026 Operating Rules compliance, or production approval. The profile documents list implemented checks and exclusions.
 
@@ -100,7 +98,7 @@ Use synthetic files only in examples, tests, and issues. Never commit customer p
 
 Use [IMPLEMENTATION_EVIDENCE.md](IMPLEMENTATION_EVIDENCE.md) for hardening history and [coverage/README.md](coverage/README.md) for report semantics. Read the [earlier work handoff](REVIEW_FOLLOW_UP_HANDOFF.md) alongside the current profile documents; some of its planned ACH work now has executable candidates. The [September receipt](evidence/ruleset-2/receipt.json) records its original bundle hashes; do not overwrite it to represent later builds. Coverage exporters prepare named revisions and are not routine build steps. Rule changes that alter validation behavior require new revisions and snapshots; preserve published snapshots and fixture bytes.
 
-The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remain DEMO and the six ACH profiles, the BAI2 profile and the CSV Wire profile remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
+The checked-in ReadMe package is self-contained. The nine ISO/X12 profiles remain DEMO and the four ACH profiles, the BAI2 profile and the CSV Wire profile remain CANDIDATE. Local results do not promote a profile to production. Obtain the required authoritative sources, independently approved fixtures, bank/workflow decisions, hosted verification, and sign-offs first.
 
 ## Maintenance tools and conventions
 

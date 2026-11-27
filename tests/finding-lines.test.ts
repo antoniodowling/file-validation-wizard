@@ -49,7 +49,7 @@ describe("finding line summaries", () => {
   });
   it.each(["\n", "\r\n", "\r", ""])("maps NACHA record fields to physical lines for %j framing", (delimiter) => {
     const source = readFileSync(resolve(process.cwd(), "demo-files/nacha/routing-check-digit-fail.ach"), "utf8").replaceAll("\n", delimiter);
-    expect(mapped(source, "nacha-origination-public-2026", "nacha.routing").label).toBe(delimiter ? "3" : "1");
+    expect(mapped(source, "nacha-origination-expanded-public-2026-r2", "nacha.routing").label).toBe(delimiter ? "3" : "1");
   });
 
 });

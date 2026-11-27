@@ -1,47 +1,13 @@
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import type { FormatPack, ValidationRule } from "../src/types";
 import { coverageFor, provenanceFor, RULESET_REVISION, EXCLUSIONS } from "../src/coverage";
-import { NACHA_RULE_IDS } from "../src/parsers/nacha";
-import { NACHA_EXCLUSIONS, NACHA_RULESET_REVISION } from "../src/nacha-coverage";
-import { FORMAT_PACKS } from "../src/format-packs";
+import { NACHA_ORIGINATION_R2_EXCLUSIONS, NACHA_ORIGINATION_R2_REVISION } from "../src/nacha-origination-r2-coverage";
+import { FORMAT_PACKS, ORIGINATION_R2_PACK as pack } from "../src/format-packs";
 import { validateSource } from "../src/validation";
 import { validationRunToCsv, validationRunToJson } from "../src/csv";
-import { ordinarySnapshots as nachaSnapshots } from "./current-coverage";
+import { r2Snapshot } from "./current-coverage";
 import { demoSnapshots as snapshots } from "./current-coverage";
 
-const nonEmpty: ValidationRule = {
-  id: "nacha.non-empty-source", description: "The selected file contains data.", field: "File content", defaultLocator: "file",
-  evaluate: context => ({ outcome: context.source.trim() ? "PASS" : "ERROR" }),
-};
-// Fixture profile isolates coverage from registration/release approval policy.
-const pack = {
-  id: "nacha-origination-public-2026", family: "NACHA", label: "NACHA public-source candidate",
-  version: "origination-public-2026", parserKind: "NACHA_FIXED", mode: "CANDIDATE",
-  extensions: [".ach"], guideUrl: null, enabled: true,
-  identifiers: { kind: "NACHA_FIXED", profile: "origination-public-2026", secCodes: ["CCD", "PPD", "CTX", "WEB", "TEL"] },
-  approval: { product: false, sc: false, ft: false, rulesApproved: false, fixturesApproved: false }, rules: [nonEmpty],
-} as unknown as FormatPack;
-
-it("declares precisely the 42 parser checks and configured source check, without EDI/ISO coverage", () => {
-  const coverage = coverageFor(pack);
-  expect(NACHA_RULE_IDS).toHaveLength(42);
-  expect(coverage.map(rule => rule.id)).toEqual([...NACHA_RULE_IDS, nonEmpty.id]);
-  expect(coverage).toHaveLength(43);
-  for (const rule of coverage) {
-    expect(rule.id.startsWith("nacha.")).toBe(true);
-    expect(rule.description).not.toBe(rule.id);
-    expect(rule.description.length).toBeGreaterThan(20);
-    expect(rule.reference).toContain("docs/NACHA_SOURCE_REVIEW.md");
-    expect(rule.reference).toContain("revision 02/2024");
-    expect(rule.evidence).toContain("synthetic local evidence");
-  }
-});
-it("deduplicates parser and configured rule IDs", () => {
-  const duplicate = { ...nonEmpty, id: NACHA_RULE_IDS[0]! };
-  expect(coverageFor({ ...pack, rules: [nonEmpty, nonEmpty, duplicate] }).map(rule => rule.id))
-    .toEqual([...NACHA_RULE_IDS, nonEmpty.id]);
-});
 it("records prerequisites, conditional applicability and actual warning/error semantics", () => {
   const rules = new Map(coverageFor(pack).map(rule => [rule.id, rule]));
   expect(rules.get("nacha.ascii")?.prerequisite).toBe("nacha.framing passed");
@@ -58,16 +24,16 @@ it("records prerequisites, conditional applicability and actual warning/error se
   expect(rules.get("nacha.batch-debit")?.prerequisite).toContain("amounts numeric and transaction directions supported");
   expect(rules.get("nacha.file-credit")?.applicability).toContain("otherwise not evaluated");
 });
-it("keeps candidate/public-source provenance and negative claims distinct from legacy revision", () => {
+it("keeps the R2 public-source provenance and scope exclusions", () => {
   const provenance = provenanceFor(pack);
   expect(provenance.mode).toBe("CANDIDATE");
-  expect(provenance.rulesetRevision).toBe(NACHA_RULESET_REVISION);
-  expect(provenance.coverageRevision).toBe(`${pack.id}@nacha-public-1.2.0/report-4`);
-  expect(provenance.implementationGuideRevision).toContain("Public sources reviewed 2026-10-14");
-  expect(provenance.implementationGuideRevision).toContain("full current Operating Rules comparison deferred");
-  expect(provenance.exclusions).toEqual(NACHA_EXCLUSIONS);
+  expect(provenance.rulesetRevision).toBe(NACHA_ORIGINATION_R2_REVISION);
+  expect(provenance.coverageRevision).toBe(`${pack.id}@nacha-origination-public-2026-r2.2/report-4`);
+  expect(provenance.implementationGuideRevision).toContain("excerpts reviewed 2026-10-14");
+  expect(provenance.implementationGuideRevision).toContain("full Rules qualification deferred");
+  expect(provenance.exclusions).toEqual(NACHA_ORIGINATION_R2_EXCLUSIONS);
   const exclusions = provenance.exclusions.join(" ");
-  for (const boundary of ["No production approval", "authorization", "routing-directory membership", "holiday calendar", "transmission cutoff", "MAC authentication", "remittance content", "cross-file"]) {
+  for (const boundary of ["production approval", "authorization", "routing-directory membership", "UN/EDIFACT", "MAC authentication", "complete X12", "cross-file"]) {
     expect(exclusions).toContain(boundary);
   }
   expect(Object.isFrozen(provenance)).toBe(true);
@@ -80,12 +46,11 @@ it("preserves corrected ISO provenance while EDI uses its separate current snaps
     .toEqual(snapshots.filter(profile => profile.profileId.startsWith("pain-")));
 });
 
-it("pins registered NACHA coverage and schema-2 candidate exports with authoritative field locations", () => {
-  const registered = FORMAT_PACKS.find(profile => profile.parserKind === "NACHA_FIXED")!;
-  const { buildRevision, ...snapshot } = provenanceFor(registered);
-  expect([snapshot]).toEqual(nachaSnapshots);
+it("pins registered NACHA coverage and schema-4 candidate exports with authoritative field locations", () => {
+  const { buildRevision, ...snapshot } = provenanceFor(pack);
+  expect(snapshot).toEqual(r2Snapshot);
   const source = readFileSync("demo-files/nacha/routing-check-digit-fail.ach", "utf8");
-  const run = validateSource("synthetic.ach", source, registered);
+  const run = validateSource("synthetic.ach", source, pack);
   const routing = run.results.find(result => result.ruleId === "nacha.routing")!;
   expect(routing.location?.kind).toBe("located");
   if (routing.location?.kind === "located") {
@@ -94,20 +59,19 @@ it("pins registered NACHA coverage and schema-2 candidate exports with authorita
   const json = JSON.parse(validationRunToJson(run));
   expect(json.exportSchemaVersion).toBe("4");
   expect(json.provenance.mode).toBe("CANDIDATE");
-  expect(json.provenance.rulesetRevision).toBe(NACHA_RULESET_REVISION);
+  expect(json.provenance.rulesetRevision).toBe(NACHA_ORIGINATION_R2_REVISION);
   expect(json.results.find((result: {ruleId: string}) => result.ruleId === "nacha.routing").location).toEqual(routing.location);
   const csv = validationRunToCsv(run);
   expect(csv).toContain('"CANDIDATE"');
-  expect(csv).toContain(NACHA_RULESET_REVISION);
+  expect(csv).toContain(NACHA_ORIGINATION_R2_REVISION);
   expect(csv).toContain('""kind"":""located""');
 });
 it("distinguishes optional absent checks from checks suppressed by malformed prerequisites", () => {
-  const registered = FORMAT_PACKS.find(profile => profile.parserKind === "NACHA_FIXED")!;
-  const pass = validateSource("synthetic.ach", readFileSync("demo-files/nacha/sparse-no-addenda-pass.ach", "utf8"), registered);
+  const pass = validateSource("synthetic.ach", readFileSync("demo-files/nacha/sparse-no-addenda-pass.ach", "utf8"), pack);
   expect(pass.checks?.find(check => check.ruleId === "nacha.addenda-type")?.state).toBe("not-applicable");
   expect(pass.checks?.find(check => check.ruleId === "nacha.web-credit-originator")?.state).toBe("not-applicable");
   expect(pass.checks?.some(check => check.state === "not-evaluated")).toBe(false);
-  const fail = validateSource("malformed.ach", "1", registered);
+  const fail = validateSource("malformed.ach", "1", pack);
   expect(fail.checks?.find(check => check.ruleId === "nacha.file-credit")?.state).toBe("not-evaluated");
   expect(fail.checks?.find(check => check.ruleId === "nacha.addenda-type")?.state).toBe("not-evaluated");
 });

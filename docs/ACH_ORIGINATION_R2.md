@@ -1,4 +1,8 @@
-# ACH origination r2 candidate
+# ACH origination R2 candidate
+
+R2 is the sole active NACHA Origination profile and directly owns all 52 checks. It retains ruleset revision `nacha-origination-public-2026-r2.2` and the existing validation and export behavior. See the [current coverage](coverage/report-schema-4.0.0.json), [retired schema-4 evidence](coverage/nacha-retired-report-schema-4.0.0.json), and [developer transfer instructions](NACHA_R2_HANDOFF.md).
+
+## Original R2 release
 
 Profile `nacha-origination-expanded-public-2026-r2`, identifiers profile `origination-expanded-public-2026-r2`, coverage revision `nacha-origination-public-2026-r2`. Source review 2026-10-14. This extends [r1](ACH_ORIGINATION_EXPANDED.md) with declared-descriptor checks; legacy and r1 behavior, coverage snapshots and fixture kits remain unchanged. Candidate only: no complete 2026 Rules qualification, business approval, hosted ReadMe or bank acceptance.
 
@@ -13,9 +17,9 @@ HCCLAIMPMT declares healthcare classification only for this candidate. Non-preno
 
 The prior WEB/TEL loan, UN/EDIFACT and opt-in XML CTX source gates remain UNSUPPORTED with no verdict. No tax business guide, original-entry matching, authorization, settlement, account verification or future amendments are added. These public-source structural checks do not establish complete ACH format or Operating Rules support.
 
-## Current correction revision: 2026-10-29 (issue #52)
+## 2026-10-29 correction (issue #52)
 
-Current ruleset/coverage implementation revision is `nacha-origination-public-2026-r2.1`, retaining the existing r2 profile ID. The opening paragraph describes the original r2 release; original snapshots remain unchanged.
+This correction published ruleset revision `nacha-origination-public-2026-r2.1` under the existing R2 profile ID. The earlier snapshots preserve the original release.
 
 The generic healthcare structural rule now admits either tilde (`~`) or backslash (`\`) as the final TRN terminator. The public [CMS Transmittal 1351 / CR8619](https://www.cms.gov/regulations-and-guidance/guidance/transmittals/downloads/r1351otn.pdf), dated 2014-02-21/effective 2014-07-01, was re-read on 2026-10-29. Its Attachment 1, PDF page 8, Segment Terminator permits both choices. The main Medicare-specific instruction on PDF page 4 uses tilde; this profile is generic declared healthcare CCD, not a Medicare-only profile. This is narrow qualification against that historical generic structural source, not a claim of complete current ASC X12 835/Nacha requirements or bank approval. No new normative source edition is asserted.
 
